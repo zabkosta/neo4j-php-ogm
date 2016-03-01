@@ -10,11 +10,22 @@ class ClassMetadata
 
     protected $associations = [];
 
-    public function __construct($type, array $fields, array $associations)
+    protected $label;
+
+    public function __construct($type, $label, array $fields, array $associations)
     {
         $this->type = $type;
+        $this->label = $label;
         $this->fields = $fields;
         $this->associations = $associations;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLabel()
+    {
+        return $this->label;
     }
 
     public function getFields()

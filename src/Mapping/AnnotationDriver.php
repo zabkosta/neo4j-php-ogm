@@ -32,10 +32,14 @@ class AnnotationDriver
             }
         }
 
+        if (!array_key_exists('type', $metadata)) {
+            throw new \Exception(sprintf('The class %s is not a valid OGM entity', $class));
+        }
+
         foreach ($reflClass->getProperties() as $property) {
             foreach ($this->reader->getPropertyAnnotations($property) as $propertyAnnotation) {
                 if ($propertyAnnotation instanceof Property) {
-                    $metadata['fields'][] = $propertyAnnotation;
+                    $metadata['fields'][$property->getName()] = $propertyAnnotation;
                 } elseif ($propertyAnnotation instanceof RelatedNode) {
                     $metadata['associations'][] = $propertyAnnotation;
                 }

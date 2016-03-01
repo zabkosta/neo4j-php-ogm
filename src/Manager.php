@@ -5,6 +5,7 @@ namespace GraphAware\Neo4j\OGM;
 use GraphAware\Neo4j\OGM\Mapping\AnnotationDriver;
 use GraphAware\Neo4j\Client\Client;
 use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
+use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 
 class Manager
 {
@@ -20,6 +21,8 @@ class Manager
 
 
     protected $databaseDriver;
+
+    protected $repositories = [];
 
     public function __construct(Client $databaseDriver)
     {
@@ -55,8 +58,18 @@ class Manager
     public function getClassMetadataFor($class)
     {
         $metadata = $this->annotationDriver->readAnnotations($class);
-        $metadataClass = new ClassMetadata($metadata['type'], $metadata['fields'], $metadata['associations']);
+        $metadataClass = new ClassMetadata($metadata['type'], $metadata['label'], $metadata['fields'], $metadata['associations']);
 
         return $metadataClass;
+    }
+
+    public function getRepository($class)
+    {
+        $classMetadata = $this->getClassMetadataFor($class);
+        if (!array_key_exists($class, $this->repositories)) {
+            $this->repositories[$class] = new BaseRepository($classMetadata, $this, $class);
+        }
+
+        return $this->repositories[$class];
     }
 }
