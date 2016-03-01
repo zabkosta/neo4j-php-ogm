@@ -66,10 +66,10 @@ class UnitOfWork
 
         foreach ($results as $result) {
             $oid = $result->statement()->getTag();
-            var_dump($oid);
             $gid = $result->records()[0]->value('id');
             $this->hydrateGraphId($oid, $gid);
             unset($this->nodesScheduledForCreate[$oid]);
+            $this->entityStates[$oid] = self::STATE_MANAGED;
         }
     }
 
