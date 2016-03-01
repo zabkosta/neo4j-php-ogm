@@ -43,6 +43,17 @@ class BaseRepository
         return $this->hydrateResultSet($result);
     }
 
+    public function findOneBy($key, $value)
+    {
+        $instances = $this->findBy($key, $value);
+
+        if (count($instances) > 1) {
+            throw new \Exception('Expected only one result, got ' . count($instances));
+        }
+
+        return isset($instances[0]) ? $instances[0] : null;
+    }
+
     public function hydrateResultSet(Result $result)
     {
         $entities = [];
