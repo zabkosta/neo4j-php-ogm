@@ -11,8 +11,11 @@ $driver = \GraphAware\Neo4j\Client\ClientBuilder::create()
 
 $em = new \GraphAware\Neo4j\OGM\Manager($driver);
 
-$repository = $em->getRepository(User::class);
 
-$ikwattro = $repository->findOneBy('login', 'ikwattro');
+$user = new User('john');
+$user->setAge(33);
 
-print_r($ikwattro);
+$em->persist($user);
+$em->flush();
+
+print_r($user);

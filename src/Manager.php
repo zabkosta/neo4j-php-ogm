@@ -39,6 +39,27 @@ class Manager
         return $this->annotationDriver;
     }
 
+    public function save($entity)
+    {
+        if (!is_object($entity)) {
+            throw new \Exception('Entity is not an object');
+        }
+    }
+
+    public function persist($entity)
+    {
+        if (!is_object($entity)) {
+            throw new \Exception('Manager::persist() expects an object');
+        }
+
+        $this->uow->persist($entity);
+    }
+
+    public function flush()
+    {
+        $this->uow->flush();
+    }
+
     /**
      * @return \GraphAware\Neo4j\OGM\UnitOfWork
      */
