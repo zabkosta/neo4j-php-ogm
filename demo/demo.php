@@ -13,6 +13,6 @@ $em = new \GraphAware\Neo4j\OGM\Manager($driver);
 
 $repository = $em->getRepository(User::class);
 
-$users = $repository->findAll();
+$users = $repository->findBy('login', 'ikwattro');
 
 print_r($users);

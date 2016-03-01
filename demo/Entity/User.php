@@ -26,7 +26,7 @@ class User
     protected $age;
 
     /**
-     * @OGM\RelatedNode(targetEntity="Demo\User", collection=true, direction="OUTGOINT")
+     * @OGM\RelatedNode(targetEntity="Demo\User", collection=true, direction="OUTGOING")
      * @var \Doctrine\Common\Collections\ArrayCollection[\Demo\User]
      */
     protected $friends;

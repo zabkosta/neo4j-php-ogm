@@ -33,6 +33,16 @@ class BaseRepository
 
     }
 
+    public function findBy($key, $value)
+    {
+        $label = $this->classMetadata->getLabel();
+        $query = sprintf('MATCH (n:%s) WHERE n.%s = {%s} RETURN n', $label, $key, $key);
+
+        $result = $this->manager->getDatabaseDriver()->run($query, [$key => $value]);
+
+        return $this->hydrateResultSet($result);
+    }
+
     public function hydrateResultSet(Result $result)
     {
         $entities = [];
@@ -56,6 +66,10 @@ class BaseRepository
                 }
             }
         }
+
+        $property = $reflClass->getProperty('id');
+        $property->setAccessible(true);
+        $property->setValue($instance, $record->value('n')->identity());
 
         return $instance;
     }
