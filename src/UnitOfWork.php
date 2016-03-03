@@ -2,7 +2,10 @@
 
 namespace GraphAware\Neo4j\OGM;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
+use GraphAware\Neo4j\OGM\Persister\RelationshipPersister;
 
 class UnitOfWork
 {
@@ -20,32 +23,79 @@ class UnitOfWork
 
     protected $hashesMap = [];
 
+    protected $entityIds = [];
+
     protected $nodesScheduledForCreate = [];
 
     protected $nodesScheduledForUpdate = [];
 
     protected $nodesScheduledForDelete = [];
 
+    protected $relationshipsScheduledForCreated = [];
+
     protected $persisters = [];
+
+    protected $relationshipPersister;
 
     public function __construct(Manager $manager)
     {
         $this->manager = $manager;
+        $this->relationshipPersister = new RelationshipPersister();
     }
 
     public function persist($entity)
     {
+        $visited = array();
+
+        $this->doPersist($entity, $visited);
+    }
+
+    public function doPersist($entity, array &$visited)
+    {
         $oid = spl_object_hash($entity);
+        $this->hashesMap[$oid] = $entity;
+
+        if (isset($visited[$oid])) {
+            return;
+        }
+
+        $visited[$oid] = $entity;
+
+        $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
         $entityState = $this->getEntityState($entity, self::STATE_NEW);
 
         switch ($entityState) {
+            case self::STATE_MANAGED:
+                break;
             case self::STATE_NEW:
                 $this->nodesScheduledForCreate[$oid] = $entity;
                 break;
-            case self::STATE_MANAGED:
-                $this->nodesScheduledForUpdate[$oid] = $entity;
-                break;
+            case self::STATE_DELETED:
+                $this->nodesScheduledForDelete[$oid] = $entity;
         }
+
+        $this->cascadePersist($entity, $visited);
+    }
+
+    public function cascadePersist($entity, array &$visited)
+    {
+        $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
+        $associations = $classMetadata->getAssociatedObjects($entity);
+
+        foreach ($associations as $association) {
+            if (is_array($association[1]) || $association[1] instanceof ArrayCollection) {
+                //
+            } else {
+                $this->persistRelationship($entity, $association[0], $association[1]);
+            }
+        }
+    }
+
+    public function persistRelationship($entityA, Relationship $relationship, $entityB)
+    {
+        $oid = spl_object_hash($entityB);
+        $this->persist($entityB);
+        $this->relationshipsScheduledForCreated[] = [$entityA, $relationship, $entityB];
     }
 
     public function flush()
@@ -68,19 +118,48 @@ class UnitOfWork
             $oid = $result->statement()->getTag();
             $gid = $result->records()[0]->value('id');
             $this->hydrateGraphId($oid, $gid);
-            unset($this->nodesScheduledForCreate[$oid]);
+            $this->entityIds[$oid] = $gid;
             $this->entityStates[$oid] = self::STATE_MANAGED;
         }
+
+        $relStack = $this->manager->getDatabaseDriver()->stack('rel_create_schedule');
+        foreach ($this->relationshipsScheduledForCreated as $relationship) {
+            $statement = $this->relationshipPersister->getRelationshipQuery(
+                $this->entityIds[spl_object_hash($relationship[0])],
+                $relationship[1],
+                $this->entityIds[spl_object_hash($relationship[2])]
+            );
+            $relStack->push($statement->text(), $statement->parameters());
+        }
+        $results = $this->manager->getDatabaseDriver()->runStack($relStack);
+
+        $this->nodesScheduledForCreate
+            = $this->nodesScheduledForUpdate
+            = $this->nodesScheduledForDelete
+            = $this->relationshipsScheduledForCreated
+            = array();
+
     }
 
-    public function getEntityState($entity, $defaultState = null)
+    public function getEntityState($entity, $assumedState = null)
     {
         $oid = spl_object_hash($entity);
-        if (!array_key_exists($oid, $this->entityStates)) {
-            $this->entityStates[$oid] = $defaultState !== null ? $defaultState : self::STATE_NEW;
+
+        if (isset($this->entityStates[$oid])) {
+            return $this->entityStates[$oid];
         }
 
-        return $this->entityStates[$oid];
+        if (null !== $assumedState) {
+            return $assumedState;
+        }
+
+        $id = $this->manager->getClassMetadataFor(get_class($entity))->getIdentityValue($entity);
+
+        if (!$id) {
+            return self::STATE_NEW;
+        }
+
+        throw new \LogicException('entity state cannot be assumed');
     }
 
     /**

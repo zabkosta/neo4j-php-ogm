@@ -26,13 +26,13 @@ class User
     protected $age;
 
     /**
-     * @OGM\RelatedNode(targetEntity="Demo\User", collection=true, direction="OUTGOING")
+     * @OGM\Relationship(targetEntity="Demo\User", type="FRIEND", collection=true, direction="OUTGOING", mappedBy="friends")
      * @var \Doctrine\Common\Collections\ArrayCollection[\Demo\User]
      */
     protected $friends;
 
     /**
-     * @OGM\RelatedNode(targetEntity="Demo\Company", type="WORKS_AT", direction="OUTGOING", mappedBy="members")
+     * @OGM\Relationship(targetEntity="Demo\Company", type="WORKS_AT", direction="OUTGOING", mappedBy="members")
      */
     protected $company;
 

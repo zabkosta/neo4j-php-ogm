@@ -4,6 +4,8 @@ namespace GraphAware\Neo4j\OGM\Metadata;
 
 class ClassMetadata
 {
+    protected $className;
+
     protected $type;
 
     protected $fields = [];
@@ -46,5 +48,30 @@ class ClassMetadata
     public function addAssociation(array $association)
     {
         $this->associations[$association[0]] = $association;
+    }
+
+    public function getIdentityValue($entity)
+    {
+        $reflO = new \ReflectionObject($entity);
+        $property = $reflO->getProperty('id');
+        $property->setAccessible(true);
+
+        return $property->getValue($reflO);
+    }
+
+    public function getAssociatedObjects($entity)
+    {
+        $relatedObjects = [];
+        $reflClass = new \ReflectionClass(get_class($entity));
+        foreach ($this->associations as $k => $assoc) {
+            $property = $reflClass->getProperty($k);
+            $property->setAccessible(true);
+            $value = $property->getValue($entity);
+            if (null !== $value) {
+                $relatedObjects[] = [$assoc, $value];
+            }
+        }
+
+        return $relatedObjects;
     }
 }

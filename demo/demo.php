@@ -14,8 +14,11 @@ $em = new \GraphAware\Neo4j\OGM\Manager($driver);
 
 $user = new User('john');
 $user->setAge(33);
+$company = new \Demo\Entity\Company("Acme");
+$user->setCompany($company);
+$company->addMember($user);
 
 $em->persist($user);
 $em->flush();
 
-print_r($user);
+//print_r($user);

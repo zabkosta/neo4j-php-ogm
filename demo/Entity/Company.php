@@ -21,7 +21,7 @@ class Company
     protected $name;
 
     /**
-     * @OGM\RelatedNode(targetEntity="Demo\User", type="WORKS_AT", direction="INCOMING", collection=true)
+     * @OGM\Relationship(targetEntity="Demo\User", type="WORKS_AT", direction="INCOMING", collection=true)
      * @var \Doctrine\Common\Collections\ArrayCollection
      */
     protected $members;

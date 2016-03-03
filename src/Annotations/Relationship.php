@@ -6,7 +6,7 @@ namespace GraphAware\Neo4j\OGM\Annotations;
  * @Annotation
  * @Target({"PROPERTY"})
  */
-class RelatedNode
+class Relationship
 {
     /**
      * @var string
@@ -31,7 +31,7 @@ class RelatedNode
     public function __construct(array $values)
     {
         $this->targetEntity = $values['targetEntity'];
-        //$this->type = $values['type'];
+        $this->type = $values['type'];
         $this->direction = $values['direction'];
         if (isset($values['collection']) && true === $values['collection']) {
             $this->collection = true;

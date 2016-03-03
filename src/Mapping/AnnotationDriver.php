@@ -5,7 +5,7 @@ namespace GraphAware\Neo4j\OGM\Mapping;
 use Doctrine\Common\Annotations\AnnotationReader;
 use GraphAware\Neo4j\OGM\Annotations\Node;
 use GraphAware\Neo4j\OGM\Annotations\Property;
-use GraphAware\Neo4j\OGM\Annotations\RelatedNode;
+use GraphAware\Neo4j\OGM\Annotations\Relationship;
 
 class AnnotationDriver
 {
@@ -40,8 +40,8 @@ class AnnotationDriver
             foreach ($this->reader->getPropertyAnnotations($property) as $propertyAnnotation) {
                 if ($propertyAnnotation instanceof Property) {
                     $metadata['fields'][$property->getName()] = $propertyAnnotation;
-                } elseif ($propertyAnnotation instanceof RelatedNode) {
-                    $metadata['associations'][] = $propertyAnnotation;
+                } elseif ($propertyAnnotation instanceof Relationship) {
+                    $metadata['associations'][$property->getName()] = $propertyAnnotation;
                 }
             }
         }

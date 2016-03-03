@@ -38,11 +38,7 @@ class BaseRepository
         $label = $this->classMetadata->getLabel();
         $query = sprintf('MATCH (n:%s) WHERE n.%s = {%s} RETURN n', $label, $key, $key);
 
-        $t = microtime(true);
         $result = $this->manager->getDatabaseDriver()->run($query, [$key => $value]);
-        $t2 = microtime(true);
-
-        echo $t2 - $t . PHP_EOL;
 
         return $this->hydrateResultSet($result);
     }
