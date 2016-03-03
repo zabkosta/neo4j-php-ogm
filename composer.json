@@ -1,4 +1,5 @@
 {
+    "name": "graphaware/neo4j-php-ogm",
     "require": {
         "doctrine/annotations": "^1.2",
         "graphaware/neo4j-php-client": "^4.0@alpha",
