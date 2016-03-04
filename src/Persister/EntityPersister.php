@@ -31,4 +31,22 @@ class EntityPersister
 
         return Statement::create($query, ['properties' => $propertyValues], spl_object_hash($object));
     }
+
+    public function getUpdateQuery($object)
+    {
+        $propertyValues = [];
+        $reflO = new \ReflectionObject($object);
+        foreach ($this->classMetadata->getFields() as $field => $meta) {
+            $p = $reflO->getProperty($field);
+            $p->setAccessible(true);
+            $propertyValues[$field] = $p->getValue($object);
+        }
+        $propId = $reflO->getProperty('id');
+        $propId->setAccessible(true);
+        $id = $propId->getValue($object);
+
+        $query = 'MATCH (n) WHERE id(n) = {id} SET n += {props}';
+
+        return Statement::create($query, ['id' => $id, 'props' => $propertyValues]);
+    }
 }

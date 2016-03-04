@@ -11,27 +11,11 @@ $driver = \GraphAware\Neo4j\Client\ClientBuilder::create()
 
 $em = new \GraphAware\Neo4j\OGM\Manager($driver);
 
+$repo = $em->getRepository(User::class);
+$ale = $repo->findOneBy('login', 'alenegro81');
+$ale->setAge(99);
 
-$user = new User('john');
-$user->setAge(33);
-$company = new \Demo\Entity\Company("Acme");
-$user->setCompany($company);
-$company->addMember($user);
-
-$ale = new User('alenegro81');
-$ale->setAge(34);
-$ale->setCompany($company);
-
-$mi = new User('bachmanm');
-$mi->setAge(30);
-$mi->setCompany($company);
-
-$company->addMember($ale);
-$company->addMember($mi);
-
-$em->persist($user);
 $em->persist($ale);
-$em->persist($mi);
 $em->flush();
 
 //print_r($user);

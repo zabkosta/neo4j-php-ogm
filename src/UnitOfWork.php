@@ -3,6 +3,7 @@
 namespace GraphAware\Neo4j\OGM;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use GraphAware\Neo4j\Client\Stack;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
 use GraphAware\Neo4j\OGM\Persister\RelationshipPersister;
@@ -66,6 +67,7 @@ class UnitOfWork
 
         switch ($entityState) {
             case self::STATE_MANAGED:
+                $this->nodesScheduledForUpdate[$oid] = $entity;
                 break;
             case self::STATE_NEW:
                 $this->nodesScheduledForCreate[$oid] = $entity;
@@ -108,11 +110,14 @@ class UnitOfWork
             $statements[] = $persister->getCreateQuery($nodeToCreate);
         }
 
+        $tx = $this->manager->getDatabaseDriver()->transaction();
+        $tx->begin();
+
         $stack = $this->manager->getDatabaseDriver()->stack('create_schedule');
         foreach ($statements as $statement) {
             $stack->push($statement->text(), $statement->parameters(), $statement->getTag());
         }
-        $results = $this->manager->getDatabaseDriver()->runStack($stack);
+        $results = $tx->runStack($stack);
 
         foreach ($results as $result) {
             $oid = $result->statement()->getTag();
@@ -131,7 +136,16 @@ class UnitOfWork
             );
             $relStack->push($statement->text(), $statement->parameters());
         }
-        $results = $this->manager->getDatabaseDriver()->runStack($relStack);
+        $results = $tx->runStack($relStack);
+
+        $updateNodeStack = Stack::create('update_nodes');
+        foreach ($this->nodesScheduledForUpdate as $entity) {
+            $statement = $this->getPersister(get_class($entity))->getUpdateQuery($entity);
+            $updateNodeStack->push($statement->text(), $statement->parameters());
+        }
+        $tx->pushStack($updateNodeStack);
+
+        $tx->commit();
 
         $this->nodesScheduledForCreate
             = $this->nodesScheduledForUpdate
@@ -160,6 +174,18 @@ class UnitOfWork
         }
 
         throw new \LogicException('entity state cannot be assumed');
+    }
+
+    public function addManaged($entity)
+    {
+        $oid = spl_object_hash($entity);
+        $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
+        $id = $classMetadata->getIdentityValue($entity);
+        if (!$id) {
+            throw new \LogicException('Entity marked for managed but couldnt find identity');
+        }
+        $this->entityStates[$oid] = self::STATE_MANAGED;
+        $this->entityIds[$oid] = $id;
     }
 
     /**

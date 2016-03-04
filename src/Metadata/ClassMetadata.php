@@ -52,11 +52,11 @@ class ClassMetadata
 
     public function getIdentityValue($entity)
     {
-        $reflO = new \ReflectionObject($entity);
-        $property = $reflO->getProperty('id');
+        $reflClass = new \ReflectionClass(get_class($entity));
+        $property = $reflClass->getProperty('id');
         $property->setAccessible(true);
 
-        return $property->getValue($reflO);
+        return $property->getValue($entity);
     }
 
     public function getAssociatedObjects($entity)

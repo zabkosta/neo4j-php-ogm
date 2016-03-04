@@ -82,6 +82,8 @@ class BaseRepository
         $property->setAccessible(true);
         $property->setValue($instance, $record->value('n')->identity());
 
+        $this->manager->getUnitOfWork()->addManaged($instance);
+
         return $instance;
     }
 }
