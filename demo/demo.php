@@ -29,9 +29,7 @@ $mi->setCompany($company);
 $company->addMember($ale);
 $company->addMember($mi);
 
-$em->persist($user);
-$em->persist($ale);
-$em->persist($mi);
+$em->persist($company);
 $em->flush();
 
 //print_r($user);

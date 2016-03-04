@@ -86,17 +86,19 @@ class UnitOfWork
 
         foreach ($associations as $association) {
             if (is_array($association[1]) || $association[1] instanceof ArrayCollection) {
-                //
+                foreach ($association[1] as $assoc) {
+                    $this->persistRelationship($entity, $association[0], $assoc, $visited);
+                }
             } else {
-                $this->persistRelationship($entity, $association[0], $association[1]);
+                $this->persistRelationship($entity, $association[0], $association[1], $visited);
             }
         }
     }
 
-    public function persistRelationship($entityA, Relationship $relationship, $entityB)
+    public function persistRelationship($entityA, Relationship $relationship, $entityB, array &$visited)
     {
         $oid = spl_object_hash($entityB);
-        $this->persist($entityB);
+        $this->doPersist($entityB, $visited);
         $this->relationshipsScheduledForCreated[] = [$entityA, $relationship, $entityB];
     }
 

@@ -18,4 +18,12 @@ $ale->setAge(99);
 $em->persist($ale);
 $em->flush();
 
+$users = $repo->findAll();
+
+foreach ($users as $user) {
+    $user->setAge(120);
+    $em->persist($user);
+}
+$em->flush();
+
 //print_r($user);
