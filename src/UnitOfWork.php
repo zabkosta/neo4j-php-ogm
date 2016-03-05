@@ -38,6 +38,8 @@ class UnitOfWork
 
     protected $relationshipPersister;
 
+    protected $entitiesById = [];
+
     public function __construct(Manager $manager)
     {
         $this->manager = $manager;
@@ -188,6 +190,12 @@ class UnitOfWork
         }
         $this->entityStates[$oid] = self::STATE_MANAGED;
         $this->entityIds[$oid] = $id;
+        $this->entitiesById[$id] = $entity;
+    }
+
+    public function getEntityById($id)
+    {
+        return isset($this->entitiesById[$id]) ? $this->entitiesById[$id] : null;
     }
 
     /**

@@ -2,19 +2,35 @@
 
 namespace GraphAware\Neo4j\OGM\Repository;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Common\Result\RecordViewInterface;
+use GraphAware\Common\Type\NodeInterface;
 use GraphAware\Neo4j\Client\Formatter\Result;
 use GraphAware\Neo4j\OGM\Manager;
 use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
 
 class BaseRepository
 {
+    /**
+     * @var \GraphAware\Neo4j\OGM\Metadata\ClassMetadata
+     */
     protected $classMetadata;
 
+    /**
+     * @var \GraphAware\Neo4j\OGM\Manager
+     */
     protected $manager;
 
+    /**
+     * @var string
+     */
     protected $className;
 
+    /**
+     * @param \GraphAware\Neo4j\OGM\Metadata\ClassMetadata $classMetadata
+     * @param \GraphAware\Neo4j\OGM\Manager $manager
+     * @param string $className
+     */
     public function __construct(ClassMetadata $classMetadata, Manager $manager, $className)
     {
         $this->classMetadata = $classMetadata;
@@ -25,7 +41,45 @@ class BaseRepository
     public function findAll()
     {
         $label = $this->classMetadata->getLabel();
-        $query = sprintf('MATCH (n:%s) RETURN n', $label);
+        $query = sprintf('MATCH (n:%s)', $label);
+
+        foreach ($this->classMetadata->getAssociations() as $identifier => $association) {
+            switch ($association->getDirection()) {
+                case 'INCOMING':
+                    $relStr = '<-[:%s]-';
+                    break;
+                case 'OUTGOING':
+                    $relStr = '-[:%s]->';
+                    break;
+                default:
+                    $relStr = '-[:%s]-';
+                    break;
+            }
+
+            $relQueryPart = sprintf($relStr, $association->getType());
+            $query .= PHP_EOL;
+            $query .= 'OPTIONAL MATCH (n)' . $relQueryPart . '(' . $identifier . ')';
+        }
+
+        $query .= PHP_EOL;
+        $query .= 'RETURN n';
+        $assocReturns = [];
+        foreach ($this->classMetadata->getAssociations() as $k => $association) {
+            if ($association->getCollection()) {
+                $assocReturns[] = sprintf('collect(%s) as %s', $k, $k);
+            } else {
+                $assocReturns[] = $k;
+            }
+        }
+
+        if (count($this->classMetadata->getAssociations()) > 0) {
+            $query .= ', ';
+            $query .= implode(', ', $assocReturns);
+        }
+
+
+
+        print_r($query);
 
         $result = $this->manager->getDatabaseDriver()->run($query);
 
@@ -67,20 +121,62 @@ class BaseRepository
     public function hydrate(RecordViewInterface $record)
     {
         $reflClass = new \ReflectionClass($this->className);
-        $instance = $reflClass->newInstanceWithoutConstructor();
-
-        foreach ($this->classMetadata->getFields() as $field => $meta) {
-            if ($record->value('n')->hasValue($field)) {
-                if ($property = $reflClass->getProperty($field)) {
+        $baseInstance = $this->hydrateNode($record->value('n'));
+        foreach ($this->classMetadata->getAssociations() as $key => $association) {
+            if (null !== $record->value($key)) {
+                if ($association->getCollection()) {
+                    foreach ($record->value($key) as $v) {
+                        $property = $reflClass->getProperty($key);
+                        $property->setAccessible(true);
+                        $property->getValue($baseInstance)->add($this->hydrateNode($v));
+                    }
+                } else {
+                    $property = $reflClass->getProperty($key);
                     $property->setAccessible(true);
-                    $property->setValue($instance, $record->value('n')->value($field));
+                    $hydrator = $this->getHydrator($association->getTargetEntity());
+                    $relO = $hydrator->hydrateNode($record->value($key));
+                    $property->setValue($baseInstance, $relO);
                 }
             }
         }
 
+        return $baseInstance;
+    }
+
+    public function getHydrator($target)
+    {
+        return $this->manager->getRepository($target);
+    }
+
+    public function hydrateNode(NodeInterface $node)
+    {
+        if ($entity = $this->manager->getUnitOfWork()->getEntityById($node->identity())) {
+            return $entity;
+        }
+        $reflClass = new \ReflectionClass($this->className);
+        $instance = $reflClass->newInstanceWithoutConstructor();
+        foreach ($this->classMetadata->getFields() as $field => $meta) {
+            if ($node->hasValue($field)) {
+                if ($property = $reflClass->getProperty($field)) {
+                    $property->setAccessible(true);
+                    $property->setValue($instance, $node->value($field));
+                }
+            }
+        }
+
+        foreach ($this->classMetadata->getAssociations() as $key => $assoc) {
+            if ($assoc->getCollection()) {
+                $property = $reflClass->getProperty($key);
+                $property->setAccessible(true);
+                $property->setValue($instance, new ArrayCollection());
+            }
+        }
+
+
+
         $property = $reflClass->getProperty('id');
         $property->setAccessible(true);
-        $property->setValue($instance, $record->value('n')->identity());
+        $property->setValue($instance, $node->identity());
 
         $this->manager->getUnitOfWork()->addManaged($instance);
 

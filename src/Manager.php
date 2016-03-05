@@ -76,6 +76,11 @@ class Manager
         return $this->databaseDriver;
     }
 
+    /**
+     * @param $class
+     * @return \GraphAware\Neo4j\OGM\Metadata\ClassMetadata
+     * @throws \Exception
+     */
     public function getClassMetadataFor($class)
     {
         $metadata = $this->annotationDriver->readAnnotations($class);
@@ -84,6 +89,10 @@ class Manager
         return $metadataClass;
     }
 
+    /**
+     * @param string $class
+     * @return \GraphAware\Neo4j\OGM\Repository\BaseRepository
+     */
     public function getRepository($class)
     {
         $classMetadata = $this->getClassMetadataFor($class);

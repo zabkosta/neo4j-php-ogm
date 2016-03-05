@@ -35,6 +35,9 @@ class ClassMetadata
         return $this->fields;
     }
 
+    /**
+     * @return \GraphAware\Neo4j\OGM\Annotations\Relationship[]
+     */
     public function getAssociations()
     {
         return $this->associations;
