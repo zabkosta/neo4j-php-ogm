@@ -53,6 +53,20 @@ class ClassMetadata
         $this->associations[$association[0]] = $association;
     }
 
+    /**
+     * @param string $key
+     *
+     * @return \GraphAware\Neo4j\OGM\Annotations\Relationship
+     */
+    public function getAssociation($key)
+    {
+        if (isset($this->associations[$key])) {
+            return $this->associations[$key];
+        }
+
+        throw new \InvalidArgumentException(sprintf('No association with key "%s" found for class "%s"', $key, $this->className));
+    }
+
     public function getIdentityValue($entity)
     {
         $reflClass = new \ReflectionClass(get_class($entity));

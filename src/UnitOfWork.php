@@ -193,6 +193,10 @@ class UnitOfWork
         $this->entitiesById[$id] = $entity;
     }
 
+    /**
+     * @param int $id
+     * @return object|null
+     */
     public function getEntityById($id)
     {
         return isset($this->entitiesById[$id]) ? $this->entitiesById[$id] : null;

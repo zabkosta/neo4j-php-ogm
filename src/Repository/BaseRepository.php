@@ -136,6 +136,7 @@ class BaseRepository
                     $hydrator = $this->getHydrator($association->getTargetEntity());
                     $relO = $hydrator->hydrateNode($record->value($key));
                     $property->setValue($baseInstance, $relO);
+                    $this->setInversedAssociation($baseInstance, $relO, $key);
                 }
             }
         }
@@ -172,8 +173,6 @@ class BaseRepository
             }
         }
 
-
-
         $property = $reflClass->getProperty('id');
         $property->setAccessible(true);
         $property->setValue($instance, $node->identity());
@@ -181,5 +180,25 @@ class BaseRepository
         $this->manager->getUnitOfWork()->addManaged($instance);
 
         return $instance;
+    }
+
+    public function setInversedAssociation($baseInstance, $otherInstance, $relationshipKey)
+    {
+        $assoc = $this->classMetadata->getAssociation($relationshipKey);
+        if ($assoc->hasMappedBy()) {
+            $mappedBy = $assoc->getMappedBy();
+            $reflClass = new \ReflectionClass(get_class($otherInstance));
+            $property = $reflClass->getProperty($mappedBy);
+            $property->setAccessible(true);
+            $otherClassMetadata = $this->manager->getClassMetadataFor(get_class($otherInstance));
+            if ($otherClassMetadata->getAssociation($mappedBy)->getCollection()) {
+                if (null === $property->getValue($otherInstance)) {
+                    $property->setValue($otherInstance, new ArrayCollection());
+                }
+                $property->getValue($otherInstance)->add($baseInstance);
+            } else {
+                $property->setValue($otherInstance, $baseInstance);
+            }
+        }
     }
 }

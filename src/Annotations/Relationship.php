@@ -24,6 +24,11 @@ class Relationship
     protected $direction;
 
     /**
+     * @var string
+     */
+    protected $mappedBy;
+
+    /**
      * @var bool
      */
     protected $collection = false;
@@ -35,6 +40,9 @@ class Relationship
         $this->direction = $values['direction'];
         if (isset($values['collection']) && true === $values['collection']) {
             $this->collection = true;
+        }
+        if (isset($values['mappedBy'])) {
+            $this->mappedBy = $values['mappedBy'];
         }
     }
 
@@ -68,5 +76,21 @@ class Relationship
     public function getCollection()
     {
         return $this->collection;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasMappedBy()
+    {
+        return null !== $this->mappedBy;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMappedBy()
+    {
+        return $this->mappedBy;
     }
 }
