@@ -36,10 +36,21 @@ class User
      */
     protected $company;
 
+    /**
+     * @OGM\Relationship(entity="Demo\Entity\Rating", collection=true)
+     * @var \Doctrine\Common\Collections\ArrayCollection
+     */
+    protected $ratings;
+
+    /**
+     * @param string $login
+     */
     public function __construct($login)
     {
         $this->login = $login;
         $this->friends = new ArrayCollection();
+        $this->ratings = new ArrayCollection();
+        print_r($this->ratings);
     }
 
     /**
@@ -120,6 +131,14 @@ class User
     public function setCompany($company)
     {
         $this->company = $company;
+    }
+
+    public function rateMovie(Movie $movie, $score)
+    {
+        $rating = new Rating($this, $movie, $score);
+        $this->ratings->add($rating);
+
+        return $rating;
     }
 
 }

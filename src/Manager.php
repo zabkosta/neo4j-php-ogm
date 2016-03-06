@@ -5,6 +5,7 @@ namespace GraphAware\Neo4j\OGM;
 use GraphAware\Neo4j\OGM\Mapping\AnnotationDriver;
 use GraphAware\Neo4j\Client\Client;
 use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
+use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 
 class Manager
@@ -77,16 +78,33 @@ class Manager
     }
 
     /**
-     * @param $class
+     * @param string $class
+     *
      * @return \GraphAware\Neo4j\OGM\Metadata\ClassMetadata
+     *
      * @throws \Exception
      */
     public function getClassMetadataFor($class)
     {
         $metadata = $this->annotationDriver->readAnnotations($class);
-        $metadataClass = new ClassMetadata($metadata['type'], $metadata['label'], $metadata['fields'], $metadata['associations']);
+        $metadataClass = new ClassMetadata($metadata['type'], $metadata['label'], $metadata['fields'], $metadata['associations'], $metadata['relationshipEntities']);
 
         return $metadataClass;
+    }
+
+    /**
+     * @param string $class
+     *
+     * @return \GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata
+     *
+     * @throws \Exception
+     */
+    public function getRelationshipEntityMetadata($class)
+    {
+        $metadata = $this->annotationDriver->readAnnotations($class);
+        $relEntityMetadata = new RelationshipEntityMetadata($metadata);
+
+        return $relEntityMetadata;
     }
 
     /**

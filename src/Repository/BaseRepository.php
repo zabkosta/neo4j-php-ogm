@@ -77,10 +77,6 @@ class BaseRepository
             $query .= implode(', ', $assocReturns);
         }
 
-
-
-        print_r($query);
-
         $result = $this->manager->getDatabaseDriver()->run($query);
 
         return $this->hydrateResultSet($result);
@@ -90,9 +86,45 @@ class BaseRepository
     public function findBy($key, $value)
     {
         $label = $this->classMetadata->getLabel();
-        $query = sprintf('MATCH (n:%s) WHERE n.%s = {%s} RETURN n', $label, $key, $key);
+        $query = sprintf('MATCH (n:%s) WHERE n.%s = {%s}', $label, $key, $key);
 
-        $result = $this->manager->getDatabaseDriver()->run($query, [$key => $value]);
+        foreach ($this->classMetadata->getAssociations() as $identifier => $association) {
+            switch ($association->getDirection()) {
+                case 'INCOMING':
+                    $relStr = '<-[:%s]-';
+                    break;
+                case 'OUTGOING':
+                    $relStr = '-[:%s]->';
+                    break;
+                default:
+                    $relStr = '-[:%s]-';
+                    break;
+            }
+
+            $relQueryPart = sprintf($relStr, $association->getType());
+            $query .= PHP_EOL;
+            $query .= 'OPTIONAL MATCH (n)' . $relQueryPart . '(' . $identifier . ')';
+        }
+
+        $query .= PHP_EOL;
+        $query .= 'RETURN n';
+        $assocReturns = [];
+        foreach ($this->classMetadata->getAssociations() as $k => $association) {
+            if ($association->getCollection()) {
+                $assocReturns[] = sprintf('collect(%s) as %s', $k, $k);
+            } else {
+                $assocReturns[] = $k;
+            }
+        }
+
+        if (count($this->classMetadata->getAssociations()) > 0) {
+            $query .= ', ';
+            $query .= implode(', ', $assocReturns);
+        }
+
+        $parameters = [$key => $value];
+
+        $result = $this->manager->getDatabaseDriver()->run($query, $parameters);
 
         return $this->hydrateResultSet($result);
     }
@@ -166,6 +198,14 @@ class BaseRepository
         }
 
         foreach ($this->classMetadata->getAssociations() as $key => $assoc) {
+            if ($assoc->getCollection()) {
+                $property = $reflClass->getProperty($key);
+                $property->setAccessible(true);
+                $property->setValue($instance, new ArrayCollection());
+            }
+        }
+
+        foreach ($this->classMetadata->getRelationshipEntities() as $key => $assoc) {
             if ($assoc->getCollection()) {
                 $property = $reflClass->getProperty($key);
                 $property->setAccessible(true);

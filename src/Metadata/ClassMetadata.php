@@ -12,14 +12,17 @@ class ClassMetadata
 
     protected $associations = [];
 
+    protected $relEntities = [];
+
     protected $label;
 
-    public function __construct($type, $label, array $fields, array $associations)
+    public function __construct($type, $label, array $fields, array $associations, array $relEntities)
     {
         $this->type = $type;
         $this->label = $label;
         $this->fields = $fields;
         $this->associations = $associations;
+        $this->relEntities = $relEntities;
     }
 
     /**
@@ -65,6 +68,24 @@ class ClassMetadata
         }
 
         throw new \InvalidArgumentException(sprintf('No association with key "%s" found for class "%s"', $key, $this->className));
+    }
+
+    /**
+     * @return \GraphAware\Neo4j\OGM\Annotations\Relationship[]
+     */
+    public function getRelationshipEntities()
+    {
+        return $this->relEntities;
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return \GraphAware\Neo4j\OGM\Annotations\Relationship
+     */
+    public function getRelationshipEntity($key)
+    {
+        return $this->relEntities[$key];
     }
 
     public function getIdentityValue($entity)

@@ -35,6 +35,14 @@ $nigel->addFriend($mi);
 $em->persist($company);
 $em->flush();
 */
-
+$s = microtime(true);
 $users = $em->getRepository(User::class)->findAll();
-print_r($users);
+foreach ($users as $user) {
+    $user->setAge(35);
+    $em->persist($user);
+}
+$em->flush();
+
+$e = microtime(true);
+echo $e - $s .PHP_EOL;
+//print_r($users);

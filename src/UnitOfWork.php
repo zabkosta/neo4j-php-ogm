@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\Client\Stack;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
+use GraphAware\Neo4j\OGM\Persister\RelationshipEntityPersister;
 use GraphAware\Neo4j\OGM\Persister\RelationshipPersister;
 
 class UnitOfWork
@@ -34,7 +35,15 @@ class UnitOfWork
 
     protected $relationshipsScheduledForCreated = [];
 
+    protected $relEntitiesScheduledForCreate = [];
+
+    protected $relEntitiesById = [];
+
+    protected $relEntitiesMap = [];
+
     protected $persisters = [];
+
+    protected $relationshipEntityPersisters = [];
 
     protected $relationshipPersister;
 
@@ -79,6 +88,7 @@ class UnitOfWork
         }
 
         $this->cascadePersist($entity, $visited);
+        $this->traverseRelationshipEntities($entity);
     }
 
     public function cascadePersist($entity, array &$visited)
@@ -142,6 +152,14 @@ class UnitOfWork
         }
         $results = $tx->runStack($relStack);
 
+        $reStack = Stack::create('rel_entity_create');
+        foreach ($this->relEntitiesScheduledForCreate as $oid => $entity) {
+            $rePersister = $this->getRelationshipEntityPersister(get_class($entity));
+            $statement = $rePersister->getCreateQuery($entity);
+            $reStack->push($statement->text(), $statement->parameters());
+        }
+        $tx->runStack($reStack);
+
         $updateNodeStack = Stack::create('update_nodes');
         foreach ($this->nodesScheduledForUpdate as $entity) {
             $statement = $this->getPersister(get_class($entity))->getUpdateQuery($entity);
@@ -157,6 +175,32 @@ class UnitOfWork
             = $this->relationshipsScheduledForCreated
             = array();
 
+    }
+
+    public function traverseRelationshipEntities($entity)
+    {
+        $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
+        $reflClass = new \ReflectionClass($entity);
+        foreach ($classMetadata->getRelationshipEntities() as $key => $relationship) {
+            $property = $reflClass->getProperty($key);
+            $property->setAccessible(true);
+            $value = $property->getValue($entity);
+            if (null === $value || ($relationship->getCollection() && count($value) === 0)) {
+                return;
+            }
+            if ($relationship->getCollection()) {
+                foreach ($value as $v) {
+                    $this->persistRelationshipEntity($v);
+                }
+            }
+        }
+    }
+
+    public function persistRelationshipEntity($entity)
+    {
+        $oid = spl_object_hash($entity);
+
+        $this->relEntitiesScheduledForCreate[$oid] = $entity;
     }
 
     public function getEntityState($entity, $assumedState = null)
@@ -214,6 +258,20 @@ class UnitOfWork
         }
 
         return $this->persisters[$class];
+    }
+
+    /**
+     * @param $class
+     * @return \GraphAware\Neo4j\OGM\Persister\RelationshipEntityPersister
+     */
+    public function getRelationshipEntityPersister($class)
+    {
+        if (!array_key_exists($class, $this->relationshipEntityPersisters)) {
+            $classMetadata = $this->manager->getRelationshipEntityMetadata($class);
+            $this->relationshipEntityPersisters[$class] = new RelationshipEntityPersister($this->manager, $class, $classMetadata);
+        }
+
+        return $this->relationshipEntityPersisters[$class];
     }
 
     public function hydrateGraphId($oid, $gid)
