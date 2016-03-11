@@ -1,5 +1,26 @@
 {
     "name": "graphaware/neo4j-php-ogm",
+    "description": "PHP Object Graph Mapper for Neo4j",
+    "license": "Apache V2",
+    "keywords": [
+        "neo4j",
+        "graph",
+        "ogm",
+        "mapper",
+        "annotations",
+        "database"
+    ],
+    "homepage": "https://github.com/graphaware/neo4j-php-ogm",
+    "authors": [
+        {
+            "name": "Christophe Willemsen",
+            "email": "christophe@graphaware.com"
+        },
+        {
+            "name": "GraphAware Ltd",
+            "email": "php@graphaware.com"
+        }
+    ],
     "require": {
         "doctrine/annotations": "^1.2",
         "graphaware/neo4j-php-client": "^4.0@alpha",
@@ -7,8 +28,15 @@
     },
     "autoload": {
         "psr-4": {
-            "GraphAware\\Neo4j\\OGM\\": "src/",
-            "Demo\\": "demo/"
+            "GraphAware\\Neo4j\\OGM\\": "src/"
         }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "GraphAware\\Neo4j\\OGM\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^5.2"
     }
 }
