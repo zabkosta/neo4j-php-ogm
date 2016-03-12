@@ -120,4 +120,14 @@ class Manager
 
         return $this->repositories[$class];
     }
+
+    /**
+     * Clear the Entity Manager
+     * All entities that were managed by the unitOfWork become detached.
+     */
+    public function clear()
+    {
+        $this->uow = null;
+        $this->uow = new UnitOfWork($this);
+    }
 }
