@@ -4,8 +4,8 @@ namespace GraphAware\Neo4j\OGM\Repository;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Common\Result\RecordViewInterface;
-use GraphAware\Common\Type\NodeInterface;
-use GraphAware\Neo4j\Client\Formatter\Result;
+use GraphAware\Common\Type\Node;
+use GraphAware\Common\Result\Result;
 use GraphAware\Neo4j\OGM\Manager;
 use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
 
@@ -181,7 +181,7 @@ class BaseRepository
         return $this->manager->getRepository($target);
     }
 
-    public function hydrateNode(NodeInterface $node)
+    public function hydrateNode(Node $node)
     {
         if ($entity = $this->manager->getUnitOfWork()->getEntityById($node->identity())) {
             return $entity;
@@ -217,7 +217,7 @@ class BaseRepository
         $property->setAccessible(true);
         $property->setValue($instance, $node->identity());
 
-        $this->manager->getUnitOfWork()->addManaged($instance);
+        //$this->manager->getUnitOfWork()->addManaged($instance);
 
         return $instance;
     }
