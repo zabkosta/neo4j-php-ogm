@@ -14,6 +14,8 @@ use Symfony\Component\Stopwatch\Stopwatch;
  */
 class NodeWithRelsPerformanceTest extends IntegrationTestCase
 {
+    private static $NUMBER_OF_RUNS = 10;
+
     /**
      * @var \Symfony\Component\Stopwatch\Stopwatch
      */
@@ -35,7 +37,7 @@ class NodeWithRelsPerformanceTest extends IntegrationTestCase
         $this->load1000PersonsWith3000RelsDepth1();
         $personsRepository = $this->em->getRepository(Person::class);
         $avgTime = 0;
-        for ($i = 1; $i < 100; ++$i) {
+        for ($i = 1; $i < self::$NUMBER_OF_RUNS; ++$i) {
             $testTag = 'run' . $i;
             $this->stopwatch->start($testTag);
             $persons = $personsRepository->findAll();
@@ -44,7 +46,7 @@ class NodeWithRelsPerformanceTest extends IntegrationTestCase
             $avgTime += $e->getDuration();
         }
 
-        $this->displayMessage(1000, 3000, $avgTime/100);
+        $this->displayMessage(1000, 3000, $avgTime/self::$NUMBER_OF_RUNS);
 
     }
 
@@ -57,7 +59,7 @@ class NodeWithRelsPerformanceTest extends IntegrationTestCase
         $this->load2000PersonsWith5SkillsDepth1();
         $personsRepository = $this->em->getRepository(Person::class);
         $avgTime = 0;
-        for ($i = 1; $i < 100; ++$i) {
+        for ($i = 1; $i < self::$NUMBER_OF_RUNS; ++$i) {
             $testTag = 'run' . $i;
             $this->stopwatch->start($testTag);
             $persons = $personsRepository->findAll();
@@ -66,7 +68,7 @@ class NodeWithRelsPerformanceTest extends IntegrationTestCase
             $avgTime += $e->getDuration();
         }
 
-        $this->displayMessage(1000, 3000, $avgTime/100);
+        $this->displayMessage(1000, 3000, $avgTime/self::$NUMBER_OF_RUNS);
 
     }
 

@@ -4,7 +4,7 @@ $loader = require_once __DIR__.'/vendor/autoload.php';
 
 use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\OGM\Manager;
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
+use GraphAware\Neo4j\OGM\Tests\Performance\Domain\Person;
 use Symfony\Component\Finder\Finder;
 
 $finder = new Finder();
@@ -15,11 +15,11 @@ foreach ($finder as $file) {
 }
 
 $client = ClientBuilder::create()
-    ->addConnection('bolt', 'http://localhost:7474')
+    ->addConnection('bolt', 'bolt://localhost')
     ->build();
 
 $em = new Manager($client);
-$repository = $em->getRepository(User::class);
+$repository = $em->getRepository(Person::class);
 $s = microtime(true);
 $users = $repository->findAll();
 echo count($users) . PHP_EOL;

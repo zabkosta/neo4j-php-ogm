@@ -26,6 +26,10 @@ class BaseRepository
      */
     protected $className;
 
+    protected $reflectionClass;
+
+    protected $loadedReflClasses = [];
+
     /**
      * @param \GraphAware\Neo4j\OGM\Metadata\ClassMetadata $classMetadata
      * @param \GraphAware\Neo4j\OGM\Manager $manager
@@ -186,7 +190,7 @@ class BaseRepository
         if ($entity = $this->manager->getUnitOfWork()->getEntityById($node->identity())) {
             return $entity;
         }
-        $reflClass = new \ReflectionClass($this->className);
+        $reflClass = $this->getReflectionClass($this->className);
         $instance = $reflClass->newInstanceWithoutConstructor();
         foreach ($this->classMetadata->getFields() as $field => $meta) {
             if ($node->hasValue($field)) {
@@ -227,7 +231,7 @@ class BaseRepository
         $assoc = $this->classMetadata->getAssociation($relationshipKey);
         if ($assoc->hasMappedBy()) {
             $mappedBy = $assoc->getMappedBy();
-            $reflClass = new \ReflectionClass(get_class($otherInstance));
+            $reflClass = $this->getReflectionClass(get_class($otherInstance));
             $property = $reflClass->getProperty($mappedBy);
             $property->setAccessible(true);
             $otherClassMetadata = $this->manager->getClassMetadataFor(get_class($otherInstance));
@@ -240,5 +244,18 @@ class BaseRepository
                 $property->setValue($otherInstance, $baseInstance);
             }
         }
+    }
+
+    /**
+     * @param $className
+     * @return \ReflectionClass
+     */
+    private function getReflectionClass($className)
+    {
+        if (!array_key_exists($className, $this->loadedReflClasses)) {
+            $this->loadedReflClasses[$className] = new \ReflectionClass($className);
+        }
+
+        return $this->loadedReflClasses[$className];
     }
 }
