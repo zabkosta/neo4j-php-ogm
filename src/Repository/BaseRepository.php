@@ -3,7 +3,7 @@
 namespace GraphAware\Neo4j\OGM\Repository;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use GraphAware\Common\Result\RecordViewInterface;
+use GraphAware\Common\Result\Record;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
 use GraphAware\Neo4j\OGM\Manager;
@@ -154,10 +154,10 @@ class BaseRepository
         return $entities;
     }
 
-    public function hydrate(RecordViewInterface $record)
+    public function hydrate(Record $record)
     {
         $reflClass = new \ReflectionClass($this->className);
-        $baseInstance = $this->hydrateNode($record->value('n'));
+        $baseInstance = $this->hydrateNode($record->get('n'));
         foreach ($this->classMetadata->getAssociations() as $key => $association) {
             if (null !== $record->value($key)) {
                 if ($association->getCollection()) {
