@@ -3,11 +3,13 @@
 namespace GraphAware\Neo4j\OGM\Repository;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use GraphAware\Common\Cypher\Statement;
 use GraphAware\Common\Result\Record;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
 use GraphAware\Neo4j\OGM\Manager;
 use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
+use GraphAware\Neo4j\OGM\Query\ResultMapping;
 
 class BaseRepository
 {
@@ -170,6 +172,26 @@ class BaseRepository
         return isset($instances[0]) ? $instances[0] : null;
     }
 
+    protected function nativeQuery(Statement $statement, ResultMapping $resultMapping)
+    {
+        $result = $this->manager->getDatabaseDriver()->run($statement->text(), $statement->parameters(), $statement->getTag());
+        if (0 === $result->size()) {
+            return null;
+        }
+        if ($result->size() > 1) {
+            throw new \RuntimeException(sprintf('nativeQuery only allows single records'));
+        }
+        $record = $result->firstRecord();
+        if (!$record->hasValue($resultMapping->getRootIdentifier())) {
+            throw new \RuntimeException(sprintf('The record doesn\'t contain the value for the root identifier "%s", please check your query "%s"', $resultMapping->getRootIdentifier(), $statement->text()));
+        }
+
+        $rootInstance = $this->hydrate($record->get($resultMapping->getRootIdentifier()), false);
+
+        return $rootInstance;
+
+    }
+
     protected function hydrateResultSet(Result $result)
     {
         $entities = [];
@@ -180,25 +202,27 @@ class BaseRepository
         return $entities;
     }
 
-    protected function hydrate(Record $record)
+    protected function hydrate(Record $record, $andCheckAssociations = true)
     {
         $reflClass = new \ReflectionClass($this->className);
         $baseInstance = $this->hydrateNode($record->get('n'));
-        foreach ($this->classMetadata->getAssociations() as $key => $association) {
-            if (null !== $record->get($key)) {
-                if ($association->getCollection()) {
-                    foreach ($record->get($key) as $v) {
+        if ($andCheckAssociations) {
+            foreach ($this->classMetadata->getAssociations() as $key => $association) {
+                if (null !== $record->get($key)) {
+                    if ($association->getCollection()) {
+                        foreach ($record->get($key) as $v) {
+                            $property = $reflClass->getProperty($key);
+                            $property->setAccessible(true);
+                            $property->getValue($baseInstance)->add($this->hydrateNode($v));
+                        }
+                    } else {
                         $property = $reflClass->getProperty($key);
                         $property->setAccessible(true);
-                        $property->getValue($baseInstance)->add($this->hydrateNode($v));
+                        $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
+                        $relO = $hydrator->hydrateNode($record->get($key));
+                        $property->setValue($baseInstance, $relO);
+                        $this->setInversedAssociation($baseInstance, $relO, $key);
                     }
-                } else {
-                    $property = $reflClass->getProperty($key);
-                    $property->setAccessible(true);
-                    $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
-                    $relO = $hydrator->hydrateNode($record->get($key));
-                    $property->setValue($baseInstance, $relO);
-                    $this->setInversedAssociation($baseInstance, $relO, $key);
                 }
             }
         }
