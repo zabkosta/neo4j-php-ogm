@@ -20,7 +20,9 @@ class Manager
      */
     protected $uow;
 
-
+    /**
+     * @var \GraphAware\Neo4j\Client\Client
+     */
     protected $databaseDriver;
 
     protected $repositories = [];

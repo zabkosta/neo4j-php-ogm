@@ -20,6 +20,11 @@ class User
     protected $login;
 
     /**
+     * @OGM\Relationship(targetEntity="Company", type="WORKS_AT", direction="OUTGOING")
+     */
+    protected $currentCompany;
+
+    /**
      * @OGM\Property(type="int")
      */
     protected $age;
@@ -57,5 +62,15 @@ class User
     public function setAge($age)
     {
         $this->age = (int) $age;
+    }
+
+    public function setCurrentCompany(Company $company)
+    {
+        $this->currentCompany = $company;
+    }
+
+    public function getCurrentCompany()
+    {
+        return $this->currentCompany;
     }
 }

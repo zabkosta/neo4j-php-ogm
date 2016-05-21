@@ -39,6 +39,7 @@ class SingleEntityTest extends IntegrationTestCase
         $this->resetEm();
 
         $repository = $this->em->getRepository(User::class);
+        /** @var User $user */
         $user = $repository->findOneBy('login', 'neo');
 
         $this->assertEquals('neo', $user->getLogin());
@@ -54,7 +55,7 @@ class SingleEntityTest extends IntegrationTestCase
         $query = 'MATCH (n:User {login: "neo"}) RETURN n';
         $result = $this->client->run($query);
         $record = $result->records()[0];
-        $userNode = $record->value('n');
+        $userNode = $record->get('n');
         $this->assertFalse($userNode->hasValue('age'));
     }
 }
