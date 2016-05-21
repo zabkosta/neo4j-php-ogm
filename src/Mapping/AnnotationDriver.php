@@ -43,6 +43,7 @@ class AnnotationDriver
                 $metadata['relType'] = $annotation->getType();
             }
         }
+        print_r($metadata);
 
         if (!array_key_exists('type', $metadata)) {
             throw new \Exception(sprintf('The class %s is not a valid OGM entity', $class));
