@@ -271,6 +271,10 @@ class BaseRepository
             }
         }
 
+        if (!class_exists($className)) {
+            throw new \LogicException(sprintf('Guessed class name "%s" doesn\'t exist', $className));
+        }
+
         return $className;
     }
 }
