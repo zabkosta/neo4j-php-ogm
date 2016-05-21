@@ -11,11 +11,11 @@ use GraphAware\Neo4j\OGM\Persister\RelationshipPersister;
 
 class UnitOfWork
 {
-    const STATE_NEW = "STATE_NEW";
+    const STATE_NEW = 'STATE_NEW';
 
-    const STATE_MANAGED = "STATE_MANAGED";
+    const STATE_MANAGED = 'STATE_MANAGED';
 
-    const STATE_DELETED = "STATE_DELETED";
+    const STATE_DELETED = 'STATE_DELETED';
 
     protected $manager;
 
@@ -174,7 +174,6 @@ class UnitOfWork
             = $this->nodesScheduledForDelete
             = $this->relationshipsScheduledForCreated
             = array();
-
     }
 
     public function traverseRelationshipEntities($entity)
@@ -239,6 +238,7 @@ class UnitOfWork
 
     /**
      * @param int $id
+     *
      * @return object|null
      */
     public function getEntityById($id)
@@ -248,6 +248,7 @@ class UnitOfWork
 
     /**
      * @param $class
+     *
      * @return Persister\EntityPersister
      */
     public function getPersister($class)
@@ -262,6 +263,7 @@ class UnitOfWork
 
     /**
      * @param $class
+     *
      * @return \GraphAware\Neo4j\OGM\Persister\RelationshipEntityPersister
      */
     public function getRelationshipEntityPersister($class)

@@ -8,5 +8,4 @@ namespace GraphAware\Neo4j\OGM\Annotations;
  */
 class GraphId
 {
-
 }

@@ -27,7 +27,7 @@ class RelationshipPersister
         $relStringPart = sprintf($relString, $relationship->getType());
 
         $query = 'MATCH (a), (b) WHERE id(a) = {ida} AND id(b) = {idb}
-        MERGE (a)' . $relStringPart . '(b)
+        MERGE (a)'.$relStringPart.'(b)
         RETURN id(r)';
 
         return Statement::create($query, ['ida' => $entityIdA, 'idb' => $entityIdB]);

@@ -31,7 +31,7 @@ class AnnotationDriver
         $metadata = [
             'fields' => [],
             'associations' => [],
-            'relationshipEntities' => []
+            'relationshipEntities' => [],
         ];
 
         foreach ($classAnnotations as $annotation) {

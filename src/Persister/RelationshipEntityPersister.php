@@ -39,14 +39,14 @@ class RelationshipEntityPersister
 
         $relType = $this->classMetadata->getType();
 
-        $query = 'MATCH (a), (b) WHERE id(a) = {a} AND id(b) = {b}' . PHP_EOL;
-        $query .= sprintf('MERGE (a)-[r:%s]->(b) SET r += {fields}', $relType) . PHP_EOL;
+        $query = 'MATCH (a), (b) WHERE id(a) = {a} AND id(b) = {b}'.PHP_EOL;
+        $query .= sprintf('MERGE (a)-[r:%s]->(b) SET r += {fields}', $relType).PHP_EOL;
         $query .= 'RETURN id(r)';
 
         $parameters = [
             'a' => $startNodeId,
             'b' => $endNodeId,
-            'fields' => []
+            'fields' => [],
         ];
 
         foreach ($this->classMetadata->getFields() as $field => $annot) {
@@ -59,6 +59,5 @@ class RelationshipEntityPersister
         print_r($query);
 
         return Statement::create($query, $parameters);
-
     }
 }

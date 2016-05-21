@@ -26,14 +26,20 @@ class BaseRepository
      */
     protected $className;
 
+    /**
+     * @var \ReflectionClass
+     */
     protected $reflectionClass;
 
+    /**
+     * @var \ReflectionClass[]
+     */
     protected $loadedReflClasses = [];
 
     /**
      * @param \GraphAware\Neo4j\OGM\Metadata\ClassMetadata $classMetadata
-     * @param \GraphAware\Neo4j\OGM\Manager $manager
-     * @param string $className
+     * @param \GraphAware\Neo4j\OGM\Manager                $manager
+     * @param string                                       $className
      */
     public function __construct(ClassMetadata $classMetadata, Manager $manager, $className)
     {
@@ -42,6 +48,11 @@ class BaseRepository
         $this->className = $className;
     }
 
+    /**
+     * @return object[]
+     *
+     * @throws \GraphAware\Neo4j\Client\Exception\Neo4jException
+     */
     public function findAll()
     {
         $label = $this->classMetadata->getLabel();
@@ -62,7 +73,7 @@ class BaseRepository
 
             $relQueryPart = sprintf($relStr, $association->getType());
             $query .= PHP_EOL;
-            $query .= 'OPTIONAL MATCH (n)' . $relQueryPart . '(' . $identifier . ')';
+            $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$identifier.')';
         }
 
         $query .= PHP_EOL;
@@ -84,9 +95,16 @@ class BaseRepository
         $result = $this->manager->getDatabaseDriver()->run($query);
 
         return $this->hydrateResultSet($result);
-
     }
 
+    /**
+     * @param string $key
+     * @param mixed  $value
+     *
+     * @return object[]
+     *
+     * @throws \GraphAware\Neo4j\Client\Exception\Neo4jException
+     */
     public function findBy($key, $value)
     {
         $label = $this->classMetadata->getLabel();
@@ -107,7 +125,7 @@ class BaseRepository
 
             $relQueryPart = sprintf($relStr, $association->getType());
             $query .= PHP_EOL;
-            $query .= 'OPTIONAL MATCH (n)' . $relQueryPart . '(' . $identifier . ')';
+            $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$identifier.')';
         }
 
         $query .= PHP_EOL;
@@ -133,28 +151,36 @@ class BaseRepository
         return $this->hydrateResultSet($result);
     }
 
+    /**
+     * @param string $key
+     * @param mixed  $value
+     *
+     * @return null|object
+     *
+     * @throws \Exception
+     */
     public function findOneBy($key, $value)
     {
         $instances = $this->findBy($key, $value);
 
         if (count($instances) > 1) {
-            throw new \Exception('Expected only one result, got ' . count($instances));
+            throw new \Exception('Expected only one result, got '.count($instances));
         }
 
         return isset($instances[0]) ? $instances[0] : null;
     }
 
-    public function hydrateResultSet(Result $result)
+    protected function hydrateResultSet(Result $result)
     {
         $entities = [];
         foreach ($result->records() as $record) {
-                $entities[] = $this->hydrate($record);
+            $entities[] = $this->hydrate($record);
         }
 
         return $entities;
     }
 
-    public function hydrate(Record $record)
+    protected function hydrate(Record $record)
     {
         $reflClass = new \ReflectionClass($this->className);
         $baseInstance = $this->hydrateNode($record->get('n'));
@@ -180,12 +206,12 @@ class BaseRepository
         return $baseInstance;
     }
 
-    public function getHydrator($target)
+    protected function getHydrator($target)
     {
         return $this->manager->getRepository($target);
     }
 
-    public function hydrateNode(Node $node)
+    protected function hydrateNode(Node $node)
     {
         if ($entity = $this->manager->getUnitOfWork()->getEntityById($node->identity())) {
             return $entity;
@@ -221,12 +247,12 @@ class BaseRepository
         $property->setAccessible(true);
         $property->setValue($instance, $node->identity());
 
-        //$this->manager->getUnitOfWork()->addManaged($instance);
+        $this->manager->getUnitOfWork()->addManaged($instance);
 
         return $instance;
     }
 
-    public function setInversedAssociation($baseInstance, $otherInstance, $relationshipKey)
+    protected function setInversedAssociation($baseInstance, $otherInstance, $relationshipKey)
     {
         $assoc = $this->classMetadata->getAssociation($relationshipKey);
         if ($assoc->hasMappedBy()) {
@@ -248,11 +274,11 @@ class BaseRepository
 
     /**
      * @param $className
+     *
      * @return \ReflectionClass
      */
-    private function getReflectionClass($className)
+    protected function getReflectionClass($className)
     {
-
         if (!array_key_exists($className, $this->loadedReflClasses)) {
             $this->loadedReflClasses[$className] = new \ReflectionClass($className);
         }
@@ -260,14 +286,19 @@ class BaseRepository
         return $this->loadedReflClasses[$className];
     }
 
-    private function getTargetFullClassName($className)
+    /**
+     * @param $className
+     *
+     * @return string
+     */
+    protected function getTargetFullClassName($className)
     {
         $expl = explode('\\', $className);
         if (1 === count($expl)) {
             $expl2 = explode('\\', $this->className);
             if (1 !== count($expl2)) {
-                unset($expl2[count($expl2)-1]);
-                $className = implode('\\', $expl2) . '\\' . $className;
+                unset($expl2[count($expl2) - 1]);
+                $className = implode('\\', $expl2).'\\'.$className;
             }
         }
 

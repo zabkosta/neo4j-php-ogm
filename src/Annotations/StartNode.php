@@ -22,6 +22,4 @@ class StartNode
     {
         return $this->targetEntity;
     }
-
-
 }

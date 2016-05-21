@@ -111,6 +111,7 @@ class Manager
 
     /**
      * @param string $class
+     *
      * @return \GraphAware\Neo4j\OGM\Repository\BaseRepository
      */
     public function getRepository($class)

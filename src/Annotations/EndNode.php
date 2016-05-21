@@ -22,6 +22,4 @@ class EndNode
     {
         return $this->targetEntity;
     }
-
-
 }
