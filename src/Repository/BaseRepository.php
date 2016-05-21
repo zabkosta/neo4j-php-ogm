@@ -169,7 +169,7 @@ class BaseRepository
                 } else {
                     $property = $reflClass->getProperty($key);
                     $property->setAccessible(true);
-                    $hydrator = $this->getHydrator($association->getTargetEntity());
+                    $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
                     $relO = $hydrator->hydrateNode($record->value($key));
                     $property->setValue($baseInstance, $relO);
                     $this->setInversedAssociation($baseInstance, $relO, $key);
@@ -252,10 +252,25 @@ class BaseRepository
      */
     private function getReflectionClass($className)
     {
+
         if (!array_key_exists($className, $this->loadedReflClasses)) {
             $this->loadedReflClasses[$className] = new \ReflectionClass($className);
         }
 
         return $this->loadedReflClasses[$className];
+    }
+
+    private function getTargetFullClassName($className)
+    {
+        $expl = explode('\\', $className);
+        if (1 === count($expl)) {
+            $expl2 = explode('\\', $this->className);
+            if (1 !== count($expl2)) {
+                unset($expl2[count($expl2)-1]);
+                $className = implode('\\', $expl2) . '\\' . $className;
+            }
+        }
+
+        return $className;
     }
 }
