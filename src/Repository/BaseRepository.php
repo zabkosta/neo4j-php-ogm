@@ -159,9 +159,9 @@ class BaseRepository
         $reflClass = new \ReflectionClass($this->className);
         $baseInstance = $this->hydrateNode($record->get('n'));
         foreach ($this->classMetadata->getAssociations() as $key => $association) {
-            if (null !== $record->value($key)) {
+            if (null !== $record->get($key)) {
                 if ($association->getCollection()) {
-                    foreach ($record->value($key) as $v) {
+                    foreach ($record->get($key) as $v) {
                         $property = $reflClass->getProperty($key);
                         $property->setAccessible(true);
                         $property->getValue($baseInstance)->add($this->hydrateNode($v));
@@ -170,7 +170,7 @@ class BaseRepository
                     $property = $reflClass->getProperty($key);
                     $property->setAccessible(true);
                     $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
-                    $relO = $hydrator->hydrateNode($record->value($key));
+                    $relO = $hydrator->hydrateNode($record->get($key));
                     $property->setValue($baseInstance, $relO);
                     $this->setInversedAssociation($baseInstance, $relO, $key);
                 }
