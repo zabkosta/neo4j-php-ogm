@@ -16,6 +16,8 @@ class ClassMetadata
 
     protected $label;
 
+    protected $repository;
+
     public function __construct($type, $label, array $fields, array $associations, array $relEntities)
     {
         $this->type = $type;
@@ -111,5 +113,20 @@ class ClassMetadata
         }
 
         return $relatedObjects;
+    }
+
+    public function setRepositoryClass($class)
+    {
+        $this->repository = $class;
+    }
+
+    public function hasCustomRepository()
+    {
+        return null !== $this->repository;
+    }
+
+    public function getRepositoryClass()
+    {
+        return $this->repository;
     }
 }

@@ -10,6 +10,7 @@ use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
 use GraphAware\Neo4j\OGM\Annotations\StartNode;
 use GraphAware\Neo4j\OGM\Annotations\EndNode;
+use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 
 class AnnotationDriver
 {
@@ -38,12 +39,14 @@ class AnnotationDriver
             if ($annotation instanceof Node) {
                 $metadata['type'] = 'Node';
                 $metadata['label'] = $annotation->getLabel();
+                if ($annotation->hasCustomRepository()) {
+                    $metadata['repository'] = $this->getRepositoryFullClassName($annotation->getRepositoryClass(), $class);
+                }
             } elseif ($annotation instanceof RelationshipEntity) {
                 $metadata['type'] = 'RelationshipEntity';
                 $metadata['relType'] = $annotation->getType();
             }
         }
-        print_r($metadata);
 
         if (!array_key_exists('type', $metadata)) {
             throw new \Exception(sprintf('The class %s is not a valid OGM entity', $class));
@@ -68,5 +71,33 @@ class AnnotationDriver
         }
 
         return $metadata;
+    }
+
+    /**
+     * @param string $class
+     * @param string $pointOfView
+     * @return string
+     */
+    private function getRepositoryFullClassName($class, $pointOfView)
+    {
+        $expl = explode('\\', $class);
+        if (1 === count($expl)) {
+            $expl2 = explode('\\', $pointOfView);
+            if (1 !== count($expl2)) {
+                unset($expl2[count($expl2)-1]);
+                $class = sprintf('%s\\%s', implode('\\', $expl2), $class);
+            }
+        }
+
+        if (!class_exists($class)) {
+            throw new \RuntimeException(sprintf('The class "%s" could not be found', $class));
+        }
+
+        $reflClass = new \ReflectionClass($class);
+        if (!$reflClass->isSubclassOf(BaseRepository::class)) {
+            throw new \RuntimeException(sprintf('Custom repository class "%s" must extend "%s"', $class, BaseRepository::class));
+        }
+
+        return $class;
     }
 }

@@ -90,6 +90,9 @@ class Manager
     {
         $metadata = $this->annotationDriver->readAnnotations($class);
         $metadataClass = new ClassMetadata($metadata['type'], $metadata['label'], $metadata['fields'], $metadata['associations'], $metadata['relationshipEntities']);
+        if (array_key_exists('repository', $metadata)) {
+            $metadataClass->setRepositoryClass($metadata['repository']);
+        }
 
         return $metadataClass;
     }
@@ -118,7 +121,8 @@ class Manager
     {
         $classMetadata = $this->getClassMetadataFor($class);
         if (!array_key_exists($class, $this->repositories)) {
-            $this->repositories[$class] = new BaseRepository($classMetadata, $this, $class);
+            $repositoryClassName = $classMetadata->hasCustomRepository() ? $classMetadata->getRepositoryClass() : BaseRepository::class;
+            $this->repositories[$class] = new $repositoryClassName($classMetadata, $this, $class);
         }
 
         return $this->repositories[$class];
