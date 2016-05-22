@@ -12,6 +12,7 @@ use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
 use GraphAware\Neo4j\OGM\Query\ResultMapping;
+use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 class BaseRepository
 {
@@ -205,7 +206,7 @@ class BaseRepository
             }
             $value = null;
             if ($field->isEntity()) {
-                $value = $this->hydrate($record, false, $field->getFieldName());
+                $value = $this->hydrate($record, false, $field->getFieldName(), ClassUtils::getFullClassName($field->getTarget(), $resultMapper->getClassName()));
             } else {
                 $value = $record->get($field->getFieldName());
             }
@@ -227,10 +228,11 @@ class BaseRepository
         return $entities;
     }
 
-    protected function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n')
+    protected function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n', $className = null)
     {
-        $reflClass = new \ReflectionClass($this->className);
-        $baseInstance = $this->hydrateNode($record->get($identifier));
+        $classN = null !== $className ? $className : $this->className;
+        $reflClass = new \ReflectionClass($classN);
+        $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
         if ($andCheckAssociations) {
             foreach ($this->classMetadata->getAssociations() as $key => $association) {
                 if (null !== $record->get($key)) {
@@ -260,14 +262,16 @@ class BaseRepository
         return $this->manager->getRepository($target);
     }
 
-    protected function hydrateNode(Node $node)
+    protected function hydrateNode(Node $node, $className = null)
     {
         if ($entity = $this->manager->getUnitOfWork()->getEntityById($node->identity())) {
             return $entity;
         }
-        $reflClass = $this->getReflectionClass($this->className);
+        $cl = $className !== null ? $className : $this->className;
+        $reflClass = $this->getReflectionClass($cl);
         $instance = $reflClass->newInstanceWithoutConstructor();
-        foreach ($this->classMetadata->getFields() as $field => $meta) {
+        $cm = $this->manager->getClassMetadataFor($cl);
+        foreach ($cm->getFields() as $field => $meta) {
             if ($node->hasValue($field)) {
                 if ($property = $reflClass->getProperty($field)) {
                     $property->setAccessible(true);
