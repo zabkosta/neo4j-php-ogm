@@ -108,7 +108,7 @@ class ClassMetadata
             $property->setAccessible(true);
             $value = $property->getValue($entity);
             if (null !== $value) {
-                $relatedObjects[] = [$assoc, $value];
+                $relatedObjects[] = [$assoc, $value, $property->getName()];
             }
         }
 

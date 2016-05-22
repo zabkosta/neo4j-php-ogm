@@ -35,6 +35,8 @@ class UnitOfWork
 
     protected $relationshipsScheduledForCreated = [];
 
+    protected $relationshipsScheduledForDelete = [];
+
     protected $relEntitiesScheduledForCreate = [];
 
     protected $relEntitiesById = [];
@@ -48,6 +50,8 @@ class UnitOfWork
     protected $relationshipPersister;
 
     protected $entitiesById = [];
+
+    protected $managedRelationshipReferences = [];
 
     public function __construct(Manager $manager)
     {
@@ -99,23 +103,24 @@ class UnitOfWork
         foreach ($associations as $association) {
             if (is_array($association[1]) || $association[1] instanceof ArrayCollection) {
                 foreach ($association[1] as $assoc) {
-                    $this->persistRelationship($entity, $association[0], $assoc, $visited);
+                    $this->persistRelationship($entity, $association[0], $assoc, $association[2], $visited);
                 }
             } else {
-                $this->persistRelationship($entity, $association[0], $association[1], $visited);
+                $this->persistRelationship($entity, $association[0], $association[1], $association[2], $visited);
             }
         }
     }
 
-    public function persistRelationship($entityA, Relationship $relationship, $entityB, array &$visited)
+    public function persistRelationship($entityA, Relationship $relationship, $entityB, $field, array &$visited)
     {
         $oid = spl_object_hash($entityB);
         $this->doPersist($entityB, $visited);
-        $this->relationshipsScheduledForCreated[] = [$entityA, $relationship, $entityB];
+        $this->relationshipsScheduledForCreated[] = [$entityA, $relationship, $entityB, $field];
     }
 
     public function flush()
     {
+        $this->checkRelationshipReferencesHaveChanged();
         $statements = [];
 
         foreach ($this->nodesScheduledForCreate as $nodeToCreate) {
@@ -137,6 +142,7 @@ class UnitOfWork
             $oid = $result->statement()->getTag();
             $gid = $result->records()[0]->value('id');
             $this->hydrateGraphId($oid, $gid);
+            $this->entitiesById[$gid] = $this->nodesScheduledForCreate[$oid];
             $this->entityIds[$oid] = $gid;
             $this->entityStates[$oid] = self::STATE_MANAGED;
         }
@@ -150,8 +156,14 @@ class UnitOfWork
             );
             $relStack->push($statement->text(), $statement->parameters());
         }
-        $results = $tx->runStack($relStack);
 
+        if (count($this->relationshipsScheduledForDelete) > 0) {
+            foreach ($this->relationshipsScheduledForDelete as $toDelete) {
+                $statement = $this->relationshipPersister->getDeleteRelationshipQuery($toDelete[0], $toDelete[1], $toDelete[2]);
+                $relStack->push($statement->text(), $statement->parameters());
+            }
+        }
+        $tx->runStack($relStack);
         $reStack = Stack::create('rel_entity_create');
         foreach ($this->relEntitiesScheduledForCreate as $oid => $entity) {
             $rePersister = $this->getRelationshipEntityPersister(get_class($entity));
@@ -169,11 +181,62 @@ class UnitOfWork
 
         $tx->commit();
 
+        foreach ($this->relationshipsScheduledForCreated as $rel) {
+            $aoid = spl_object_hash($rel[0]);
+            $boid = spl_object_hash($rel[2]);
+            $field = $rel[3];
+            $this->managedRelationshipReferences[$aoid][$field][] = [
+                'entity' => $aoid,
+                'target' => $boid,
+                'rel' => $rel[1]
+            ];
+        }
+
         $this->nodesScheduledForCreate
             = $this->nodesScheduledForUpdate
             = $this->nodesScheduledForDelete
             = $this->relationshipsScheduledForCreated
+            = $this->relationshipsScheduledForDelete
             = array();
+    }
+
+    public function checkRelationshipReferencesHaveChanged()
+    {
+        foreach ($this->managedRelationshipReferences as $oid => $reference) {
+            $entity = $this->entitiesById[$this->entityIds[$oid]];
+            $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
+            $reflO = new \ReflectionObject($entity);
+            foreach ($reference as $field => $info) {
+                $property = $reflO->getProperty($field);
+                $property->setAccessible(true);
+                $value = $property->getValue($entity);
+                if (is_array($value) || $value instanceof ArrayCollection) {
+                    if (count($value) < count($info)) {
+                        foreach ($info as $ref) {
+                            $target = $this->entitiesById[$this->entityIds[$ref['target']]];
+                            $toBeDeleted = null;
+                            if (is_array($value)) {
+                                if (!in_array($target, $value)) {
+                                    $toBeDeleted = $target;
+                                }
+                            } elseif($value instanceof ArrayCollection) {
+                                if (!$value->contains($target)) {
+                                    $toBeDeleted = $target;
+                                }
+                            }
+                            if (null !== $toBeDeleted) {
+                                $this->scheduleRelationshipReferenceForDelete($entity, $toBeDeleted, $ref['rel']);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public function scheduleRelationshipReferenceForDelete($entity, $target, Relationship $relationship)
+    {
+        $this->relationshipsScheduledForDelete[] = [$entity->getId(), $target->getId(), $relationship];
     }
 
     public function traverseRelationshipEntities($entity)

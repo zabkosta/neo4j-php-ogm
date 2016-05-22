@@ -25,8 +25,10 @@ class Relationship
 
     /**
      * @var string
+     *
+     * @Enum({"OUTGOING","INCOMING"})
      */
-    protected $direction;
+    public $direction;
 
     /**
      * @var string

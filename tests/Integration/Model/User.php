@@ -2,6 +2,7 @@
 
 namespace GraphAware\Neo4j\OGM\Tests\Integration\Model;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
@@ -25,6 +26,12 @@ class User
     protected $currentCompany;
 
     /**
+     * @OGM\Relationship(targetEntity="User", type="FOLLOWS", direction="OUTGOING", collection=true)
+     * @var User[]
+     */
+    protected $friends;
+
+    /**
      * @OGM\Property(type="int")
      */
     protected $age;
@@ -33,6 +40,7 @@ class User
     {
         $this->login = $login;
         $this->age = $age;
+        $this->friends = new ArrayCollection();
     }
 
     /**
@@ -72,5 +80,13 @@ class User
     public function getCurrentCompany()
     {
         return $this->currentCompany;
+    }
+
+    /**
+     * @return \Doctrine\Common\Collections\ArrayCollection|\GraphAware\Neo4j\OGM\Tests\Integration\Model\User[]
+     */
+    public function getFriends()
+    {
+        return $this->friends;
     }
 }

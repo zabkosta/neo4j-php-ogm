@@ -54,9 +54,38 @@ class RelationshipIntegrationTest extends IntegrationTestCase
         $this->assertInstanceOf(Company::class, $user->getCurrentCompany());
     }
 
+    /**
+     * @group rel-ref
+     */
+    public function testRelatedEntitiesCanBeRemoved()
+    {
+        $user = new User('ikwattro');
+        $user2 = new User('alenegro81');
+        $user3 = new User('jexp');
+        $user->getFriends()->add($user2);
+        $user->getFriends()->add($user3);
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->assertGraphExist('(u:User {login:"ikwattro"})-[r:FOLLOWS]->(o:User {login:"alenegro81"})');
+        $this->assertGraphExist('(u:User {login:"ikwattro"})-[r:FOLLOWS]->(o:User {login:"jexp"})');
+        $user->getFriends()->removeElement($user2);
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->assertGraphNotExist('(u:User {login:"ikwattro"})-[r:FOLLOWS]->(o:User {login:"alenegro81"})');
+    }
+
+    private function assertGraphNotExist($q)
+    {
+        $this->assertTrue($this->checkGraph($q)->size() < 1);
+    }
+
     private function assertGraphExist($q)
     {
-        $result = $this->client->run('MATCH ' . $q . ' RETURN *');
-        $this->assertTrue($result->size() > 0);
+        $this->assertTrue($this->checkGraph($q)->size() > 0);
+    }
+
+    private function checkGraph($q)
+    {
+        return $this->client->run('MATCH ' . $q . ' RETURN *');
     }
 }
