@@ -9,6 +9,8 @@ use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
 use GraphAware\Neo4j\OGM\Manager;
 use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
+use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
+use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
 use GraphAware\Neo4j\OGM\Query\ResultMapping;
 
 class BaseRepository
@@ -172,24 +174,47 @@ class BaseRepository
         return isset($instances[0]) ? $instances[0] : null;
     }
 
-    protected function nativeQuery(Statement $statement, ResultMapping $resultMapping)
+    protected function nativeQuery($query, $parameters = null, QueryResultMapping $resultMapping)
     {
-        $result = $this->manager->getDatabaseDriver()->run($statement->text(), $statement->parameters(), $statement->getTag());
-        if (0 === $result->size()) {
+        $parameters = null !== $parameters ? (array) $parameters : array();
+        $result = $this->manager->getDatabaseDriver()->run($query, $parameters);
+        if ($result->size() < 1) {
             return null;
         }
-        if ($result->size() > 1) {
-            throw new \RuntimeException(sprintf('nativeQuery only allows single records'));
-        }
-        $record = $result->firstRecord();
-        if (!$record->hasValue($resultMapping->getRootIdentifier())) {
-            throw new \RuntimeException(sprintf('The record doesn\'t contain the value for the root identifier "%s", please check your query "%s"', $resultMapping->getRootIdentifier(), $statement->text()));
+
+        if ($result->size() > 1 && $resultMapping->getQueryResultType() !== QueryResultMapping::RESULT_MULTIPLE) {
+            throw new \RuntimeException(sprintf('Expected a single record, got %d', $result->size()));
         }
 
-        $rootInstance = $this->hydrate($record->get($resultMapping->getRootIdentifier()), false);
+        $results = [];
+        $mappingMetadata = $this->manager->getResultMappingMetadata($resultMapping->getQueryResultClass());
+        foreach ($result->records() as $record) {
+            $results[] = $this->hydrateQueryRecord($mappingMetadata, $record);
+        }
 
-        return $rootInstance;
+        return $resultMapping->getQueryResultType() === QueryResultMapping::RESULT_SINGLE ? $results[0] : $results;
+    }
 
+    protected function hydrateQueryRecord(QueryResultMapper $resultMapper, Record $record)
+    {
+        $reflClass = new \ReflectionClass($resultMapper->getClassName());
+        $instance = $reflClass->newInstanceWithoutConstructor();
+        foreach ($resultMapper->getFields() as $field) {
+            if (!$record->hasValue($field->getFieldName())) {
+                throw new \RuntimeException(sprintf('The record doesn\'t contain the required field "%s"', $field->getFieldName()));
+            }
+            $value = null;
+            if ($field->isEntity()) {
+                $value = $this->hydrate($record, false, $field->getFieldName());
+            } else {
+                $value = $record->get($field->getFieldName());
+            }
+            $property = $reflClass->getProperty($field->getFieldName());
+            $property->setAccessible(true);
+            $property->setValue($instance, $value);
+        }
+
+        return $instance;
     }
 
     protected function hydrateResultSet(Result $result)
@@ -202,10 +227,10 @@ class BaseRepository
         return $entities;
     }
 
-    protected function hydrate(Record $record, $andCheckAssociations = true)
+    protected function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n')
     {
         $reflClass = new \ReflectionClass($this->className);
-        $baseInstance = $this->hydrateNode($record->get('n'));
+        $baseInstance = $this->hydrateNode($record->get($identifier));
         if ($andCheckAssociations) {
             foreach ($this->classMetadata->getAssociations() as $key => $association) {
                 if (null !== $record->get($key)) {

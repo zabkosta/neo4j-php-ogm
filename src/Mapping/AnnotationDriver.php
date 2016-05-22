@@ -4,13 +4,17 @@ namespace GraphAware\Neo4j\OGM\Mapping;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\FileCacheReader;
+use GraphAware\Neo4j\OGM\Annotations\MappedResult;
 use GraphAware\Neo4j\OGM\Annotations\Node;
 use GraphAware\Neo4j\OGM\Annotations\Property;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
 use GraphAware\Neo4j\OGM\Annotations\StartNode;
 use GraphAware\Neo4j\OGM\Annotations\EndNode;
+use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
+use GraphAware\Neo4j\OGM\Metadata\ResultField;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
+use GraphAware\Neo4j\OGM\Annotations\QueryResult;
 
 class AnnotationDriver
 {
@@ -23,6 +27,33 @@ class AnnotationDriver
             sys_get_temp_dir(),
             $debug = true
         );
+    }
+
+    public function readQueryResult($class)
+    {
+        $reflClass = new \ReflectionClass($class);
+        $classAnnotations = $this->reader->getClassAnnotations($reflClass);
+        $isQueryResult = false;
+        foreach ($classAnnotations as $classAnnotation) {
+            if ($classAnnotation instanceof QueryResult) {
+                $isQueryResult = true;
+            }
+        }
+        if (!$isQueryResult) {
+            throw new \RuntimeException(sprintf('The class "%s" is not a valid QueryResult entity', $class));
+        }
+
+        $queryResultMapper = new QueryResultMapper($class);
+
+        foreach ($reflClass->getProperties() as $property) {
+            foreach ($this->reader->getPropertyAnnotations($property) as $propertyAnnotation) {
+                if ($propertyAnnotation instanceof MappedResult) {
+                    $queryResultMapper->addField(new ResultField($property->getName(), $propertyAnnotation->type, $propertyAnnotation->target));
+                }
+            }
+        }
+
+        return $queryResultMapper;
     }
 
     public function readAnnotations($class)

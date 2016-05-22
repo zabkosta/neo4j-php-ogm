@@ -5,8 +5,10 @@ namespace GraphAware\Neo4j\OGM;
 use GraphAware\Neo4j\OGM\Mapping\AnnotationDriver;
 use GraphAware\Neo4j\Client\Client;
 use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
+use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
+use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 class Manager
 {
@@ -26,6 +28,11 @@ class Manager
     protected $databaseDriver;
 
     protected $repositories = [];
+
+    /**
+     * @var QueryResultMapper[]
+     */
+    protected $resultMappers = [];
 
     public function __construct(Client $databaseDriver)
     {
@@ -77,6 +84,21 @@ class Manager
     public function getDatabaseDriver()
     {
         return $this->databaseDriver;
+    }
+
+    public function getResultMappingMetadata($class)
+    {
+        if (!array_key_exists($class, $this->resultMappers)) {
+            $this->resultMappers[$class] = $this->annotationDriver->readQueryResult($class);
+            foreach ($this->resultMappers[$class]->getFields() as $field) {
+                if ($field->isEntity()) {
+                    $targetFQDN = ClassUtils::getFullClassName($field->getTarget(), $class);
+                    $field->setMetadata($this->getClassMetadataFor($targetFQDN));
+                }
+            }
+        }
+
+        return $this->resultMappers[$class];
     }
 
     /**

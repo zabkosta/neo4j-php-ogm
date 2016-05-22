@@ -1,0 +1,68 @@
+<?php
+
+namespace GraphAware\Neo4j\OGM\Metadata;
+
+class ResultField
+{
+    const FIELD_TYPE_ENTITY = 'ENTITY';
+
+    protected $fieldName;
+
+    protected $fieldType;
+
+    protected $target;
+
+    /**
+     * @var null|\GraphAware\Neo4j\OGM\Metadata\ClassMetadata
+     */
+    protected $targetMetadata;
+
+    public function __construct($fieldName, $fieldType, $target)
+    {
+        $this->fieldName = $fieldName;
+        $this->fieldType = $fieldType;
+        $this->target = $target;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getFieldName()
+    {
+        return $this->fieldName;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getFieldType()
+    {
+        return $this->fieldType;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTarget()
+    {
+        return $this->target;
+    }
+
+    public function isEntity()
+    {
+        return $this->fieldType === self::FIELD_TYPE_ENTITY;
+    }
+
+    public function setMetadata(ClassMetadata $metadata)
+    {
+        $this->targetMetadata = $metadata;
+    }
+
+    /**
+     * @return \GraphAware\Neo4j\OGM\Metadata\ClassMetadata|null
+     */
+    public function getTargetMetadata()
+    {
+        return $this->targetMetadata;
+    }
+}
