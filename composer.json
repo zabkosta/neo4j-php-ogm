@@ -7,8 +7,10 @@
         "graph",
         "ogm",
         "mapper",
+        "mapping",
         "annotations",
-        "database"
+        "database",
+        "cypher"
     ],
     "homepage": "https://github.com/graphaware/neo4j-php-ogm",
     "authors": [
