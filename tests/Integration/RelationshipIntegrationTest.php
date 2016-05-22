@@ -72,6 +72,38 @@ class RelationshipIntegrationTest extends IntegrationTestCase
         $this->em->persist($user);
         $this->em->flush();
         $this->assertGraphNotExist('(u:User {login:"ikwattro"})-[r:FOLLOWS]->(o:User {login:"alenegro81"})');
+        $this->em->clear();
+        $ikwattro = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
+        $this->assertCount(1, $ikwattro->getFriends());
+    }
+
+    /**
+     * @group rel-ref
+     */
+    public function testRelatedEntitiesFetchedCanBeRemoved()
+    {
+        $user = new User('ikwattro');
+        $user2 = new User('jexp');
+        $user3 = new User('michal');
+        $user->getFriends()->add($user2);
+        $user->getFriends()->add($user3);
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->assertGraphExist('(u:User {login:"ikwattro"})-[r:FOLLOWS]->(o:User {login:"michal"})');
+        $this->assertGraphExist('(u:User {login:"ikwattro"})-[r:FOLLOWS]->(o:User {login:"jexp"})');
+        $this->em->clear();
+        /** @var User $ikwattro */
+        $ikwattro = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
+        $this->assertInstanceOf(User::class, $ikwattro);
+        $this->assertCount(2, $ikwattro->getFriends());
+        foreach ($ikwattro->getFriends() as $friend) {
+            if ($friend->getLogin() === 'jexp') {
+                $ikwattro->getFriends()->removeElement($friend);
+            }
+        }
+        $this->assertCount(1, $ikwattro->getFriends());
+        $this->em->flush();
+        $this->assertGraphNotExist('(u:User {login:"ikwattro"})-[r:FOLLOWS]->(o:User {login:"jexp"})');
     }
 
     private function assertGraphNotExist($q)

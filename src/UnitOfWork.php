@@ -200,6 +200,17 @@ class UnitOfWork
             = array();
     }
 
+    public function addManagedRelationshipReference($entityA, $entityB, $field, Relationship $relationship)
+    {
+        $aoid = spl_object_hash($entityA);
+        $boid = spl_object_hash($entityB);
+        $this->managedRelationshipReferences[$aoid][$field][] = [
+            'entity' => $aoid,
+            'target' => $boid,
+            'rel' => $relationship
+        ];
+    }
+
     public function checkRelationshipReferencesHaveChanged()
     {
         foreach ($this->managedRelationshipReferences as $oid => $reference) {

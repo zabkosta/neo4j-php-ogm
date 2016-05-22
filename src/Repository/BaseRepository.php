@@ -240,7 +240,9 @@ class BaseRepository
                         foreach ($record->get($key) as $v) {
                             $property = $reflClass->getProperty($key);
                             $property->setAccessible(true);
-                            $property->getValue($baseInstance)->add($this->hydrateNode($v));
+                            $v = $this->hydrateNode($v);
+                            $property->getValue($baseInstance)->add($v);
+                            $this->manager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v, $property->getName(), $association);
                         }
                     } else {
                         $property = $reflClass->getProperty($key);
