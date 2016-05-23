@@ -14,11 +14,6 @@ use GraphAware\Neo4j\OGM\Util\ClassUtils;
 class Manager
 {
     /**
-     * @var \GraphAware\Neo4j\OGM\Mapping\AnnotationDriver
-     */
-    protected $annotationDriver;
-
-    /**
      * @var \GraphAware\Neo4j\OGM\UnitOfWork
      */
     protected $uow;
@@ -28,12 +23,25 @@ class Manager
      */
     protected $databaseDriver;
 
+    /**
+     * @var \GraphAware\Neo4j\OGM\Repository\BaseRepository[]
+     */
     protected $repositories = [];
 
     /**
      * @var QueryResultMapper[]
      */
     protected $resultMappers = [];
+
+    public static function create($host, $cacheDir = null)
+    {
+        $cache = $cacheDir ? : sys_get_temp_dir();
+        $client = ClientBuilder::create()
+            ->addConnection('default', $host)
+            ->build();
+
+        return new self($client, $cache);
+    }
 
     /**
      * @param string $host
@@ -49,9 +57,9 @@ class Manager
         return new self($client);
     }
 
-    public function __construct(Client $databaseDriver)
+    public function __construct(Client $databaseDriver, $cacheDirectory = null)
     {
-        $this->annotationDriver = new AnnotationDriver();
+        $this->annotationDriver = new AnnotationDriver($cacheDirectory);
         $this->uow = new UnitOfWork($this);
         $this->databaseDriver = $databaseDriver;
     }

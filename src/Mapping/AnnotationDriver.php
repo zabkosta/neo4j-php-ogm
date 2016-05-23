@@ -24,11 +24,12 @@ class AnnotationDriver
 
     public function __construct($cacheDirectory = null)
     {
+        $cacheDir = $cacheDirectory ? : sys_get_temp_dir();
         AnnotationRegistry::registerFile(__DIR__.'/Neo4jOGMAnnotations.php');
         $reader = new AnnotationReader();
         $this->reader = new FileCacheReader(
             $reader,
-            sys_get_temp_dir(),
+            $cacheDir,
             $debug = true
         );
     }
@@ -91,9 +92,9 @@ class AnnotationDriver
             foreach ($this->reader->getPropertyAnnotations($property) as $propertyAnnotation) {
                 if ($propertyAnnotation instanceof Property) {
                     $metadata['fields'][$property->getName()] = $propertyAnnotation;
-                } elseif ($propertyAnnotation instanceof Relationship && !$propertyAnnotation->isRelationshipEntity()) {
+                } elseif ($propertyAnnotation instanceof Relationship && null !== $propertyAnnotation->getTargetEntity()) {
                     $metadata['associations'][$property->getName()] = $propertyAnnotation;
-                } elseif ($propertyAnnotation instanceof Relationship && $propertyAnnotation->isRelationshipEntity()) {
+                } elseif ($propertyAnnotation instanceof Relationship && null === $propertyAnnotation->getTargetEntity()) {
                     $metadata['relationshipEntities'][$property->getName()] = $propertyAnnotation;
                 } elseif ($propertyAnnotation instanceof StartNode) {
                     $metadata['start_node'] = $propertyAnnotation;

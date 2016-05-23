@@ -16,7 +16,7 @@ class Relationship
     /**
      * @var string
      */
-    protected $relationshipEntity;
+    public $relationshipEntity;
 
     /**
      * @var string
@@ -65,6 +65,11 @@ class Relationship
         if (isset($values['mappedBy'])) {
             $this->mappedBy = $values['mappedBy'];
         }
+
+        if (isset($values['relationshipEntity'])) {
+            $this->relationshipEntity = $values['relationshipEntity'];
+        }
+
     }
 
     /**

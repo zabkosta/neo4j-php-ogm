@@ -19,11 +19,8 @@ class IntegrationTestCase extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->client = ClientBuilder::create()
-            ->addConnection('default', 'http://localhost:7474')
-            ->build();
-
-        $this->em = new Manager($this->client);
+        $this->em = Manager::create('http://localhost:7474', __DIR__.'/../../_var/cache');
+        $this->client = $this->em->getDatabaseDriver();
     }
 
     public function clearDb()

@@ -14,6 +14,11 @@ class RelationshipEntity
     protected $type;
 
     /**
+     * @Enum({"INCOMING","OUTGOING"})
+     */
+    public $direction;
+
+    /**
      * @param array $values
      */
     public function __construct(array $values)

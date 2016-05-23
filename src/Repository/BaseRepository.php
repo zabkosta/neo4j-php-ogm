@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Common\Result\Record;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
+use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Manager;
 use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
@@ -115,21 +116,22 @@ class BaseRepository
         $label = $this->classMetadata->getLabel();
         $idId = $isId ? 'id(n)' : sprintf('n.%s', $key);
         $query = sprintf('MATCH (n:%s) WHERE %s = {%s}', $label, $idId, $key);
-
-        foreach ($this->classMetadata->getAssociations() as $identifier => $association) {
+        /** @var Relationship[] $associations */
+        $associations = array_merge($this->classMetadata->getAssociations(), $this->classMetadata->getRelationshipEntities());
+        foreach ($associations as $identifier => $association) {
             switch ($association->getDirection()) {
                 case 'INCOMING':
-                    $relStr = '<-[:%s]-';
+                    $relStr = '<-[rel_%s:%s]-';
                     break;
                 case 'OUTGOING':
-                    $relStr = '-[:%s]->';
+                    $relStr = '-[rel_%s:%s]->';
                     break;
                 default:
-                    $relStr = '-[:%s]-';
+                    $relStr = '-[rel_%s:%s]-';
                     break;
             }
 
-            $relQueryPart = sprintf($relStr, $association->getType());
+            $relQueryPart = sprintf($relStr, strtolower($association->getType()), $association->getType());
             $query .= PHP_EOL;
             $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$identifier.')';
         }
@@ -145,7 +147,14 @@ class BaseRepository
             }
         }
 
-        if (count($this->classMetadata->getAssociations()) > 0) {
+        foreach ($this->classMetadata->getRelationshipEntities() as $relationshipEntity) {
+            $relid = 'rel_'.strtolower($relationshipEntity->getType());
+            if ($relationshipEntity->getCollection()) {
+                $assocReturns[] = sprintf('collect({start:startNode(%s), end:endNode(%s), rel:%s}) as %s',$relid, $relid, $relid, $relid);
+            }
+        }
+
+        if (count($associations) > 0) {
             $query .= ', ';
             $query .= implode(', ', $assocReturns);
         }
@@ -243,23 +252,72 @@ class BaseRepository
         $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
         if ($andCheckAssociations) {
             foreach ($this->classMetadata->getAssociations() as $key => $association) {
-                if ($record->hasValue($key) && null !== $record->get($key)) {
-                    if ($association->getCollection()) {
-                        foreach ($record->get($key) as $v) {
+                if (!$association->isRelationshipEntity()) {
+                    if ($record->hasValue($key) && null !== $record->get($key)) {
+                        if ($association->getCollection()) {
+                            foreach ($record->get($key) as $v) {
+                                $property = $reflClass->getProperty($key);
+                                $property->setAccessible(true);
+                                $v2 = $this->hydrateNode($v, $this->getTargetFullClassName($association->getTargetEntity()));
+                                $property->getValue($baseInstance)->add($v2);
+                                $this->manager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $property->getName(), $association);
+                            }
+                        } else {
                             $property = $reflClass->getProperty($key);
                             $property->setAccessible(true);
-                            $v2 = $this->hydrateNode($v, $this->getTargetFullClassName($association->getTargetEntity()));
-                            $property->getValue($baseInstance)->add($v2);
-                            $this->manager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $property->getName(), $association);
+                            $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
+                            $relO = $hydrator->hydrateNode($record->get($key));
+                            $property->setValue($baseInstance, $relO);
+                            $this->setInversedAssociation($baseInstance, $relO, $key);
                         }
-                    } else {
-                        $property = $reflClass->getProperty($key);
-                        $property->setAccessible(true);
-                        $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
-                        $relO = $hydrator->hydrateNode($record->get($key));
-                        $property->setValue($baseInstance, $relO);
-                        $this->setInversedAssociation($baseInstance, $relO, $key);
                     }
+                }
+            }
+
+            foreach ($this->classMetadata->getRelationshipEntities() as $key => $relationshipEntity) {
+                $recordKey = 'rel_'.strtolower($relationshipEntity->getType());
+                if (null === $record->get($recordKey) || empty($record->get($recordKey))) {
+                    continue;
+                }
+                $class = $this->getTargetFullClassName($relationshipEntity->getRelationshipEntity());
+                $reMetadata = $this->manager->getRelationshipEntityMetadata($class);
+                $startNodeClass = $this->getTargetFullClassName($reMetadata->getStartNode()->getTargetEntity());
+                $endNodeClass = $this->getTargetFullClassName($reMetadata->getEndNode()->getTargetEntity());
+                $reReflClass = new \ReflectionClass($class);
+                if ($relationshipEntity->getCollection()) {
+                    $v = new ArrayCollection();
+                    if (!is_array($record->get($recordKey))) {
+                        throw new \LogicException('Expected array record value');
+                    }
+                    foreach ($record->get($recordKey) as $reMap) {
+                        $reInstance = $reReflClass->newInstanceWithoutConstructor();
+                        $start = $this->hydrateNode($reMap['start'], $startNodeClass);
+                        $end = $this->hydrateNode($reMap['end'], $endNodeClass);
+                        /** @var \GraphAware\Neo4j\Client\Formatter\Type\Relationship $rel */
+                        $rel = $reMap['rel'];
+                        $relId = $rel->identity();
+                        $startProperty = $reReflClass->getProperty($reMetadata->getStartNodeKey());
+                        $startProperty->setAccessible(true);
+                        $startProperty->setValue($reInstance, $start);
+                        $endProperty = $reReflClass->getProperty($reMetadata->getEndNodeKey());
+                        $endProperty->setAccessible(true);
+                        $endProperty->setValue($reInstance, $end);
+                        $v->add($reInstance);
+                        $relIdProperty = $reReflClass->getProperty('id');
+                        $relIdProperty->setAccessible(true);
+                        $relIdProperty->setValue($reInstance, $relId);
+                        foreach ($reMetadata->getFields() as $fkp => $field) {
+                            if ($rel->hasValue($fkp)) {
+                                $fp = $reReflClass->getProperty($fkp);
+                                $fp->setAccessible(true);
+                                $fp->setValue($reInstance, $rel->get($fkp));
+                            }
+
+                        }
+                    }
+                    $reP = $reflClass->getProperty($key);
+                    $reP->setAccessible(true);
+                    $reP->setValue($baseInstance, $v);
                 }
             }
         }

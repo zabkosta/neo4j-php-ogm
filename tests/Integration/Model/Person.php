@@ -23,4 +23,9 @@ class Person
      * @OGM\Property(type="int")
      */
     public $born;
+
+    /**
+     * @OGM\Relationship(relationshipEntity="Role", direction="OUTGOING", type="ACTED_IN", collection=true)
+     */
+    public $roles;
 }
