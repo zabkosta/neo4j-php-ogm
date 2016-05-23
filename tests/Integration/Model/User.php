@@ -96,6 +96,11 @@ class User
         return $this->friends;
     }
 
+    public function setInactive()
+    {
+        $this->isActive = false;
+    }
+
     public function setActive()
     {
         $this->isActive = true;

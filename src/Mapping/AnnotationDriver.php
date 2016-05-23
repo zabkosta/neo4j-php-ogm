@@ -15,6 +15,7 @@ use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\ResultField;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Annotations\QueryResult;
+use GraphAware\Neo4j\OGM\Annotations\Label;
 
 class AnnotationDriver
 {
@@ -97,6 +98,8 @@ class AnnotationDriver
                 } elseif ($propertyAnnotation instanceof EndNode) {
                     $metadata['end_node'] = $propertyAnnotation;
                     $metadata['end_node_key'] = $property->getName();
+                } elseif ($propertyAnnotation instanceof Label) {
+                    $metadata['fields'][$property->getName()] = $propertyAnnotation;
                 }
             }
         }

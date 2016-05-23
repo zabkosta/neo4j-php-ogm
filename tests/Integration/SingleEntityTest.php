@@ -58,4 +58,32 @@ class SingleEntityTest extends IntegrationTestCase
         $userNode = $record->get('n');
         $this->assertFalse($userNode->hasValue('age'));
     }
+
+    /**
+     * @group label
+     */
+    public function testExtraLabelsCanBeAdded()
+    {
+        $user = new User('ikwattro');
+        $user->setActive();
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->assertGraphExist('(u:User:Active {login:"ikwattro"})');
+    }
+
+    /**
+     * @group label
+     */
+    public function testExtraLabelsCanBeRemoved()
+    {
+        $user = new User('ikwattro');
+        $user->setActive();
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->assertGraphExist('(u:User:Active {login:"ikwattro"})');
+        $user->setInactive();
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->assertGraphNotExist('(u:User:Active {login:"ikwattro"})');
+    }
 }
