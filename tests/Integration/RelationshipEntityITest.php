@@ -4,6 +4,8 @@ namespace GraphAware\Neo4j\Client\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Role;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 
 /**
  * Class RelationshipEntityITest
@@ -22,7 +24,12 @@ class RelationshipEntityITest extends IntegrationTestCase
     public function testRelationshipEntitesAreRetrieved()
     {
         $tom = $this->getPerson('Tom Hanks');
-        print_r($tom);
+        foreach ($tom->roles as $role) {
+            $this->assertInstanceOf(Role::class, $role);
+            $this->assertEquals($tom->id, $role->getActor()->getId());
+            $this->assertInstanceOf(Movie::class, $role->getMovie());
+            $this->assertInternalType('array', $role->getRoles());
+        }
     }
 
     /**

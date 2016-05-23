@@ -28,4 +28,38 @@ class Role
      * @OGM\Property(type="array")
      */
     protected $roles;
+
+    /**
+     * @return mixed
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getActor()
+    {
+        return $this->actor;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getMovie()
+    {
+        return $this->movie;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRoles()
+    {
+        return $this->roles;
+    }
+
+
 }
