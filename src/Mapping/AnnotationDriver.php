@@ -27,9 +27,9 @@ class AnnotationDriver
     {
         AnnotationRegistry::registerFile(__DIR__.'/Neo4jOGMAnnotations.php');
         $reader = new SimpleAnnotationReader();
-        $reader->addNamespace('GraphAware\Neo4j\OGM\Annotations');
+        //$reader->addNamespace('GraphAware\Neo4j\OGM\Annotations');
         $this->reader = new FileCacheReader(
-            new SimpleAnnotationReader(),
+            new AnnotationReader(),
             sys_get_temp_dir(),
             $debug = true
         );
