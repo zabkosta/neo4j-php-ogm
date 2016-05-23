@@ -48,6 +48,21 @@ class RelationshipEntityITest extends IntegrationTestCase
         }
     }
 
+    public function testRelationshipEntityCanBeRemoved()
+    {
+        $tom = $this->getPerson('Tom Hanks');
+        $c = count($tom->getRoles());
+        foreach ($tom->getRoles() as $role) {
+            echo $role->getId();
+            $tom->getRoles()->removeElement($role);
+            break;
+        }
+        $this->em->flush();
+        $this->em->clear();
+        $tom = $this->getPerson('Tom Hanks');
+        $this->assertEquals($c-1, count($tom->getRoles()));
+    }
+
     /**
      * @param string $name
      * @return Person

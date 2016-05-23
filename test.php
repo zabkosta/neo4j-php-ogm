@@ -2,25 +2,22 @@
 
 $loader = require_once __DIR__.'/vendor/autoload.php';
 
-use GraphAware\Neo4j\Client\ClientBuilder;
-use GraphAware\Neo4j\OGM\Manager;
-use GraphAware\Neo4j\OGM\Tests\Performance\Domain\Person;
-use Symfony\Component\Finder\Finder;
+$personA = new \GraphAware\Neo4j\OGM\Tests\Integration\Model\Person('ikwattro');
+$personB = new \GraphAware\Neo4j\OGM\Tests\Integration\Model\Person('jexp');
+$ca = clone($personA);
+$arr = [
+    'a' => spl_object_hash($personA),
+    'b' => spl_object_hash($personB),
+    'c' => spl_object_hash($ca)
+];
+$arr2 = [
+    'a' => $personA
+];
 
-$finder = new Finder();
-$finder->files()->name('*.php')->in(__DIR__.'/src/Annotations');
+print_r($arr);
 
-foreach ($finder as $file) {
-    require_once $file->getRealpath();
-}
+unset($personA);
 
-$client = ClientBuilder::create()
-    ->addConnection('bolt', 'bolt://localhost')
-    ->build();
+print_r($arr2);
+print_r($arr);
 
-$em = new Manager($client);
-$repository = $em->getRepository(Person::class);
-$s = microtime(true);
-$users = $repository->findAll();
-echo count($users) . PHP_EOL;
-echo microtime(true) - $s;

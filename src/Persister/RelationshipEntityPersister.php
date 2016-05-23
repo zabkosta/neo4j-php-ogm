@@ -79,4 +79,12 @@ class RelationshipEntityPersister
 
         return Statement::create($query, $parameters);
     }
+
+    public function getDeleteQuery($entity)
+    {
+        $id = $this->classMetadata->getObjectInternalId($entity);
+        $query = 'START rel=rel('.$id.') DELETE rel';
+
+        return Statement::create($query);
+    }
 }

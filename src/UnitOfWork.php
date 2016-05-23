@@ -41,6 +41,8 @@ class UnitOfWork
 
     protected $relEntitesScheduledForUpdate = [];
 
+    protected $relEntitesScheduledForDelete = [];
+
     protected $relEntitiesById = [];
 
     protected $relEntitiesMap = [];
@@ -67,6 +69,8 @@ class UnitOfWork
 
     protected $reEntitiesById = [];
 
+    protected $managedRelationshipEntitiesMap = [];
+
     public function __construct(Manager $manager)
     {
         $this->manager = $manager;
@@ -90,8 +94,6 @@ class UnitOfWork
         }
 
         $visited[$oid] = $entity;
-
-        $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
         $entityState = $this->getEntityState($entity, self::STATE_NEW);
 
         switch ($entityState) {
@@ -127,7 +129,6 @@ class UnitOfWork
 
     public function persistRelationship($entityA, Relationship $relationship, $entityB, $field, array &$visited)
     {
-        $oid = spl_object_hash($entityB);
         $this->doPersist($entityB, $visited);
         $this->relationshipsScheduledForCreated[] = [$entityA, $relationship, $entityB, $field];
     }
@@ -192,6 +193,10 @@ class UnitOfWork
             $statement = $rePersister->getUpdateQuery($entity);
             $reStack->push($statement->text(), $statement->parameters());
         }
+        foreach ($this->relEntitesScheduledForDelete as $o) {
+            $statement = $this->getRelationshipEntityPersister(get_class($o))->getDeleteQuery($o);
+            $reStack->push($statement->text(), $statement->parameters());
+        }
         $tx->runStack($reStack);
 
         $updateNodeStack = Stack::create('update_nodes');
@@ -221,6 +226,7 @@ class UnitOfWork
             = $this->relationshipsScheduledForDelete
             = $this->relEntitesScheduledForUpdate
             = $this->relEntitiesScheduledForCreate
+            = $this->relEntitesScheduledForDelete
             = array();
     }
 
@@ -288,6 +294,7 @@ class UnitOfWork
             $reA = $this->reEntitiesById[$this->reEntityIds[$oid]];
             $reB = $this->relationshipEntityReferences[$this->reEntityIds[$oid]];
             $this->computeRelationshipEntityChanges($reA, $reB);
+            $this->checkRelationshipEntityDeletions($reA);
         }
     }
 
@@ -307,7 +314,7 @@ class UnitOfWork
         }
     }
 
-    public function addManagedRelationshipEntity($entity)
+    public function addManagedRelationshipEntity($entity, $pointOfView, $field)
     {
         $id = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getObjectInternalId($entity);
         $oid = spl_object_hash($entity);
@@ -316,13 +323,37 @@ class UnitOfWork
         $this->reEntitiesById[$id] = $entity;
         $this->reEntityIds[$oid] = $id;
         $this->relationshipEntityReferences[$id] = $ref;
+        $poid = spl_object_hash($pointOfView);
+        $this->managedRelationshipEntities[$poid][$field][] = $oid;
+        $this->managedRelationshipEntitiesMap[$oid][$poid] = $field;
     }
 
-    public function checkRelationshipReferencesHaveChanged()
+    private function checkRelationshipEntityDeletions($entity)
+    {
+        $oid = spl_object_hash($entity);
+        $id = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getObjectInternalId($entity);
+        foreach ($this->managedRelationshipEntitiesMap[$oid] as $pov => $field) {
+            $e = $this->entitiesById[$this->entityIds[$pov]];
+            $reflClass = new \ReflectionClass(get_class($e));
+            $reflP = $reflClass->getProperty($field);
+            $values = $reflP->getValue($e);
+            $shouldBeDeleted = true;
+            foreach ($values as $v) {
+                $id2 = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getObjectInternalId($v);
+                if ($id2 === $id) {
+                    $shouldBeDeleted = false;
+                }
+            }
+            if ($shouldBeDeleted) {
+                $this->relEntitesScheduledForDelete[] = $entity;
+            }
+        }
+    }
+
+    private function checkRelationshipReferencesHaveChanged()
     {
         foreach ($this->managedRelationshipReferences as $oid => $reference) {
             $entity = $this->entitiesById[$this->entityIds[$oid]];
-            $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
             $reflO = new \ReflectionObject($entity);
             foreach ($reference as $field => $info) {
                 $property = $reflO->getProperty($field);
