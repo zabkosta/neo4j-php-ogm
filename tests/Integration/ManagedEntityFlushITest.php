@@ -40,4 +40,26 @@ class ManagedEntityFlushITest extends IntegrationTestCase
         $this->em->flush();
         $this->assertGraphExist('(u:User {login:"ikwattro", age:35})');
     }
+
+    /**
+     * @group flush
+     */
+    public function testChangesComputedForEntityFetched()
+    {
+        $this->createUser();
+        /** @var User $ikwattro */
+        $ikwattro = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
+        $ikwattro->setAge(35);
+        $this->em->flush();
+        $this->assertGraphExist('(u:User {login:"ikwattro", age: 35})');
+    }
+
+    private function createUser($login = 'ikwattro')
+    {
+        $user = new User($login);
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->assertGraphExist('(u:User {login:"'.$login.'"})');
+        $this->em->clear();
+    }
 }

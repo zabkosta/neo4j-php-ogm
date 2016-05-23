@@ -353,6 +353,7 @@ class UnitOfWork
         $this->entityStates[$oid] = self::STATE_MANAGED;
         $this->entityIds[$oid] = $id;
         $this->entitiesById[$id] = $entity;
+        $this->manageEntityReference($oid);
     }
 
     /**
