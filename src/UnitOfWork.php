@@ -4,6 +4,7 @@ namespace GraphAware\Neo4j\OGM;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\Client\Stack;
+use GraphAware\Neo4j\OGM\Annotations\Property;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
 use GraphAware\Neo4j\OGM\Persister\RelationshipEntityPersister;
@@ -52,6 +53,8 @@ class UnitOfWork
     protected $entitiesById = [];
 
     protected $managedRelationshipReferences = [];
+
+    protected $entityStateReferences = [];
 
     public function __construct(Manager $manager)
     {
@@ -121,6 +124,7 @@ class UnitOfWork
     public function flush()
     {
         $this->checkRelationshipReferencesHaveChanged();
+        $this->detectEntityChanges();
         $statements = [];
 
         foreach ($this->nodesScheduledForCreate as $nodeToCreate) {
@@ -145,6 +149,7 @@ class UnitOfWork
             $this->entitiesById[$gid] = $this->nodesScheduledForCreate[$oid];
             $this->entityIds[$oid] = $gid;
             $this->entityStates[$oid] = self::STATE_MANAGED;
+            $this->manageEntityReference($oid);
         }
 
         $relStack = $this->manager->getDatabaseDriver()->stack('rel_create_schedule');
@@ -198,6 +203,46 @@ class UnitOfWork
             = $this->relationshipsScheduledForCreated
             = $this->relationshipsScheduledForDelete
             = array();
+    }
+
+    private function manageEntityReference($oid)
+    {
+        $id = $this->entityIds[$oid];
+        $entity = $this->entitiesById[$id];
+        $this->entityStateReferences[$id] = clone($entity);
+    }
+
+    private function detectEntityChanges()
+    {
+        $managed = [];
+        foreach ($this->entityStates as $oid => $state) {
+            if( $state === self::STATE_MANAGED) {
+                $managed[] = $oid;
+            }
+        }
+
+        foreach ($managed as $oid) {
+            $id = $this->entityIds[$oid];
+            $entityA = $this->entitiesById[$id];
+            $entityB = $this->entityStateReferences[$id];
+            $this->computeChanges($entityA, $entityB);
+        }
+    }
+
+    private function computeChanges($entityA, $entityB)
+    {
+        $classMetadata = $this->manager->getClassMetadataFor(get_class($entityA));
+        foreach ($classMetadata->getFields() as $field => $meta) {
+            $reflO = new \ReflectionObject($entityA);
+            $reflI = new \ReflectionObject($entityB);
+            $p1 = $reflO->getProperty($field);
+            $p1->setAccessible(true);
+            $p2 = $reflI->getProperty($field);
+            $p2->setAccessible(true);
+            if ($p1->getValue($entityA) !== $p2->getValue($entityB)) {
+                $this->nodesScheduledForUpdate[spl_object_hash($entityA)] = $entityA;
+            }
+        }
     }
 
     public function addManagedRelationshipReference($entityA, $entityB, $field, Relationship $relationship)
