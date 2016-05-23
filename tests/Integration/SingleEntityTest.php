@@ -101,4 +101,18 @@ class SingleEntityTest extends IntegrationTestCase
         $ikwattro = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
         $this->assertTrue($ikwattro->isActive());
     }
+
+    /**
+     * @group label
+     */
+    public function testExtraLabelsHydrateFalseWhenNodeDontHaveLabel()
+    {
+        $user = new User('ikwattro');
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->em->clear();
+        /** @var User $ikwattro */
+        $ikwattro = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
+        $this->assertFalse($ikwattro->isActive());
+    }
 }
