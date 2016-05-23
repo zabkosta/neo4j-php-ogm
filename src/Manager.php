@@ -2,6 +2,7 @@
 
 namespace GraphAware\Neo4j\OGM;
 
+use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\OGM\Mapping\AnnotationDriver;
 use GraphAware\Neo4j\Client\Client;
 use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
@@ -33,6 +34,20 @@ class Manager
      * @var QueryResultMapper[]
      */
     protected $resultMappers = [];
+
+    /**
+     * @param string $host
+     *
+     * @return \GraphAware\Neo4j\OGM\Manager
+     */
+    public static function buildWithHost($host)
+    {
+        $client = ClientBuilder::create()
+            ->addConnection('default', $host)
+            ->build();
+
+        return new self($client);
+    }
 
     public function __construct(Client $databaseDriver)
     {

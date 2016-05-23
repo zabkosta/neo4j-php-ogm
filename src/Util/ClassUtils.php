@@ -7,6 +7,7 @@ class ClassUtils
     /**
      * @param string $class
      * @param string $pointOfView
+     *
      * @return string
      */
     public static function getFullClassName($class, $pointOfView)
@@ -15,7 +16,7 @@ class ClassUtils
         if (1 === count($expl)) {
             $expl2 = explode('\\', $pointOfView);
             if (1 !== count($expl2)) {
-                unset($expl2[count($expl2)-1]);
+                unset($expl2[count($expl2) - 1]);
                 $class = sprintf('%s\\%s', implode('\\', $expl2), $class);
             }
         }

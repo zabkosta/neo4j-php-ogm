@@ -4,7 +4,6 @@ namespace GraphAware\Neo4j\OGM;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\Client\Stack;
-use GraphAware\Neo4j\OGM\Annotations\Property;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
 use GraphAware\Neo4j\OGM\Persister\RelationshipEntityPersister;
@@ -193,7 +192,7 @@ class UnitOfWork
             $this->managedRelationshipReferences[$aoid][$field][] = [
                 'entity' => $aoid,
                 'target' => $boid,
-                'rel' => $rel[1]
+                'rel' => $rel[1],
             ];
         }
 
@@ -209,14 +208,14 @@ class UnitOfWork
     {
         $id = $this->entityIds[$oid];
         $entity = $this->entitiesById[$id];
-        $this->entityStateReferences[$id] = clone($entity);
+        $this->entityStateReferences[$id] = clone $entity;
     }
 
     private function detectEntityChanges()
     {
         $managed = [];
         foreach ($this->entityStates as $oid => $state) {
-            if( $state === self::STATE_MANAGED) {
+            if ($state === self::STATE_MANAGED) {
                 $managed[] = $oid;
             }
         }
@@ -252,7 +251,7 @@ class UnitOfWork
         $this->managedRelationshipReferences[$aoid][$field][] = [
             'entity' => $aoid,
             'target' => $boid,
-            'rel' => $relationship
+            'rel' => $relationship,
         ];
     }
 
@@ -275,7 +274,7 @@ class UnitOfWork
                                 if (!in_array($target, $value)) {
                                     $toBeDeleted = $target;
                                 }
-                            } elseif($value instanceof ArrayCollection) {
+                            } elseif ($value instanceof ArrayCollection) {
                                 if (!$value->contains($target)) {
                                     $toBeDeleted = $target;
                                 }

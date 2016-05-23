@@ -4,9 +4,9 @@ namespace GraphAware\Neo4j\OGM\Query;
 
 class QueryResultMapping
 {
-    const RESULT_SINGLE = "RESULT_SINGLE";
+    const RESULT_SINGLE = 'RESULT_SINGLE';
 
-    const RESULT_MULTIPLE = "RESULT_MULTIPLE";
+    const RESULT_MULTIPLE = 'RESULT_MULTIPLE';
 
     /**
      * @var string

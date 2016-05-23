@@ -180,7 +180,7 @@ class BaseRepository
         $parameters = null !== $parameters ? (array) $parameters : array();
         $result = $this->manager->getDatabaseDriver()->run($query, $parameters);
         if ($result->size() < 1) {
-            return null;
+            return;
         }
 
         if ($result->size() > 1 && $resultMapping->getQueryResultType() !== QueryResultMapping::RESULT_MULTIPLE) {
