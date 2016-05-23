@@ -4,6 +4,8 @@ namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Company;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
 
 /**
  * Class RelationshipIntegrationTest
@@ -104,5 +106,20 @@ class RelationshipIntegrationTest extends IntegrationTestCase
         $this->assertCount(1, $ikwattro->getFriends());
         $this->em->flush();
         $this->assertGraphNotExist('(u:User {login:"ikwattro"})-[r:FOLLOWS]->(o:User {login:"jexp"})');
+    }
+
+    /**
+     * @group rel-ref-by-id
+     */
+    public function testRelatedEntitiesAreCorrectlyFetchedWhenRootEntityIsFoundById()
+    {
+        $this->playMovies();
+        $id = $this->client->run('MATCH (m:Movie) WHERE m.title = "The Matrix" RETURN id(m) as id')->firstRecord()->get('id');
+        /** @var Movie $movie */
+        $movie = $this->em->getRepository(Movie::class)->findOneById($id);
+        $this->assertEquals($id, $movie->id);
+        foreach ($movie->actors as $actor) {
+            $this->assertInstanceOf(Person::class, $actor);
+        }
     }
 }

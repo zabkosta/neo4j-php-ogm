@@ -248,8 +248,8 @@ class BaseRepository
                         foreach ($record->get($key) as $v) {
                             $property = $reflClass->getProperty($key);
                             $property->setAccessible(true);
-                            $v = $this->hydrateNode($v);
-                            $property->getValue($baseInstance)->add($v);
+                            $v2 = $this->hydrateNode($v, $this->getTargetFullClassName($association->getTargetEntity()));
+                            $property->getValue($baseInstance)->add($v2);
                             $this->manager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v, $property->getName(), $association);
                         }
                     } else {
@@ -299,7 +299,7 @@ class BaseRepository
             }
         }
 
-        foreach ($this->classMetadata->getAssociations() as $key => $assoc) {
+        foreach ($cm->getAssociations() as $key => $assoc) {
             if ($assoc->getCollection()) {
                 $property = $reflClass->getProperty($key);
                 $property->setAccessible(true);
@@ -307,7 +307,7 @@ class BaseRepository
             }
         }
 
-        foreach ($this->classMetadata->getRelationshipEntities() as $key => $assoc) {
+        foreach ($cm->getRelationshipEntities() as $key => $assoc) {
             if ($assoc->getCollection()) {
                 $property = $reflClass->getProperty($key);
                 $property->setAccessible(true);
