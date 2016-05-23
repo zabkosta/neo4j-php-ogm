@@ -3,7 +3,9 @@
 namespace GraphAware\Neo4j\OGM\Mapping;
 
 use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\AnnotationRegistry;
 use Doctrine\Common\Annotations\FileCacheReader;
+use Doctrine\Common\Annotations\SimpleAnnotationReader;
 use GraphAware\Neo4j\OGM\Annotations\MappedResult;
 use GraphAware\Neo4j\OGM\Annotations\Node;
 use GraphAware\Neo4j\OGM\Annotations\Property;
@@ -23,8 +25,11 @@ class AnnotationDriver
 
     public function __construct($cacheDirectory = null)
     {
+        AnnotationRegistry::registerFile(__DIR__.'/Neo4jOGMAnnotations.php');
+        $reader = new SimpleAnnotationReader();
+        $reader->addNamespace('GraphAware\Neo4j\OGM\Annotations');
         $this->reader = new FileCacheReader(
-            new AnnotationReader(),
+            new SimpleAnnotationReader(),
             sys_get_temp_dir(),
             $debug = true
         );
