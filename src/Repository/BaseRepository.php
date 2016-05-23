@@ -110,10 +110,11 @@ class BaseRepository
      *
      * @throws \GraphAware\Neo4j\Client\Exception\Neo4jException
      */
-    public function findBy($key, $value)
+    public function findBy($key, $value, $isId = false)
     {
         $label = $this->classMetadata->getLabel();
-        $query = sprintf('MATCH (n:%s) WHERE n.%s = {%s}', $label, $key, $key);
+        $idId = $isId ? 'id(n)' : sprintf('n.%s', $key);
+        $query = sprintf('MATCH (n:%s) WHERE %s = {%s}', $label, $idId, $key);
 
         foreach ($this->classMetadata->getAssociations() as $identifier => $association) {
             switch ($association->getDirection()) {
@@ -177,10 +178,7 @@ class BaseRepository
 
     public function findOneById($id)
     {
-        $label = $this->classMetadata->getLabel();
-        $query = sprintf('MATCH (n:%s) WHERE id(n) = {id} RETURN n', $label);
-        $result = $this->manager->getDatabaseDriver()->run($query, ['id' => $id]);
-        $hydrated = $this->hydrateResultSet($result);
+        $hydrated = $this->findBy('id', $id, true);
 
         return isset($hydrated[0]) ? $hydrated[0] : null;
     }
