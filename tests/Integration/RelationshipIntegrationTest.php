@@ -80,7 +80,7 @@ class RelationshipIntegrationTest extends IntegrationTestCase
     }
 
     /**
-     * @group rel-ref
+     * @group rel-ref-fetch
      */
     public function testRelatedEntitiesFetchedCanBeRemoved()
     {

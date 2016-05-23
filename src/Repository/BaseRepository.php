@@ -204,7 +204,7 @@ class BaseRepository
         return $resultMapping->getQueryResultType() === QueryResultMapping::RESULT_SINGLE ? $results[0] : $results;
     }
 
-    protected function hydrateQueryRecord(QueryResultMapper $resultMapper, Record $record)
+    private function hydrateQueryRecord(QueryResultMapper $resultMapper, Record $record)
     {
         $reflClass = new \ReflectionClass($resultMapper->getClassName());
         $instance = $reflClass->newInstanceWithoutConstructor();
@@ -226,7 +226,7 @@ class BaseRepository
         return $instance;
     }
 
-    protected function hydrateResultSet(Result $result)
+    private function hydrateResultSet(Result $result)
     {
         $entities = [];
         foreach ($result->records() as $record) {
@@ -236,7 +236,7 @@ class BaseRepository
         return $entities;
     }
 
-    protected function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n', $className = null)
+    private function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n', $className = null)
     {
         $classN = null !== $className ? $className : $this->className;
         $reflClass = new \ReflectionClass($classN);
@@ -250,7 +250,7 @@ class BaseRepository
                             $property->setAccessible(true);
                             $v2 = $this->hydrateNode($v, $this->getTargetFullClassName($association->getTargetEntity()));
                             $property->getValue($baseInstance)->add($v2);
-                            $this->manager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v, $property->getName(), $association);
+                            $this->manager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $property->getName(), $association);
                         }
                     } else {
                         $property = $reflClass->getProperty($key);
@@ -267,12 +267,12 @@ class BaseRepository
         return $baseInstance;
     }
 
-    protected function getHydrator($target)
+    private function getHydrator($target)
     {
         return $this->manager->getRepository($target);
     }
 
-    protected function hydrateNode(Node $node, $className = null)
+    private function hydrateNode(Node $node, $className = null)
     {
         if ($entity = $this->manager->getUnitOfWork()->getEntityById($node->identity())) {
             return $entity;
@@ -318,13 +318,12 @@ class BaseRepository
         $property = $reflClass->getProperty('id');
         $property->setAccessible(true);
         $property->setValue($instance, $node->identity());
-
         $this->manager->getUnitOfWork()->addManaged($instance);
 
         return $instance;
     }
 
-    protected function setInversedAssociation($baseInstance, $otherInstance, $relationshipKey)
+    private function setInversedAssociation($baseInstance, $otherInstance, $relationshipKey)
     {
         $assoc = $this->classMetadata->getAssociation($relationshipKey);
         if ($assoc->hasMappedBy()) {
@@ -349,7 +348,7 @@ class BaseRepository
      *
      * @return \ReflectionClass
      */
-    protected function getReflectionClass($className)
+    private function getReflectionClass($className)
     {
         if (!array_key_exists($className, $this->loadedReflClasses)) {
             $this->loadedReflClasses[$className] = new \ReflectionClass($className);
@@ -363,7 +362,7 @@ class BaseRepository
      *
      * @return string
      */
-    protected function getTargetFullClassName($className)
+    private function getTargetFullClassName($className)
     {
         $expl = explode('\\', $className);
         if (1 === count($expl)) {
