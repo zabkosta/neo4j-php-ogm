@@ -35,4 +35,19 @@ class IntegrationTestCase extends \PHPUnit_Framework_TestCase
     {
         $this->em->clear();
     }
+
+    protected function assertGraphNotExist($q)
+    {
+        $this->assertTrue($this->checkGraph($q)->size() < 1);
+    }
+
+    protected function assertGraphExist($q)
+    {
+        $this->assertTrue($this->checkGraph($q)->size() > 0);
+    }
+
+    protected function checkGraph($q)
+    {
+        return $this->client->run('MATCH ' . $q . ' RETURN *');
+    }
 }

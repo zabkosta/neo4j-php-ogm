@@ -32,6 +32,12 @@ class User
     protected $friends;
 
     /**
+     * @OGM\Label(name="Active")
+     * @var bool
+     */
+    protected $isActive;
+
+    /**
      * @OGM\Property(type="int")
      */
     protected $age;
@@ -88,5 +94,18 @@ class User
     public function getFriends()
     {
         return $this->friends;
+    }
+
+    public function setActive()
+    {
+        $this->isActive = true;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isActive()
+    {
+        return $this->isActive;
     }
 }

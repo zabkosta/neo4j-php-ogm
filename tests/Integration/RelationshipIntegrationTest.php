@@ -105,19 +105,4 @@ class RelationshipIntegrationTest extends IntegrationTestCase
         $this->em->flush();
         $this->assertGraphNotExist('(u:User {login:"ikwattro"})-[r:FOLLOWS]->(o:User {login:"jexp"})');
     }
-
-    private function assertGraphNotExist($q)
-    {
-        $this->assertTrue($this->checkGraph($q)->size() < 1);
-    }
-
-    private function assertGraphExist($q)
-    {
-        $this->assertTrue($this->checkGraph($q)->size() > 0);
-    }
-
-    private function checkGraph($q)
-    {
-        return $this->client->run('MATCH ' . $q . ' RETURN *');
-    }
 }
