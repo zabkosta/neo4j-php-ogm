@@ -175,6 +175,16 @@ class BaseRepository
         return isset($instances[0]) ? $instances[0] : null;
     }
 
+    public function findOneById($id)
+    {
+        $label = $this->classMetadata->getLabel();
+        $query = sprintf('MATCH (n:%s) WHERE id(n) = {id} RETURN n', $label);
+        $result = $this->manager->getDatabaseDriver()->run($query, ['id' => $id]);
+        $hydrated = $this->hydrateResultSet($result);
+
+        return isset($hydrated[0]) ? $hydrated[0] : null;
+    }
+
     protected function nativeQuery($query, $parameters = null, QueryResultMapping $resultMapping)
     {
         $parameters = null !== $parameters ? (array) $parameters : array();
@@ -235,7 +245,7 @@ class BaseRepository
         $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
         if ($andCheckAssociations) {
             foreach ($this->classMetadata->getAssociations() as $key => $association) {
-                if (null !== $record->get($key)) {
+                if ($record->hasValue($key) && null !== $record->get($key)) {
                     if ($association->getCollection()) {
                         foreach ($record->get($key) as $v) {
                             $property = $reflClass->getProperty($key);

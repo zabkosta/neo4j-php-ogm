@@ -115,4 +115,18 @@ class SingleEntityTest extends IntegrationTestCase
         $ikwattro = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
         $this->assertFalse($ikwattro->isActive());
     }
+
+    /**
+     * @group internal-id
+     */
+    public function testFindById()
+    {
+        $q = 'CREATE (n:User) RETURN n';
+        $result = $this->client->run($q);
+        $id = $result->firstRecord()->get('n')->identity();
+
+        $user = $this->em->getRepository(User::class)->findOneById($id);
+        $this->assertInstanceOf(User::class, $user);
+        $this->assertEquals($id, $user->getId());
+    }
 }
