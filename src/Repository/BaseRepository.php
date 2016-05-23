@@ -3,7 +3,6 @@
 namespace GraphAware\Neo4j\OGM\Repository;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use GraphAware\Common\Cypher\Statement;
 use GraphAware\Common\Result\Record;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
@@ -11,7 +10,8 @@ use GraphAware\Neo4j\OGM\Manager;
 use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
-use GraphAware\Neo4j\OGM\Query\ResultMapping;
+use GraphAware\Neo4j\OGM\Annotations\Property;
+use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 class BaseRepository
@@ -274,10 +274,19 @@ class BaseRepository
         $instance = $reflClass->newInstanceWithoutConstructor();
         $cm = $this->manager->getClassMetadataFor($cl);
         foreach ($cm->getFields() as $field => $meta) {
-            if ($node->hasValue($field)) {
+            if ($meta instanceof Property) {
+                if ($node->hasValue($field)) {
+                    if ($property = $reflClass->getProperty($field)) {
+                        $property->setAccessible(true);
+                        $property->setValue($instance, $node->value($field));
+                    }
+                }
+            } elseif ($meta instanceof Label) {
+                $label = $meta->name;
+                $v = $node->hasLabel($label);
                 if ($property = $reflClass->getProperty($field)) {
                     $property->setAccessible(true);
-                    $property->setValue($instance, $node->value($field));
+                    $property->setValue($instance, $v);
                 }
             }
         }

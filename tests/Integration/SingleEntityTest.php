@@ -86,4 +86,19 @@ class SingleEntityTest extends IntegrationTestCase
         $this->em->flush();
         $this->assertGraphNotExist('(u:User:Active {login:"ikwattro"})');
     }
+
+    /**
+     * @group label
+     */
+    public function testExtraLabelsAreHydrated()
+    {
+        $user = new User('ikwattro');
+        $user->setActive();
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->em->clear();
+        /** @var User $ikwattro */
+        $ikwattro = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
+        $this->assertTrue($ikwattro->isActive());
+    }
 }
