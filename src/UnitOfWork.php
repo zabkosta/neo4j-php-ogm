@@ -39,6 +39,8 @@ class UnitOfWork
 
     protected $relEntitiesScheduledForCreate = [];
 
+    protected $relEntitesScheduledForUpdate = [];
+
     protected $relEntitiesById = [];
 
     protected $relEntitiesMap = [];
@@ -54,6 +56,16 @@ class UnitOfWork
     protected $managedRelationshipReferences = [];
 
     protected $entityStateReferences = [];
+
+    protected $managedRelationshipEntities = [];
+
+    protected $relationshipEntityReferences = [];
+
+    protected $relationshipEntityStates = [];
+
+    protected $reEntityIds = [];
+
+    protected $reEntitiesById = [];
 
     public function __construct(Manager $manager)
     {
@@ -123,6 +135,7 @@ class UnitOfWork
     public function flush()
     {
         $this->checkRelationshipReferencesHaveChanged();
+        $this->detectRelationshipEntityChanges();
         $this->detectEntityChanges();
         $statements = [];
 
@@ -174,6 +187,11 @@ class UnitOfWork
             $statement = $rePersister->getCreateQuery($entity);
             $reStack->push($statement->text(), $statement->parameters());
         }
+        foreach ($this->relEntitesScheduledForUpdate as $oid => $entity) {
+            $rePersister = $this->getRelationshipEntityPersister(get_class($entity));
+            $statement = $rePersister->getUpdateQuery($entity);
+            $reStack->push($statement->text(), $statement->parameters());
+        }
         $tx->runStack($reStack);
 
         $updateNodeStack = Stack::create('update_nodes');
@@ -201,6 +219,8 @@ class UnitOfWork
             = $this->nodesScheduledForDelete
             = $this->relationshipsScheduledForCreated
             = $this->relationshipsScheduledForDelete
+            = $this->relEntitesScheduledForUpdate
+            = $this->relEntitiesScheduledForCreate
             = array();
     }
 
@@ -253,6 +273,49 @@ class UnitOfWork
             'target' => $boid,
             'rel' => $relationship,
         ];
+    }
+
+    private function detectRelationshipEntityChanges()
+    {
+        $managed = [];
+        foreach ($this->relationshipEntityStates as $oid => $state) {
+            if ($state === self::STATE_MANAGED) {
+                $managed[] = $oid;
+            }
+        }
+
+        foreach ($managed as $oid) {
+            $reA = $this->reEntitiesById[$this->reEntityIds[$oid]];
+            $reB = $this->relationshipEntityReferences[$this->reEntityIds[$oid]];
+            $this->computeRelationshipEntityChanges($reA, $reB);
+        }
+    }
+
+    private function computeRelationshipEntityChanges($entityA, $entityB)
+    {
+        $classMetadata = $this->manager->getRelationshipEntityMetadata($entityA);
+        foreach ($classMetadata->getFields() as $field => $meta) {
+            $reflO = new \ReflectionObject($entityA);
+            $reflI = new \ReflectionObject($entityB);
+            $p1 = $reflO->getProperty($field);
+            $p1->setAccessible(true);
+            $p2 = $reflI->getProperty($field);
+            $p2->setAccessible(true);
+            if ($p1->getValue($entityA) !== $p2->getValue($entityB)) {
+                $this->relEntitesScheduledForUpdate[spl_object_hash($entityA)] = $entityA;
+            }
+        }
+    }
+
+    public function addManagedRelationshipEntity($entity)
+    {
+        $id = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getObjectInternalId($entity);
+        $oid = spl_object_hash($entity);
+        $this->relationshipEntityStates[$oid] = self::STATE_MANAGED;
+        $ref = clone($entity);
+        $this->reEntitiesById[$id] = $entity;
+        $this->reEntityIds[$oid] = $id;
+        $this->relationshipEntityReferences[$id] = $ref;
     }
 
     public function checkRelationshipReferencesHaveChanged()

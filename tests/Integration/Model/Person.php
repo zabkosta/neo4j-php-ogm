@@ -55,7 +55,7 @@ class Person
     }
 
     /**
-     * @return mixed
+     * @return Role
      */
     public function getRoles()
     {

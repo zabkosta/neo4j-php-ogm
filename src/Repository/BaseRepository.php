@@ -314,6 +314,7 @@ class BaseRepository
                             }
 
                         }
+                        $this->manager->getUnitOfWork()->addManagedRelationshipEntity($reInstance);
                     }
                     $reP = $reflClass->getProperty($key);
                     $reP->setAccessible(true);

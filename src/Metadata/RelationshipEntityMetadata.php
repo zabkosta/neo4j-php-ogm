@@ -79,4 +79,13 @@ class RelationshipEntityMetadata
     {
         return $this->fields;
     }
+
+    public function getObjectInternalId($o)
+    {
+        $reflO = new \ReflectionObject($o);
+        $p = $reflO->getProperty('id');
+        $p->setAccessible(true);
+
+        return $p->getValue($o);
+    }
 }

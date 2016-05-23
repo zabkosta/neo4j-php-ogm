@@ -56,7 +56,26 @@ class RelationshipEntityPersister
             $parameters['fields'][$field] = $v;
         }
 
-        print_r($query);
+        return Statement::create($query, $parameters);
+    }
+
+    public function getUpdateQuery($entity)
+    {
+        $reflClass = new \ReflectionClass(get_class($entity));
+        $id = $this->classMetadata->getObjectInternalId($entity);
+
+        $query = sprintf('START rel=rel(%d) SET rel += {fields}', $id);
+
+        $parameters = [
+            'fields' => [],
+        ];
+
+        foreach ($this->classMetadata->getFields() as $field => $annot) {
+            $prop = $reflClass->getProperty($field);
+            $prop->setAccessible(true);
+            $v = $prop->getValue($entity);
+            $parameters['fields'][$field] = $v;
+        }
 
         return Statement::create($query, $parameters);
     }

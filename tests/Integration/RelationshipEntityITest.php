@@ -23,12 +23,28 @@ class RelationshipEntityITest extends IntegrationTestCase
 
     public function testRelationshipEntitesAreRetrieved()
     {
+        /** @var Person $tom */
         $tom = $this->getPerson('Tom Hanks');
-        foreach ($tom->roles as $role) {
+        foreach ($tom->getRoles() as $role) {
             $this->assertInstanceOf(Role::class, $role);
             $this->assertEquals($tom->id, $role->getActor()->getId());
             $this->assertInstanceOf(Movie::class, $role->getMovie());
             $this->assertInternalType('array', $role->getRoles());
+        }
+    }
+
+    public function testRelationshipEntitiesShouldBeManaged()
+    {
+        $tom = $this->getPerson('Tom Hanks');
+        foreach ($tom->getRoles() as $role) {
+            $role->setRoles(array('Super Tom'));
+        }
+        $this->em->flush();
+        $this->em->clear();
+
+        $tom2 = $this->getPerson('Tom Hanks');
+        foreach ($tom2->getRoles() as $role) {
+            $this->assertEquals('Super Tom', $role->getRoles()[0]);
         }
     }
 
