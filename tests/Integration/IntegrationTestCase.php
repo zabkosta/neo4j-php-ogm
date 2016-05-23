@@ -20,7 +20,7 @@ class IntegrationTestCase extends \PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->client = ClientBuilder::create()
-            ->addConnection('default', 'bolt://localhost')
+            ->addConnection('default', 'http://localhost:7474')
             ->build();
 
         $this->em = new Manager($this->client);
