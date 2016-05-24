@@ -48,6 +48,9 @@ class RelationshipEntityITest extends IntegrationTestCase
         }
     }
 
+    /**
+     * @group re-remove
+     */
     public function testRelationshipEntityCanBeRemoved()
     {
         $tom = $this->getPerson('Tom Hanks');
@@ -73,6 +76,7 @@ class RelationshipEntityITest extends IntegrationTestCase
         $person->addRole($movie, ['Super Actor']);
         $this->em->persist($person);
         $this->em->flush();
+        $this->assertGraphExist('(p:Person {name:"ikwattro"})-[r:ACTED_IN {roles: ["Super Actor"]}]->(m:Movie {title:"Neo4j on the rocks"})');
     }
 
     public function testRelationshipEntityAndFindAllFetch()
