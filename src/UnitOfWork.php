@@ -108,7 +108,7 @@ class UnitOfWork
         }
 
         $this->cascadePersist($entity, $visited);
-        $this->traverseRelationshipEntities($entity);
+        $this->traverseRelationshipEntities($entity, $visited);
     }
 
     public function cascadePersist($entity, array &$visited)
@@ -183,9 +183,9 @@ class UnitOfWork
         }
         $tx->runStack($relStack);
         $reStack = Stack::create('rel_entity_create');
-        foreach ($this->relEntitiesScheduledForCreate as $oid => $entity) {
-            $rePersister = $this->getRelationshipEntityPersister(get_class($entity));
-            $statement = $rePersister->getCreateQuery($entity);
+        foreach ($this->relEntitiesScheduledForCreate as $oid => $info) {
+            $rePersister = $this->getRelationshipEntityPersister(get_class($info[0]));
+            $statement = $rePersister->getCreateQuery($info[0], $info[1]);
             $reStack->push($statement->text(), $statement->parameters());
         }
         foreach ($this->relEntitesScheduledForUpdate as $oid => $entity) {
@@ -388,7 +388,7 @@ class UnitOfWork
         $this->relationshipsScheduledForDelete[] = [$entity->getId(), $target->getId(), $relationship];
     }
 
-    public function traverseRelationshipEntities($entity)
+    public function traverseRelationshipEntities($entity, array &$visited)
     {
         $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
         $reflClass = new \ReflectionClass($entity);
@@ -401,17 +401,26 @@ class UnitOfWork
             }
             if ($relationship->getCollection()) {
                 foreach ($value as $v) {
-                    $this->persistRelationshipEntity($v);
+                    $this->persistRelationshipEntity($v, get_class($entity));
+                    $rem = $this->manager->getRelationshipEntityMetadata(get_class($v));
+                    $startKey = $rem->getStartNodeKey();
+                    $endKey = $rem->getEndNodeKey();
+                    $keyToUse = $relationship->direction === "OUTGOING" ? $endKey : $startKey;
+                    $reRefl = new \ReflectionClass(get_class($v));
+                    $oep = $reRefl->getProperty($keyToUse);
+                    $oep->setAccessible(true);
+                    $oev = $oep->getValue($v);
+                    $this->persist($oev, $visited);
                 }
             }
         }
     }
 
-    public function persistRelationshipEntity($entity)
+    public function persistRelationshipEntity($entity, $pov)
     {
         $oid = spl_object_hash($entity);
 
-        $this->relEntitiesScheduledForCreate[$oid] = $entity;
+        $this->relEntitiesScheduledForCreate[$oid] = [$entity, $pov];
     }
 
     public function getEntityState($entity, $assumedState = null)

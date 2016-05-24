@@ -25,8 +25,11 @@ class Movie
      */
     public $actors;
 
-    public function __construct()
+    public function __construct($title = null)
     {
+        if (null !== $title) {
+            $this->title = $title;
+        }
         $this->actors = new ArrayCollection();
     }
 }

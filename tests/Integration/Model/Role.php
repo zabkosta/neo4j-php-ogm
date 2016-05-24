@@ -29,6 +29,15 @@ class Role
      */
     protected $roles;
 
+    public function __construct(Person $actor, Movie $movie, $roles = null)
+    {
+        $this->actor = $actor;
+        $this->movie = $movie;
+        if (is_array($roles)) {
+            $this->roles = $roles;
+        }
+    }
+
     /**
      * @return mixed
      */

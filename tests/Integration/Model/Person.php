@@ -2,6 +2,8 @@
 
 namespace GraphAware\Neo4j\OGM\Tests\Integration\Model;
 
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
+use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
@@ -26,9 +28,17 @@ class Person
 
     /**
      * @OGM\Relationship(relationshipEntity="Role", direction="OUTGOING", type="ACTED_IN", collection=true)
-     * @var Role[]
+     * @var \Doctrine\Common\Collections\ArrayCollection|Role[]
      */
     public $roles;
+
+    public function __construct($name = null)
+    {
+        if (null !== $name) {
+            $this->name = $name;
+        }
+        $this->roles = new ArrayCollection();
+    }
 
     /**
      * @return mixed
@@ -60,5 +70,11 @@ class Person
     public function getRoles()
     {
         return $this->roles;
+    }
+
+    public function addRole(Movie $movie, $roles = null)
+    {
+        $roles = is_array($roles) ? $roles : [];
+        $this->roles->add(new Role($this, $movie, $roles));
     }
 }

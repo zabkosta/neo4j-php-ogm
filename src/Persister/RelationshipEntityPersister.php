@@ -5,6 +5,7 @@ namespace GraphAware\Neo4j\OGM\Persister;
 use GraphAware\Common\Cypher\Statement;
 use GraphAware\Neo4j\OGM\Manager;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
+use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 class RelationshipEntityPersister
 {
@@ -24,18 +25,19 @@ class RelationshipEntityPersister
         $this->classMetadata = $classMetadata;
     }
 
-    public function getCreateQuery($entity)
+    public function getCreateQuery($entity, $pov)
     {
-        $reflClass = new \ReflectionClass(get_class($entity));
+        $class = ClassUtils::getFullClassName(get_class($entity), $pov);
+        $reflClass = new \ReflectionClass($class);
         $startNodeProperty = $reflClass->getProperty($this->classMetadata->getStartNodeKey());
         $startNodeProperty->setAccessible(true);
         $startNode = $startNodeProperty->getValue($entity);
-        $startNodeId = $this->em->getClassMetadataFor($this->classMetadata->getStartNode()->getTargetEntity())->getIdentityValue($startNode);
+        $startNodeId = $this->em->getClassMetadataFor(ClassUtils::getFullClassName($this->classMetadata->getStartNode()->getTargetEntity(), $pov))->getIdentityValue($startNode);
 
         $endNodeProperty = $reflClass->getProperty($this->classMetadata->getEndNodeKey());
         $endNodeProperty->setAccessible(true);
         $endNode = $endNodeProperty->getValue($entity);
-        $endNodeId = $this->em->getClassMetadataFor($this->classMetadata->getEndNode()->getTargetEntity())->getIdentityValue($endNode);
+        $endNodeId = $this->em->getClassMetadataFor(ClassUtils::getFullClassName($this->classMetadata->getEndNode()->getTargetEntity(), $pov))->getIdentityValue($endNode);
 
         $relType = $this->classMetadata->getType();
 

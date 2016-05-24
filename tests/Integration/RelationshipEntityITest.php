@@ -53,7 +53,6 @@ class RelationshipEntityITest extends IntegrationTestCase
         $tom = $this->getPerson('Tom Hanks');
         $c = count($tom->getRoles());
         foreach ($tom->getRoles() as $role) {
-            echo $role->getId();
             $tom->getRoles()->removeElement($role);
             break;
         }
@@ -61,6 +60,19 @@ class RelationshipEntityITest extends IntegrationTestCase
         $this->em->clear();
         $tom = $this->getPerson('Tom Hanks');
         $this->assertEquals($c-1, count($tom->getRoles()));
+    }
+
+    /**
+     * @group re-cascade-persist
+     */
+    public function testRelationshipEntityCanBeAdded()
+    {
+        $this->clearDb();
+        $person = new Person('ikwattro');
+        $movie = new Movie('Neo4j on the rocks');
+        $person->addRole($movie, ['Super Actor']);
+        $this->em->persist($person);
+        $this->em->flush();
     }
 
     /**
