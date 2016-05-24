@@ -63,21 +63,22 @@ class BaseRepository
     {
         $label = $this->classMetadata->getLabel();
         $query = sprintf('MATCH (n:%s)', $label);
-
-        foreach ($this->classMetadata->getAssociations() as $identifier => $association) {
+        /** @var Relationship[] $associations */
+        $associations = array_merge($this->classMetadata->getAssociations(), $this->classMetadata->getRelationshipEntities());
+        foreach ($associations as $identifier => $association) {
             switch ($association->getDirection()) {
                 case 'INCOMING':
-                    $relStr = '<-[:%s]-';
+                    $relStr = '<-[rel_%s:%s]-';
                     break;
                 case 'OUTGOING':
-                    $relStr = '-[:%s]->';
+                    $relStr = '-[rel_%s:%s]->';
                     break;
                 default:
-                    $relStr = '-[:%s]-';
+                    $relStr = '-[rel_%s:%s]-';
                     break;
             }
 
-            $relQueryPart = sprintf($relStr, $association->getType());
+            $relQueryPart = sprintf($relStr, strtolower($association->getType()), $association->getType());
             $query .= PHP_EOL;
             $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$identifier.')';
         }
@@ -93,7 +94,14 @@ class BaseRepository
             }
         }
 
-        if (count($this->classMetadata->getAssociations()) > 0) {
+        foreach ($this->classMetadata->getRelationshipEntities() as $relationshipEntity) {
+            $relid = 'rel_'.strtolower($relationshipEntity->getType());
+            if ($relationshipEntity->getCollection()) {
+                $assocReturns[] = sprintf('CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
+            }
+        }
+
+        if (count($associations) > 0) {
             $query .= ', ';
             $query .= implode(', ', $assocReturns);
         }
@@ -150,7 +158,7 @@ class BaseRepository
         foreach ($this->classMetadata->getRelationshipEntities() as $relationshipEntity) {
             $relid = 'rel_'.strtolower($relationshipEntity->getType());
             if ($relationshipEntity->getCollection()) {
-                $assocReturns[] = sprintf('collect({start:startNode(%s), end:endNode(%s), rel:%s}) as %s',$relid, $relid, $relid, $relid);
+                $assocReturns[] = sprintf('CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
             }
         }
 

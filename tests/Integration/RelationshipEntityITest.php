@@ -75,6 +75,14 @@ class RelationshipEntityITest extends IntegrationTestCase
         $this->em->flush();
     }
 
+    public function testRelationshipEntityAndFindAllFetch()
+    {
+        $actors = $this->em->getRepository(Person::class)->findAll();
+        foreach ($actors as $actor) {
+            $this->assertInstanceOf(Person::class, $actor);
+        }
+    }
+
     /**
      * @param string $name
      * @return Person
