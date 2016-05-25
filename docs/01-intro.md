@@ -401,3 +401,99 @@ Let's explain the annotation parameters :
 Note : `targetEntity` takes the **fully qualified class name` as argument, you can pass only the classname if both of the
 entities lives in the same namespace.
 
+Simply with this annotation, the nodes connected by an outgoing ACTED_IN relationship to this entity will be returned, let's
+take Tom Hanks again and all his movies :
+
+```php
+$tomHanks = $manager->getRepository(Person::class)->findOneBy('name', 'Tom Hanks');
+echo sprintf('Tom Hanks played in %d movies', count($tomHanks->getMovies())) . PHP_EOL;
+
+foreach ($tomHanks->getMovies() as $movie) {
+    echo $movie->getTitle() . PHP_EOL;
+}
+```
+
+``` bash
+$ php app.php
+Tom Hanks played in 12 movies
+Charlie Wilson's War
+The Polar Express
+A League of Their Own
+Cast Away
+Apollo 13
+The Green Mile
+The Da Vinci Code
+Cloud Atlas
+That Thing You Do
+Joe Versus the Volcano
+You've Got Mail
+Sleepless in Seattle
+
+```
+
+Great, we can retrieve the related movies for an actor, but once we own the Movie object, there is no way to retrieve back the actor, let's tackle
+this by adding the appropriate mapping to the Movie domain object class.
+
+```php
+<?php
+
+namespace Movies;
+
+use Doctrine\Common\Collections\ArrayCollection;
+use GraphAware\Neo4j\OGM\Annotations as OGM;
+
+/**
+ * @OGM\Node(label="Movie")
+ */
+class Movie
+{
+    ...
+
+    /**
+     * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Person", collection=true)
+     * @var ArrayCollection|Person[]
+     */
+    protected $actors;
+
+    /**
+     * @param string $title
+     * @param string|null $release
+     */
+    public function __construct($title, $release = null)
+    {
+        $this->title = $title;
+        $this->release = $release;
+        $this->actors = new ArrayCollection();
+    }
+
+    ...
+
+    /**
+     * @return \Doctrine\Common\Collections\ArrayCollection|\Movies\Person[]
+     */
+    public function getActors()
+    {
+        return $this->actors;
+    }
+
+    /**
+     * @param \Movies\Person $person
+     */
+    public function addActor(Person $person)
+    {
+        if (!$this->actors->contains($person)) {
+            $this->actors->add($person);
+        }
+    }
+
+    /**
+     * @param \Movies\Person $person
+     */
+    public function removeActor(Person $person)
+    {
+        if ($this->actors->contains($person)) {
+            $this->actors->removeElement($person);
+        }
+    }
+}
+```

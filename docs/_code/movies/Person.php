@@ -29,7 +29,7 @@ class Person
     protected $born;
 
     /**
-     * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Movie", collection=true)
+     * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Movie", collection=true, mappedBy="actors")
      * @var ArrayCollection|Movie[]
      */
     protected $movies;

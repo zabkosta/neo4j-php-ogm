@@ -2,6 +2,7 @@
 
 namespace Movies;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
@@ -34,6 +35,12 @@ class Movie
     protected $release;
 
     /**
+     * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Person", collection=true, mappedBy="movies")
+     * @var ArrayCollection|Person[]
+     */
+    protected $actors;
+
+    /**
      * @param string $title
      * @param string|null $release
      */
@@ -41,6 +48,7 @@ class Movie
     {
         $this->title = $title;
         $this->release = $release;
+        $this->actors = new ArrayCollection();
     }
 
     /**
@@ -81,5 +89,33 @@ class Movie
     public function getRelease()
     {
         return $this->release;
+    }
+
+    /**
+     * @return \Doctrine\Common\Collections\ArrayCollection|\Movies\Person[]
+     */
+    public function getActors()
+    {
+        return $this->actors;
+    }
+
+    /**
+     * @param \Movies\Person $person
+     */
+    public function addActor(Person $person)
+    {
+        if (!$this->actors->contains($person)) {
+            $this->actors->add($person);
+        }
+    }
+
+    /**
+     * @param \Movies\Person $person
+     */
+    public function removeActor(Person $person)
+    {
+        if ($this->actors->contains($person)) {
+            $this->actors->removeElement($person);
+        }
     }
 }

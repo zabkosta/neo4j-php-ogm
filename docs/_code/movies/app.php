@@ -16,3 +16,14 @@ $manager->flush();
 
 $tomHanks->setBorn(1990);
 $manager->flush();
+
+$manager->clear();
+
+$tomHanks = $manager->getRepository(Person::class)->findOneBy('name', 'Tom Hanks');
+echo sprintf('Tom Hanks played in %d movies', count($tomHanks->getMovies())) . PHP_EOL;
+
+foreach ($tomHanks->getMovies() as $movie) {
+    echo $movie->getTitle() . PHP_EOL;
+
+    echo count($movie->getActors()) . PHP_EOL;
+}
