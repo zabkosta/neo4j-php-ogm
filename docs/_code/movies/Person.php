@@ -2,6 +2,7 @@
 
 namespace Movies;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
@@ -28,7 +29,12 @@ class Person
     protected $born;
 
     /**
-     * Person constructor.
+     * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Movie", collection=true)
+     * @var ArrayCollection|Movie[]
+     */
+    protected $movies;
+
+    /**
      * @param string $name
      * @param int|null $born
      */
@@ -36,6 +42,7 @@ class Person
     {
         $this->name = $name;
         $this->born = $born;
+        $this->movies = new ArrayCollection();
     }
 
     /**
@@ -68,5 +75,33 @@ class Person
     public function setBorn($year)
     {
         $this->born = $year;
+    }
+
+    /**
+     * @return \Doctrine\Common\Collections\ArrayCollection|\Movies\Movie[]
+     */
+    public function getMovies()
+    {
+        return $this->movies;
+    }
+
+    /**
+     * @param \Movies\Movie $movie
+     */
+    public function addMovie(Movie $movie)
+    {
+        if (!$this->movies->contains($movie)) {
+            $this->movies->add($movie);
+        }
+    }
+
+    /**
+     * @param \Movies\Movie $movie
+     */
+    public function removeMovie(Movie $movie)
+    {
+        if ($this->movies->contains($movie)) {
+            $this->movies->removeElement($movie);
+        }
     }
 }

@@ -1,3 +1,5 @@
+## GraphAware Neo4j PHP OGM - Documentation
+
 ### Introduction
 
 Neo4j-PHP-OGM is an Object Graph Mapper for Neo4j in PHP.
@@ -297,5 +299,105 @@ class Movie
 }
 ```
 
+---
 
+### Managing relationships
+
+Mapping relationship to an domain object property is done with the `@OGM\Relationship` annotation. There are two types of relationships managed
+by the OGM.
+
+* Simple relationships, where the property will reflect another node
+* Relationships entities, where the property will reflect a `RelationshipEntity` mapped object.
+
+The first one is generally used for relationships where you don't have properties or don't need them in your domain model.
+
+The latter is used when you need to filter on the relationships and need them in your business logic.
+
+An example of a simple relationship can be a `FOLLOWS` relationship while a `RANKED` relationship with a score property is better
+handled by a RelationshipEntity.
+
+Let's add the `ACTED_IN` relationship to our Person model, this will be a simple relationship :
+
+```php
+<?php
+
+namespace Movies;
+
+use Doctrine\Common\Collections\ArrayCollection;
+use GraphAware\Neo4j\OGM\Annotations as OGM;
+
+/**
+ * @OGM\Node(label="Person")
+ */
+class Person
+{
+    /...
+
+    /**
+     * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Movie", collection=true)
+     * @var ArrayCollection|Movie[]
+     */
+    protected $movies;
+
+    /**
+     * @param string $name
+     * @param int|null $born
+     */
+    public function __construct($name, $born = null)
+    {
+        $this->name = $name;
+        $this->born = $born;
+        $this->movies = new ArrayCollection();
+    }
+
+    ...
+
+    /**
+     * @return \Doctrine\Common\Collections\ArrayCollection|\Movies\Movie[]
+     */
+    public function getMovies()
+    {
+        return $this->movies;
+    }
+
+    /**
+     * @param \Movies\Movie $movie
+     */
+    public function addMovie(Movie $movie)
+    {
+        if (!$this->movies->contains($movie)) {
+            $this->movies->add($movie);
+        }
+    }
+
+    /**
+     * @param \Movies\Movie $movie
+     */
+    public function removeMovie(Movie $movie)
+    {
+        if ($this->movies->contains($movie)) {
+            $this->movies->removeElement($movie);
+        }
+    }
+}
+```
+
+
+Let's explain the annotation parameters :
+
+```
+    /**
+     * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Movie", collection=true)
+     * @var ArrayCollection|Movie[]
+     */
+    protected $movies;
+```
+
+* `type` is the relationship type
+* `direction`  is the direction of the relationship, can be of `OUTGOING`, `INCOMING` or `BOTH`
+* `targetEntity` defines the classname of the entity representing the node on the other side of the relationship.
+* `collection` defines whether or not there can be multiple relationships of the same type connected to this entity.
+
+Note : `targetEntity` takes the **fully qualified class name` as argument, you can pass only the classname if both of the
+entities lives in the same namespace.
 
