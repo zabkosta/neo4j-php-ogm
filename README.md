@@ -65,7 +65,7 @@ $this->em->flush();
 
 ## Documentation
 
-Coming soon...
+The documentation is available [here](docs/01-intro.md).
 
 ## Getting Help
 
