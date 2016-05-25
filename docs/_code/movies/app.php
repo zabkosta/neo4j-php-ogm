@@ -4,7 +4,8 @@ require_once __DIR__.'/../../../vendor/autoload.php';
 
 use GraphAware\Neo4j\OGM\Manager;
 use Movies\Person;
-
+use Movies\User;
+use Movies\Movie;
 // Entity manager setup
 $manager = Manager::create('http://localhost:7676');
 playMovies($manager->getDatabaseDriver());
@@ -52,6 +53,15 @@ $castAway = $filter[0];
 $castAway->setTitle('Cast Away 2');
 $manager->flush();
 
+
+// Create a User and a Rating for the movie "The Matrix"
+
+$user = new User('cypher666');
+/** @var Movie $movie */
+$movie = $manager->getRepository(Movie::class)->findOneBy('title', 'The Matrix');
+$user->rateMovie($movie, '4.5');
+$manager->persist($user);
+$manager->flush();
 
 function playMovies(\GraphAware\Neo4j\Client\Client $client) {
     $q = 'CREATE (TheMatrix:Movie {title:\'The Matrix\', released:1999, tagline:\'Welcome to the Real World\'})
