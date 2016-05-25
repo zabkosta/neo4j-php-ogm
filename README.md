@@ -41,19 +41,19 @@ class User
 ```
 
 ```php
-$em = $this->getEntityManager();
+$this->em = $this->getEntityManager();
 // The entity manager is generally created somewhere else in your application and available in the dependency injection container.
 // More info about the creation is in the documentation
 
 // Creating and Persisting a User
 
 $bart = new User('Bart Johnson', 33);
-$entityManager->persist($bart);
-$entityManager->flush();
+$this->em->persist($bart);
+$this->em->flush();
 
 // Retrieving from the database
 
-$john = $this-em->getRepository(User::class)->findOneBy('name', 'John Doe');
+$john = $this->em->getRepository(User::class)->findOneBy('name', 'John Doe');
 echo $john->getAge();
 
 // Updating
