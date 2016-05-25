@@ -497,3 +497,45 @@ class Movie
     }
 }
 ```
+
+We need also to add a parameter to the `Person` entity mapping for the `movies` relationship annotation.
+
+```php
+    /**
+     * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Movie", collection=true, mappedBy="actors")
+     * @var ArrayCollection|Movie[]
+     */
+    protected $movies;
+```
+
+The `mappedBy` argument defines the name of the property of the other entity where the relationship is bound to. This is to ensure
+that the relationships are mapped to the right property, maybe the Movie entity will have incoming relationships from other objects
+than a Person.
+
+Let's modify the related `Cast Away` movie related to Tom Hanks to a new `Cast Away 2` movie name.
+
+```php
+// Find Tom Hanks, filter his movies to find Cast Away and rename it to Cast Away 2
+/** @var Person $tomHanks */
+$tomHanks = $manager->getRepository(Person::class)->findOneBy('name', 'Tom Hanks');
+$filter = array_values(array_filter($tomHanks->getMovies()->toArray(), function(\Movies\Movie $movie) {
+    return 'Cast Away' === $movie->getTitle();
+}));
+
+/** @var \Movies\Movie $castAway */
+$castAway = $filter[0];
+$castAway->setTitle('Cast Away 2');
+$manager->flush();
+```
+
+And verify our database :
+
+![update_related](_04-updatedrelated.png)
+
+All good !
+
+---
+
+### Relationship Entities
+
+

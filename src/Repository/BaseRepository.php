@@ -291,6 +291,7 @@ class BaseRepository
                                 $v2 = $this->hydrateNode($v, $this->getTargetFullClassName($association->getTargetEntity()));
                                 $property->getValue($baseInstance)->add($v2);
                                 $this->manager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $property->getName(), $association);
+                                $this->setInversedAssociation($baseInstance, $v2, $key);
                             }
                         } else {
                             $property = $reflClass->getProperty($key);

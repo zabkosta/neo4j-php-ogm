@@ -35,7 +35,7 @@ class Movie
     protected $release;
 
     /**
-     * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Person", collection=true, mappedBy="movies")
+     * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Person", collection=true)
      * @var ArrayCollection|Person[]
      */
     protected $actors;
@@ -65,6 +65,14 @@ class Movie
     public function getTitle()
     {
         return $this->title;
+    }
+
+    /**
+     * @param string $title
+     */
+    public function setTitle($title)
+    {
+        $this->title = $title;
     }
 
     /**
