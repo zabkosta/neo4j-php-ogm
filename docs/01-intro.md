@@ -530,7 +530,7 @@ $manager->flush();
 
 And verify our database :
 
-![update_related](_04-updatedrelated.png)
+![update_related](_04-updaterelated.png)
 
 All good !
 
