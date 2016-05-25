@@ -67,6 +67,12 @@ $this->em->flush();
 
 Coming soon...
 
+## Getting Help
+
+For questions, please open a new thread on [StackOverflow](https://stackoverflow.com) with the `graphaware`, `neo4j` and `neo4j-php-ogm` tags.
+
+For isses, please raise a Github issue in the repository.
+
 ## License
 
 The library is released under the MIT License, refer to the LICENSE file bundled with this package.
