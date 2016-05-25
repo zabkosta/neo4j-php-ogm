@@ -17,6 +17,14 @@ use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 class BaseRepository
 {
+    const FILTER_LIMIT = 'limit';
+
+    const FILTER_ORDER = 'order';
+
+    const ORDER_ASC = 'ASC';
+
+    const ORDER_DESC = 'DESC';
+
     /**
      * @var \GraphAware\Neo4j\OGM\Metadata\ClassMetadata
      */
@@ -59,8 +67,9 @@ class BaseRepository
      *
      * @throws \GraphAware\Neo4j\Client\Exception\Neo4jException
      */
-    public function findAll()
+    public function findAll(array $filters = array())
     {
+        $parameters = [];
         $label = $this->classMetadata->getLabel();
         $query = sprintf('MATCH (n:%s)', $label);
         /** @var Relationship[] $associations */
@@ -106,7 +115,20 @@ class BaseRepository
             $query .= implode(', ', $assocReturns);
         }
 
-        $result = $this->manager->getDatabaseDriver()->run($query);
+        if (isset($filters[self::FILTER_ORDER])) {
+            foreach ($filters[self::FILTER_ORDER] as $key => $filter) {
+                if (array_key_exists($key, $this->classMetadata->getFields())) {
+                    $query .= sprintf(' ORDER BY n.%s %s', $key, $filter);
+                }
+            }
+        }
+
+        if (isset($filters[self::FILTER_LIMIT]) && is_numeric($filters[self::FILTER_LIMIT])) {
+            $query .= ' LIMIT {limit}';
+            $parameters[self::FILTER_LIMIT] = $filters[self::FILTER_LIMIT];
+        }
+
+        $result = $this->manager->getDatabaseDriver()->run($query, $parameters);
 
         return $this->hydrateResultSet($result);
     }
