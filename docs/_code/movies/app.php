@@ -13,3 +13,6 @@ $tomHanks = $personRepository->findOneBy('name', 'Tom Hanks');
 $actor = new Person('Kevin Ross', 1976);
 $manager->persist($actor);
 $manager->flush();
+
+$tomHanks->setBorn(1990);
+$manager->flush();

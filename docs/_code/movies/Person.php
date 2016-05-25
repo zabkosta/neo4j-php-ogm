@@ -61,4 +61,12 @@ class Person
     {
         return $this->born;
     }
+
+    /**
+     * @param int $year
+     */
+    public function setBorn($year)
+    {
+        $this->born = $year;
+    }
 }

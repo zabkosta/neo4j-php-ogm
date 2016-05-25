@@ -149,7 +149,7 @@ Once you have the repository, you can retrieve node from the database, let's fin
 
 ```php
 use GraphAware\Neo4j\OGM\Manager;
-use Person;
+use Movies\Person;
 
 $manager = Manager::create('http://localhost:7474');
 
@@ -182,4 +182,28 @@ $manager->flush();
 And verify our database :
 
 ![New entity persisted](_02-newactor.png)
+
+The entity remains to be managed by the Entity Manager, this means that any update to your object will be reflected on next flush.
+This is also the case when you load entities from the database, they become automtically managed, let's modify Tom Hank's year of birth :
+
+```php
+// adding the setter to the model
+
+    /**
+     * @param int $year
+     */
+    public function setBorn($year)
+    {
+        $this->born = $year;
+    }
+```
+
+```php
+$tomHanks->setBorn(1990);
+$manager->flush();
+```
+
+![Update entity](_03-update.png)
+
+He is quite younger now :)
 
