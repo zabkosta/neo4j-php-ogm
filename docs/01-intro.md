@@ -40,6 +40,8 @@ Mapping definition is done by using **Annotations** on your domain object entiti
 ```php
 <?php
 
+namespace Movies;
+
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
@@ -115,4 +117,69 @@ annotation and they will not be saved / loaded to / from the database.
 The type argument defines the internal type (php) of the property, common types are `string`, 'int', `float`, ...
 
 Currently, the exact property name used in your domain model is used as property key on the database node. (This will evolve).
+
+### Entity Manager
+
+As of now, we are able to load / save `Person` entities to the database, as well as handling updates. Before we need to create
+the entity manager which will be the central point of operations.
+
+Creating the manager is just instantiating a new `GraphAware\Neo4j\OGM\Manager` object and passing your neo4j host url :
+
+```php
+use GraphAware\Neo4j\OGM\Manager;
+
+$manager = Manager::create('http://localhost:7474');
+```
+
+#### Repository
+
+Finding nodes from the database is done via their repository, retrieving the corresponding repository is done by passing the
+entity class name to the `getRepository` method :
+
+```php
+use GraphAware\Neo4j\OGM\Manager;
+use Movies\Person;
+
+$manager = Manager::create('http://localhost:7474');
+
+$personRepository = $manager->getRepository(Person::class);
+```
+
+Once you have the repository, you can retrieve node from the database, let's find `Tom Hanks` :
+
+```php
+use GraphAware\Neo4j\OGM\Manager;
+use Person;
+
+$manager = Manager::create('http://localhost:7474');
+
+$personRepository = $manager->getRepository(Person::class);
+$tomHanks = $personRepository->findOneBy('name', 'Tom Hanks');
+```
+
+The available methods on the repository are :
+
+* `findAll()`
+* `findOneBy($propertyKey, $propertyValue)`
+* `findBy($property, $propertyValue)`
+* `findOneById($id)`
+
+#### Persisting new objects
+
+Persistence is handled by the OGM with two main methods, `persist()` and `flush()`.
+
+To briefly summarize the difference, the objects you pass to the `persist` method become `managed` by the Entity Manager,
+keeping track of their changes and reflecting the changes at the next `flush()` operation.
+
+Let's create a new actor, named `Kevin Ross` and born in `1976` :
+
+```php
+$actor = new Person('Kevin Ross', 1976);
+$manager->persist($actor);
+$manager->flush();
+```
+
+And verify our database :
+
+![New entity persisted](_02-newactor.png)
 

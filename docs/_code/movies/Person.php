@@ -1,5 +1,7 @@
 <?php
 
+namespace Movies;
+
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
