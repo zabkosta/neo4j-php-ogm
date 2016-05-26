@@ -19,6 +19,17 @@ abstract class GraphEntityMetadata
     protected $className;
 
     /**
+     * @var \ReflectionClass
+     */
+    protected $reflectionClass;
+
+    public function __construct($className, \ReflectionClass $reflectionClass)
+    {
+        $this->className = $className;
+        $this->reflectionClass = $reflectionClass;
+    }
+
+    /**
      * @var EntityPropertyMetadata[]
      */
     protected $entityPropertiesMetadata = [];
@@ -37,6 +48,14 @@ abstract class GraphEntityMetadata
     public function getClassName()
     {
         return $this->className;
+    }
+
+    /**
+     * @return object
+     */
+    public function newInstance()
+    {
+        return $this->reflectionClass->newInstanceWithoutConstructor();
     }
 
 }

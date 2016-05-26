@@ -11,6 +11,8 @@
 
 namespace GraphAware\Neo4j\OGM\Metadata;
 
+use GraphAware\Neo4j\OGM\Common\Collection;
+
 class EntityPropertyMetadata
 {
     /**
@@ -19,19 +21,31 @@ class EntityPropertyMetadata
     private $propertyName;
 
     /**
+     * @var \ReflectionProperty
+     */
+    private $reflectionProperty;
+
+    /**
      * @var \GraphAware\Neo4j\OGM\Metadata\PropertyAnnotationMetadata
      */
     private $propertyAnnotationMetadata;
+
+    /**
+     * @var bool
+     */
+    private $isAccessible;
 
     /**
      * EntityPropertyMetadata constructor.
      * @param string $propertyName
      * @param \GraphAware\Neo4j\OGM\Metadata\PropertyAnnotationMetadata $propertyAnnotationMetadata
      */
-    public function __construct($propertyName, PropertyAnnotationMetadata $propertyAnnotationMetadata)
+    public function __construct($propertyName, \ReflectionProperty $reflectionProperty, PropertyAnnotationMetadata $propertyAnnotationMetadata)
     {
         $this->propertyName = $propertyName;
+        $this->reflectionProperty = $reflectionProperty;
         $this->propertyAnnotationMetadata = $propertyAnnotationMetadata;
+        $this->isAccessible = $reflectionProperty->isPublic();
     }
 
     /**
@@ -40,5 +54,35 @@ class EntityPropertyMetadata
     public function getPropertyName()
     {
         return $this->propertyName;
+    }
+
+    /**
+     * @param object $object
+     * @param mixed $value
+     */
+    public function setValue($object, $value)
+    {
+        $this->checkAccess();
+        $this->reflectionProperty->setValue($object, $value);
+    }
+
+    /**
+     * @param object $object
+     */
+    public function getValue($object)
+    {
+        $this->checkAccess();
+        $this->reflectionProperty->getValue($object);
+    }
+
+    /**
+     *
+     */
+    private function checkAccess()
+    {
+        if (!$this->isAccessible) {
+            $this->reflectionProperty->setAccessible(true);
+        }
+        $this->isAccessible = true;
     }
 }

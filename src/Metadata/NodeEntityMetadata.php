@@ -23,9 +23,9 @@ final class NodeEntityMetadata extends GraphEntityMetadata
      * @param string $className
      * @param \GraphAware\Neo4j\OGM\Metadata\NodeAnnotationMetadata $nodeAnnotationMetadata
      */
-    public function __construct($className, NodeAnnotationMetadata $nodeAnnotationMetadata)
+    public function __construct($className, \ReflectionClass $reflectionClass, NodeAnnotationMetadata $nodeAnnotationMetadata)
     {
-        $this->className = $className;
+        parent::__construct($className, $reflectionClass);
         $this->nodeAnnotationMetadata = $nodeAnnotationMetadata;
     }
 

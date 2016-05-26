@@ -53,11 +53,11 @@ class GraphEntityMetadataFactory
         $reflectionClass = new \ReflectionClass($className);
 
         if (null !== $annotation = $this->reader->getClassAnnotation($reflectionClass, Node::class)) {
-            $entityMetadata = new NodeEntityMetadata($className, $this->nodeAnnotationMetadataFactory->create($className));
+            $entityMetadata = new NodeEntityMetadata($className, $reflectionClass, $this->nodeAnnotationMetadataFactory->create($className));
             foreach ($reflectionClass->getProperties() as $reflectionProperty) {
                 $propertyAnnotationMetadata = $this->propertyAnnotationMetadataFactory->create($className, $reflectionProperty->getName());
                 if (null !== $propertyAnnotationMetadata) {
-                    $entityMetadata->addPropertyMetadata(new EntityPropertyMetadata($reflectionProperty->getName(), $propertyAnnotationMetadata));
+                    $entityMetadata->addPropertyMetadata(new EntityPropertyMetadata($reflectionProperty->getName(), $reflectionProperty, $propertyAnnotationMetadata));
                 }
             }
 
