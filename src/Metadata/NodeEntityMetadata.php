@@ -11,26 +11,26 @@
 
 namespace GraphAware\Neo4j\OGM\Metadata;
 
-final class RelationshipEntityMetadata
+final class NodeEntityMetadata
 {
     /**
      * @var string
      */
-    private $type;
+    private $label;
 
     /**
-     * @param string $type
+     * @param string $label
      */
-    public function __construct($type)
+    public function __construct($label)
     {
-        $this->type = $type;
+        $this->label = $label;
     }
 
     /**
      * @return string
      */
-    public function getType()
+    public function getLabel()
     {
-        return $this->type;
+        return $this->label;
     }
 }
