@@ -11,7 +11,7 @@
 
 namespace GraphAware\Neo4j\OGM\Metadata;
 
-final class PropertyMetadata
+final class PropertyAnnotationMetadata
 {
     /**
      * @var string

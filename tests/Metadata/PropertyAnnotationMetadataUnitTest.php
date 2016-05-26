@@ -2,7 +2,7 @@
 
 namespace GraphAware\Neo4j\OGM\Tests\Metadata;
 
-use GraphAware\Neo4j\OGM\Metadata\PropertyMetadata;
+use GraphAware\Neo4j\OGM\Metadata\PropertyAnnotationMetadata;
 
 /**
  * Class PropertyMetadataUnitTest
@@ -10,35 +10,35 @@ use GraphAware\Neo4j\OGM\Metadata\PropertyMetadata;
  *
  * @group metadata
  */
-class PropertyMetadataUnitTest extends \PHPUnit_Framework_TestCase
+class PropertyAnnotationMetadataUnitTest extends \PHPUnit_Framework_TestCase
 {
     public function testInit()
     {
-        $metadata = new PropertyMetadata('string');
+        $metadata = new PropertyAnnotationMetadata('string');
         $this->assertEquals('string', $metadata->getType());
     }
 
     public function testIsNullableByDefault()
     {
-        $metadata = new PropertyMetadata('string');
+        $metadata = new PropertyAnnotationMetadata('string');
         $this->assertTrue($metadata->isNullable());
     }
 
     public function testNotHaveCustomKeyByDefault()
     {
-        $metadata = new PropertyMetadata('string');
+        $metadata = new PropertyAnnotationMetadata('string');
         $this->assertFalse($metadata->hasCustomKey());
     }
 
     public function testNotNullableCanBeDefined()
     {
-        $metadata = new PropertyMetadata('string', null, false);
+        $metadata = new PropertyAnnotationMetadata('string', null, false);
         $this->assertFalse($metadata->isNullable());
     }
 
     public function testCustomKeyCanBePassed()
     {
-        $metadata = new PropertyMetadata('string', 'dob');
+        $metadata = new PropertyAnnotationMetadata('string', 'dob');
         $this->assertEquals('dob', $metadata->getKey());
     }
 }

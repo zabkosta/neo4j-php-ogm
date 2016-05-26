@@ -11,19 +11,22 @@
 
 namespace GraphAware\Neo4j\OGM\Metadata;
 
-final class NodeEntityMetadata
+final class NodeEntityMetadata extends GraphEntityMetadata
 {
     /**
-     * @var string
+     * @var \GraphAware\Neo4j\OGM\Metadata\NodeAnnotationMetadata
      */
-    private $label;
+    private $nodeAnnotationMetadata;
 
     /**
-     * @param string $label
+     * NodeEntityMetadata constructor.
+     * @param string $className
+     * @param \GraphAware\Neo4j\OGM\Metadata\NodeAnnotationMetadata $nodeAnnotationMetadata
      */
-    public function __construct($label)
+    public function __construct($className, NodeAnnotationMetadata $nodeAnnotationMetadata)
     {
-        $this->label = $label;
+        $this->className = $className;
+        $this->nodeAnnotationMetadata = $nodeAnnotationMetadata;
     }
 
     /**
@@ -31,6 +34,25 @@ final class NodeEntityMetadata
      */
     public function getLabel()
     {
-        return $this->label;
+        return $this->nodeAnnotationMetadata->getLabel();
+    }
+
+    /**
+     * @return \GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata[]
+     */
+    public function getPropertiesMetadata()
+    {
+        return $this->entityPropertiesMetadata;
+    }
+
+    /**
+     * @param $key
+     * @return \GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata
+     */
+    public function getPropertyMetadata($key)
+    {
+        if (array_key_exists($key, $this->entityPropertiesMetadata)) {
+            return $this->entityPropertiesMetadata[$key];
+        }
     }
 }
