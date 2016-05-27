@@ -8,7 +8,8 @@ use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Manager;
-use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
+use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
+use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
 use GraphAware\Neo4j\OGM\Annotations\Property;
@@ -55,7 +56,7 @@ class BaseRepository
      * @param \GraphAware\Neo4j\OGM\Manager                $manager
      * @param string                                       $className
      */
-    public function __construct(ClassMetadata $classMetadata, Manager $manager, $className)
+    public function __construct(NodeEntityMetadata $classMetadata, Manager $manager, $className)
     {
         $this->classMetadata = $classMetadata;
         $this->manager = $manager;
@@ -73,7 +74,7 @@ class BaseRepository
         $label = $this->classMetadata->getLabel();
         $query = sprintf('MATCH (n:%s)', $label);
         /** @var Relationship[] $associations */
-        $associations = array_merge($this->classMetadata->getAssociations(), $this->classMetadata->getRelationshipEntities());
+        $associations = array_merge($this->classMetadata->getAssociatedObjects(), $this->classMetadata->getRelationshipEntities());
         foreach ($associations as $identifier => $association) {
             switch ($association->getDirection()) {
                 case 'INCOMING':
@@ -95,7 +96,7 @@ class BaseRepository
         $query .= PHP_EOL;
         $query .= 'RETURN n';
         $assocReturns = [];
-        foreach ($this->classMetadata->getAssociations() as $k => $association) {
+        foreach ($this->classMetadata->getAssociatedObjects() as $k => $association) {
             if ($association->getCollection()) {
                 $assocReturns[] = sprintf('collect(%s) as %s', $k, $k);
             } else {
@@ -147,7 +148,7 @@ class BaseRepository
         $idId = $isId ? 'id(n)' : sprintf('n.%s', $key);
         $query = sprintf('MATCH (n:%s) WHERE %s = {%s}', $label, $idId, $key);
         /** @var Relationship[] $associations */
-        $associations = array_merge($this->classMetadata->getAssociations(), $this->classMetadata->getRelationshipEntities());
+        $associations = array_merge($this->classMetadata->getAssociatedObjects(), $this->classMetadata->getRelationshipEntities());
         foreach ($associations as $identifier => $association) {
             switch ($association->getDirection()) {
                 case 'INCOMING':
@@ -169,7 +170,7 @@ class BaseRepository
         $query .= PHP_EOL;
         $query .= 'RETURN n';
         $assocReturns = [];
-        foreach ($this->classMetadata->getAssociations() as $k => $association) {
+        foreach ($this->classMetadata->getAssociatedObjects() as $k => $association) {
             if ($association->getCollection()) {
                 $assocReturns[] = sprintf('collect(%s) as %s', $k, $k);
             } else {
@@ -281,7 +282,7 @@ class BaseRepository
         $reflClass = new \ReflectionClass($classN);
         $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
         if ($andCheckAssociations) {
-            foreach ($this->classMetadata->getAssociations() as $key => $association) {
+            foreach ($this->classMetadata->getAssociatedObjects() as $key => $association) {
                 if (!$association->isRelationshipEntity()) {
                     if ($record->hasValue($key) && null !== $record->get($key)) {
                         if ($association->getCollection()) {
@@ -368,28 +369,26 @@ class BaseRepository
             return $entity;
         }
         $cl = $className !== null ? $className : $this->className;
-        $reflClass = $this->getReflectionClass($cl);
-        $instance = $reflClass->newInstanceWithoutConstructor();
-        $cm = $this->manager->getClassMetadataFor($cl);
-        foreach ($cm->getFields() as $field => $meta) {
-            if ($meta instanceof Property) {
+        $cm = $className === null ? $this->classMetadata : $this->manager->getClassMetadataFor($cl);
+        $instance = $cm->newInstance();
+        foreach ($cm->getPropertiesMetadata() as $field => $meta) {
+            if ($meta instanceof EntityPropertyMetadata) {
                 if ($node->hasValue($field)) {
-                    if ($property = $reflClass->getProperty($field)) {
-                        $property->setAccessible(true);
-                        $property->setValue($instance, $node->value($field));
-                    }
+                    $meta->setValue($instance, $node->value($field));
                 }
             } elseif ($meta instanceof Label) {
                 $label = $meta->name;
+                /*
                 $v = $node->hasLabel($label);
                 if ($property = $reflClass->getProperty($field)) {
                     $property->setAccessible(true);
                     $property->setValue($instance, $v);
                 }
+                */
             }
         }
 
-        foreach ($cm->getAssociations() as $key => $assoc) {
+        foreach ($cm->getAssociatedObjects() as $key => $assoc) {
             if ($assoc->getCollection()) {
                 $property = $reflClass->getProperty($key);
                 $property->setAccessible(true);
@@ -405,9 +404,7 @@ class BaseRepository
             }
         }
 
-        $property = $reflClass->getProperty('id');
-        $property->setAccessible(true);
-        $property->setValue($instance, $node->identity());
+        $cm->setId($instance, $node->identity());
         $this->manager->getUnitOfWork()->addManaged($instance);
 
         return $instance;

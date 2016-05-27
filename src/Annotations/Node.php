@@ -16,5 +16,5 @@ final class Node implements Entity
     /**
      * @var string
      */
-    protected $repository;
+    public $repository;
 }

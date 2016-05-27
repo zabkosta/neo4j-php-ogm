@@ -68,11 +68,14 @@ class EntityPropertyMetadata
 
     /**
      * @param object $object
+     *
+     * @return mixed
      */
     public function getValue($object)
     {
         $this->checkAccess();
-        $this->reflectionProperty->getValue($object);
+
+        return $this->reflectionProperty->getValue($object);
     }
 
     /**

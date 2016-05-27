@@ -13,7 +13,9 @@ namespace GraphAware\Neo4j\OGM\Metadata\Factory;
 
 use Doctrine\Common\Annotations\Reader;
 use GraphAware\Neo4j\OGM\Annotations\Node;
+use GraphAware\Neo4j\OGM\Annotations\GraphId;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
+use GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 
@@ -35,6 +37,11 @@ class GraphEntityMetadataFactory
     private $propertyAnnotationMetadataFactory;
 
     /**
+     * @var \GraphAware\Neo4j\OGM\Metadata\Factory\IdAnnotationMetadataFactory
+     */
+    private $IdAnnotationMetadataFactory;
+
+    /**
      * @param \Doctrine\Common\Annotations\Reader $reader
      */
     public function __construct(Reader $reader)
@@ -42,6 +49,7 @@ class GraphEntityMetadataFactory
         $this->reader = $reader;
         $this->nodeAnnotationMetadataFactory = new NodeAnnotationMetadataFactory($reader);
         $this->propertyAnnotationMetadataFactory = new PropertyAnnotationMetadataFactory($reader);
+        $this->IdAnnotationMetadataFactory = new IdAnnotationMetadataFactory($reader);
     }
 
     /**
@@ -51,17 +59,24 @@ class GraphEntityMetadataFactory
     public function create($className)
     {
         $reflectionClass = new \ReflectionClass($className);
+        $entityIdMetadata = null;
+        $propertiesMetadata = [];
 
         if (null !== $annotation = $this->reader->getClassAnnotation($reflectionClass, Node::class)) {
-            $entityMetadata = new NodeEntityMetadata($className, $reflectionClass, $this->nodeAnnotationMetadataFactory->create($className));
+            $annotationMetadata = $this->nodeAnnotationMetadataFactory->create($className);
             foreach ($reflectionClass->getProperties() as $reflectionProperty) {
                 $propertyAnnotationMetadata = $this->propertyAnnotationMetadataFactory->create($className, $reflectionProperty->getName());
                 if (null !== $propertyAnnotationMetadata) {
-                    $entityMetadata->addPropertyMetadata(new EntityPropertyMetadata($reflectionProperty->getName(), $reflectionProperty, $propertyAnnotationMetadata));
+                    $propertiesMetadata[] = new EntityPropertyMetadata($reflectionProperty->getName(), $reflectionProperty, $propertyAnnotationMetadata);
+                } else {
+                    $idA = $this->IdAnnotationMetadataFactory->create($className, $reflectionProperty);
+                    if (null !== $idA) {
+                        $entityIdMetadata = new EntityIdMetadata($reflectionProperty->getName(), $reflectionProperty, $idA);
+                    }
                 }
             }
 
-            return $entityMetadata;
+            return new NodeEntityMetadata($className, $reflectionClass, $annotationMetadata, $entityIdMetadata, $propertiesMetadata);
         }
 
         throw new MappingException(sprintf('The class "%s" is not a valid OGM entity'));

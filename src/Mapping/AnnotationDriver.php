@@ -34,6 +34,11 @@ class AnnotationDriver
         );
     }
 
+    public function getReader()
+    {
+        return $this->reader;
+    }
+
     public function readQueryResult($class)
     {
         $reflClass = new \ReflectionClass($class);

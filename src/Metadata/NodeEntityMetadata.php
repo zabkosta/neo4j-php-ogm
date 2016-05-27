@@ -11,6 +11,8 @@
 
 namespace GraphAware\Neo4j\OGM\Metadata;
 
+use GraphAware\Neo4j\OGM\Util\ClassUtils;
+
 final class NodeEntityMetadata extends GraphEntityMetadata
 {
     /**
@@ -19,14 +21,20 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     private $nodeAnnotationMetadata;
 
     /**
+     * @var string
+     */
+    private $customRepository;
+
+    /**
      * NodeEntityMetadata constructor.
      * @param string $className
      * @param \GraphAware\Neo4j\OGM\Metadata\NodeAnnotationMetadata $nodeAnnotationMetadata
      */
-    public function __construct($className, \ReflectionClass $reflectionClass, NodeAnnotationMetadata $nodeAnnotationMetadata)
+    public function __construct($className, \ReflectionClass $reflectionClass, NodeAnnotationMetadata $nodeAnnotationMetadata, EntityIdMetadata $entityIdMetadata, array $entityPropertiesMetadata)
     {
-        parent::__construct($className, $reflectionClass);
+        parent::__construct($entityIdMetadata, $className, $reflectionClass, $entityPropertiesMetadata);
         $this->nodeAnnotationMetadata = $nodeAnnotationMetadata;
+        $this->customRepository = $this->nodeAnnotationMetadata->getCustomRepository();
     }
 
     /**
@@ -54,5 +62,35 @@ final class NodeEntityMetadata extends GraphEntityMetadata
         if (array_key_exists($key, $this->entityPropertiesMetadata)) {
             return $this->entityPropertiesMetadata[$key];
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasCustomRepository()
+    {
+        return null !== $this->customRepository;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRepositoryClass()
+    {
+        if (null === $this->customRepository) {
+            throw new \LogicException(sprintf('There is no custom repository for "%s"', $this->className));
+        }
+
+        return ClassUtils::getFullClassName($this->customRepository, $this->className);
+    }
+
+    public function getAssociatedObjects()
+    {
+        return array();
+    }
+
+    public function getRelationshipEntities()
+    {
+        return array();
     }
 }

@@ -19,11 +19,18 @@ final class NodeAnnotationMetadata
     private $label;
 
     /**
-     * @param string $label
+     * @var string
      */
-    public function __construct($label)
+    private $customRepository;
+
+    /**
+     * @param string $label
+     * @param string|null $repository
+     */
+    public function __construct($label, $repository)
     {
         $this->label = $label;
+        $this->customRepository = $repository;
     }
 
     /**
@@ -32,5 +39,13 @@ final class NodeAnnotationMetadata
     public function getLabel()
     {
         return $this->label;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCustomRepository()
+    {
+        return $this->customRepository;
     }
 }

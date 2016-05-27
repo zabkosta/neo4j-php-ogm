@@ -448,7 +448,7 @@ class UnitOfWork
     {
         $oid = spl_object_hash($entity);
         $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
-        $id = $classMetadata->getIdentityValue($entity);
+        $id = $classMetadata->getIdValue($entity);
         if (null === $id) {
             throw new \LogicException('Entity marked for managed but couldnt find identity');
         }

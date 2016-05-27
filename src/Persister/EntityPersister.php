@@ -3,17 +3,23 @@
 namespace GraphAware\Neo4j\OGM\Persister;
 
 use GraphAware\Common\Cypher\Statement;
-use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
 use GraphAware\Neo4j\OGM\Annotations\Property;
 use GraphAware\Neo4j\OGM\Annotations\Label;
+use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 
 class EntityPersister
 {
+    /**
+     * @var \GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata
+     */
     protected $classMetadata;
 
+    /**
+     * @var string
+     */
     protected $className;
 
-    public function __construct($className, ClassMetadata $classMetadata)
+    public function __construct($className, NodeEntityMetadata $classMetadata)
     {
         $this->className = $className;
         $this->classMetadata = $classMetadata;
@@ -24,12 +30,11 @@ class EntityPersister
         $propertyValues = [];
         $extraLabels = [];
         $removeLabels = [];
-        $reflO = new \ReflectionObject($object);
-        foreach ($this->classMetadata->getFields() as $field => $meta) {
+        foreach ($this->classMetadata->getPropertiesMetadata() as $field => $meta) {
+            $propertyValues[$field] = $meta->getValue($object);
+            /**
             if ($meta instanceof Property) {
-                $p = $reflO->getProperty($field);
-                $p->setAccessible(true);
-                $propertyValues[$field] = $p->getValue($object);
+                $propertyValues[$field] = $meta->getValue($object);
             } elseif ($meta instanceof Label) {
                 $p = $reflO->getProperty($field);
                 $p->setAccessible(true);
@@ -40,6 +45,7 @@ class EntityPersister
                     $removeLabels[] = $meta->name;
                 }
             }
+             */
         }
 
         $query = sprintf('CREATE (n:%s) SET n += {properties}', $this->classMetadata->getLabel());

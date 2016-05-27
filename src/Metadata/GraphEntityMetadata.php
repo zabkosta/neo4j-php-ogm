@@ -14,6 +14,11 @@ namespace GraphAware\Neo4j\OGM\Metadata;
 abstract class GraphEntityMetadata
 {
     /**
+     * @var \GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata
+     */
+    protected $entityIdMetadata;
+
+    /**
      * @var string
      */
     protected $className;
@@ -23,16 +28,27 @@ abstract class GraphEntityMetadata
      */
     protected $reflectionClass;
 
-    public function __construct($className, \ReflectionClass $reflectionClass)
-    {
-        $this->className = $className;
-        $this->reflectionClass = $reflectionClass;
-    }
-
     /**
      * @var EntityPropertyMetadata[]
      */
     protected $entityPropertiesMetadata = [];
+
+    /**
+     * GraphEntityMetadata constructor.
+     * @param \GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata $entityIdMetadata
+     * @param string $className
+     * @param \ReflectionClass $reflectionClass
+     * @param EntityPropertyMetadata[] $entityPropertiesMetadata
+     */
+    public function __construct(EntityIdMetadata $entityIdMetadata, $className, \ReflectionClass $reflectionClass, array $entityPropertiesMetadata)
+    {
+        $this->entityIdMetadata = $entityIdMetadata;
+        $this->className = $className;
+        $this->reflectionClass = $reflectionClass;
+        foreach ($entityPropertiesMetadata as $meta) {
+            $this->entityPropertiesMetadata[$meta->getPropertyName()] = $meta;
+        }
+    }
 
     /**
      * @param \GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata $entityPropertyMetadata
@@ -56,6 +72,32 @@ abstract class GraphEntityMetadata
     public function newInstance()
     {
         return $this->reflectionClass->newInstanceWithoutConstructor();
+    }
+
+    /**
+     * @param $object
+     * @return mixed
+     */
+    public function getIdValue($object)
+    {
+        return $this->entityIdMetadata->getValue($object);
+    }
+
+    /**
+     * @param $object
+     * @param $value
+     */
+    public function setId($object, $value)
+    {
+        $this->entityIdMetadata->setValue($object, $value);
+    }
+
+    /**
+     * @return string
+     */
+    public function getIdentifier()
+    {
+        return $this->entityIdMetadata->getPropertyName();
     }
 
 }
