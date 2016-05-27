@@ -388,6 +388,11 @@ class BaseRepository
             }
         }
 
+        foreach ($cm->getLabeledProperties() as $labeledProperty) {
+            $v = $node->hasLabel($labeledProperty->getLabelName()) ? true : false;
+            $labeledProperty->setLabel($instance, $v);
+        }
+
         foreach ($cm->getAssociatedObjects() as $key => $assoc) {
             if ($assoc->getCollection()) {
                 $property = $reflClass->getProperty($key);

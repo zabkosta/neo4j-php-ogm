@@ -257,14 +257,10 @@ class UnitOfWork
     private function computeChanges($entityA, $entityB)
     {
         $classMetadata = $this->manager->getClassMetadataFor(get_class($entityA));
-        foreach ($classMetadata->getFields() as $field => $meta) {
-            $reflO = new \ReflectionObject($entityA);
-            $reflI = new \ReflectionObject($entityB);
-            $p1 = $reflO->getProperty($field);
-            $p1->setAccessible(true);
-            $p2 = $reflI->getProperty($field);
-            $p2->setAccessible(true);
-            if ($p1->getValue($entityA) !== $p2->getValue($entityB)) {
+        foreach ($classMetadata->getPropertiesMetadata() as $field => $meta) {
+            $p1 = $meta->getValue($entityA);
+            $p2 = $meta->getValue($entityB);
+            if ($p1 !== $p2) {
                 $this->nodesScheduledForUpdate[spl_object_hash($entityA)] = $entityA;
             }
         }

@@ -32,20 +32,14 @@ class EntityPersister
         $removeLabels = [];
         foreach ($this->classMetadata->getPropertiesMetadata() as $field => $meta) {
             $propertyValues[$field] = $meta->getValue($object);
-            /**
-            if ($meta instanceof Property) {
-                $propertyValues[$field] = $meta->getValue($object);
-            } elseif ($meta instanceof Label) {
-                $p = $reflO->getProperty($field);
-                $p->setAccessible(true);
-                $v = $p->getValue($object);
-                if (true === $v) {
-                    $extraLabels[] = $meta->name;
-                } else {
-                    $removeLabels[] = $meta->name;
-                }
+        }
+
+        foreach ($this->classMetadata->getLabeledProperties() as $labeledProperty) {
+            if ($labeledProperty->isLabelSet($object)) {
+                $extraLabels[] = $labeledProperty->getLabelName();
+            } else {
+                $removeLabels[] = $labeledProperty->getLabelName();
             }
-             */
         }
 
         $query = sprintf('CREATE (n:%s) SET n += {properties}', $this->classMetadata->getLabel());
@@ -68,32 +62,20 @@ class EntityPersister
     public function getUpdateQuery($object)
     {
         $propertyValues = [];
-        $reflO = new \ReflectionObject($object);
-        foreach ($this->classMetadata->getFields() as $field => $meta) {
-            $p = $reflO->getProperty($field);
-            $p->setAccessible(true);
-            $propertyValues[$field] = $p->getValue($object);
+        $extraLabels = [];
+        $removeLabels = [];
+        foreach ($this->classMetadata->getPropertiesMetadata() as $field => $meta) {
+            $propertyValues[$field] = $meta->getValue($object);
         }
-        $propId = $reflO->getProperty('id');
-        $propId->setAccessible(true);
-        $id = $propId->getValue($object);
 
-        foreach ($this->classMetadata->getFields() as $field => $meta) {
-            if ($meta instanceof Property) {
-                $p = $reflO->getProperty($field);
-                $p->setAccessible(true);
-                $propertyValues[$field] = $p->getValue($object);
-            } elseif ($meta instanceof Label) {
-                $p = $reflO->getProperty($field);
-                $p->setAccessible(true);
-                $v = $p->getValue($object);
-                if (true === $v) {
-                    $extraLabels[] = $meta->name;
-                } else {
-                    $removeLabels[] = $meta->name;
-                }
+        foreach ($this->classMetadata->getLabeledProperties() as $labeledProperty) {
+            if ($labeledProperty->isLabelSet($object)) {
+                $extraLabels[] = $labeledProperty->getLabelName();
+            } else {
+                $removeLabels[] = $labeledProperty->getLabelName();
             }
         }
+        $id = $this->classMetadata->getIdValue($object);
 
         $query = 'MATCH (n) WHERE id(n) = {id} SET n += {props}';
         if (!empty($extraLabels)) {

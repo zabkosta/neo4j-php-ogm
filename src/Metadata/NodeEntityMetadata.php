@@ -26,6 +26,11 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     private $customRepository;
 
     /**
+     * @var LabeledPropertyMetadata[]
+     */
+    protected $labeledPropertiesMetadata = [];
+
+    /**
      * NodeEntityMetadata constructor.
      * @param string $className
      * @param \GraphAware\Neo4j\OGM\Metadata\NodeAnnotationMetadata $nodeAnnotationMetadata
@@ -35,6 +40,11 @@ final class NodeEntityMetadata extends GraphEntityMetadata
         parent::__construct($entityIdMetadata, $className, $reflectionClass, $entityPropertiesMetadata);
         $this->nodeAnnotationMetadata = $nodeAnnotationMetadata;
         $this->customRepository = $this->nodeAnnotationMetadata->getCustomRepository();
+        foreach ($entityPropertiesMetadata as $o) {
+            if ($o instanceof LabeledPropertyMetadata) {
+                $this->labeledPropertiesMetadata[$o->getPropertyName()] = $o;
+            }
+        }
     }
 
     /**
@@ -65,6 +75,25 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     }
 
     /**
+     * @param $key
+     * @return \GraphAware\Neo4j\OGM\Metadata\LabeledPropertyMetadata
+     */
+    public function getLabeledProperty($key)
+    {
+        if (array_key_exists($key, $this->labeledPropertiesMetadata)) {
+            return $this->labeledPropertiesMetadata[$key];
+        }
+    }
+
+    /**
+     * @return \GraphAware\Neo4j\OGM\Metadata\LabeledPropertyMetadata[]
+     */
+    public function getLabeledProperties()
+    {
+        return $this->labeledPropertiesMetadata;
+    }
+
+    /**
      * @return bool
      */
     public function hasCustomRepository()
@@ -84,11 +113,17 @@ final class NodeEntityMetadata extends GraphEntityMetadata
         return ClassUtils::getFullClassName($this->customRepository, $this->className);
     }
 
+    /**
+     * @return array
+     */
     public function getAssociatedObjects()
     {
         return array();
     }
 
+    /**
+     * @return array
+     */
     public function getRelationshipEntities()
     {
         return array();

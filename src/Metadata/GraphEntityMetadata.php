@@ -38,7 +38,7 @@ abstract class GraphEntityMetadata
      * @param \GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata $entityIdMetadata
      * @param string $className
      * @param \ReflectionClass $reflectionClass
-     * @param EntityPropertyMetadata[] $entityPropertiesMetadata
+     * @param $entityPropertiesMetadata
      */
     public function __construct(EntityIdMetadata $entityIdMetadata, $className, \ReflectionClass $reflectionClass, array $entityPropertiesMetadata)
     {
@@ -46,16 +46,10 @@ abstract class GraphEntityMetadata
         $this->className = $className;
         $this->reflectionClass = $reflectionClass;
         foreach ($entityPropertiesMetadata as $meta) {
-            $this->entityPropertiesMetadata[$meta->getPropertyName()] = $meta;
+            if ($meta instanceof EntityPropertyMetadata) {
+                $this->entityPropertiesMetadata[$meta->getPropertyName()] = $meta;
+            }
         }
-    }
-
-    /**
-     * @param \GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata $entityPropertyMetadata
-     */
-    public function addPropertyMetadata(EntityPropertyMetadata $entityPropertyMetadata)
-    {
-        $this->entityPropertiesMetadata[$entityPropertyMetadata->getPropertyName()] = $entityPropertyMetadata;
     }
 
     /**
