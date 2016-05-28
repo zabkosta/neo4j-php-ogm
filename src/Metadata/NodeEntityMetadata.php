@@ -11,6 +11,7 @@
 
 namespace GraphAware\Neo4j\OGM\Metadata;
 
+use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 final class NodeEntityMetadata extends GraphEntityMetadata
@@ -31,12 +32,27 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     protected $labeledPropertiesMetadata = [];
 
     /**
-     * NodeEntityMetadata constructor.
-     * @param string $className
-     * @param \GraphAware\Neo4j\OGM\Metadata\NodeAnnotationMetadata $nodeAnnotationMetadata
+     * @var RelationshipMetadata[]
      */
-    public function __construct($className, \ReflectionClass $reflectionClass, NodeAnnotationMetadata $nodeAnnotationMetadata, EntityIdMetadata $entityIdMetadata, array $entityPropertiesMetadata)
-    {
+    protected $relationships = [];
+
+    /**
+     * NodeEntityMetadata constructor.
+     * @param \GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata $className
+     * @param \ReflectionClass $reflectionClass
+     * @param \GraphAware\Neo4j\OGM\Metadata\NodeAnnotationMetadata $nodeAnnotationMetadata
+     * @param \GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata $entityIdMetadata
+     * @param array $entityPropertiesMetadata
+     * @param RelationshipMetadata[] $simpleRelationshipsMetadata
+     */
+    public function __construct(
+        $className,
+        \ReflectionClass $reflectionClass,
+        NodeAnnotationMetadata $nodeAnnotationMetadata,
+        EntityIdMetadata $entityIdMetadata,
+        array $entityPropertiesMetadata,
+        array $simpleRelationshipsMetadata
+    ) {
         parent::__construct($entityIdMetadata, $className, $reflectionClass, $entityPropertiesMetadata);
         $this->nodeAnnotationMetadata = $nodeAnnotationMetadata;
         $this->customRepository = $this->nodeAnnotationMetadata->getCustomRepository();
@@ -44,6 +60,9 @@ final class NodeEntityMetadata extends GraphEntityMetadata
             if ($o instanceof LabeledPropertyMetadata) {
                 $this->labeledPropertiesMetadata[$o->getPropertyName()] = $o;
             }
+        }
+        foreach ($simpleRelationshipsMetadata as $relationshipMetadata) {
+            $this->relationships[$relationshipMetadata->getPropertyName()] = $relationshipMetadata;
         }
     }
 
@@ -114,18 +133,56 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     }
 
     /**
-     * @return array
+     * @return \GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata[]
      */
-    public function getAssociatedObjects()
+    public function getRelationships()
     {
-        return array();
+        return $this->relationships;
+    }
+
+    /**
+     * @param $key
+     * @return \GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata
+     */
+    public function getRelationship($key)
+    {
+        if (array_key_exists($key, $this->relationships)) {
+            return $this->relationships[$key];
+        }
+    }
+
+    /**
+     * @return RelationshipMetadata[]
+     */
+    public function getSimpleRelationships()
+    {
+        return array_map(function(RelationshipMetadata $relationshipMetadata) {
+            if (!$relationshipMetadata->isRelationshipEntity()) {
+                return $relationshipMetadata;
+            }
+        }, $this->relationships);
+    }
+
+    /**
+     * @return RelationshipMetadata[]
+     */
+    public function getRelationshipEntities()
+    {
+        $coll = [];
+        foreach ($this->relationships as $relationship) {
+            if ($relationship->isRelationshipEntity()) {
+                $coll[] = $relationship;
+            }
+        }
+
+        return $coll;
     }
 
     /**
      * @return array
      */
-    public function getRelationshipEntities()
+    public function getAssociatedObjects()
     {
-        return array();
+        return $this->getSimpleRelationships();
     }
 }

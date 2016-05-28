@@ -5,6 +5,8 @@ namespace GraphAware\Neo4j\OGM;
 use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\Client\Stack;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
+use GraphAware\Neo4j\OGM\Common\Collection;
+use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
 use GraphAware\Neo4j\OGM\Persister\RelationshipEntityPersister;
 use GraphAware\Neo4j\OGM\Persister\RelationshipPersister;
@@ -114,23 +116,27 @@ class UnitOfWork
     public function cascadePersist($entity, array &$visited)
     {
         $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
-        $associations = $classMetadata->getAssociatedObjects($entity);
+        $associations = $classMetadata->getSimpleRelationships();
 
         foreach ($associations as $association) {
-            if (is_array($association[1]) || $association[1] instanceof ArrayCollection) {
-                foreach ($association[1] as $assoc) {
-                    $this->persistRelationship($entity, $association[0], $assoc, $association[2], $visited);
+            $value = $association->getValue($entity);
+            if (is_array($value) || $value instanceof ArrayCollection) {
+                foreach ($value as $assoc) {
+                    $this->persistRelationship($entity, $assoc, $association, $visited);
                 }
             } else {
-                $this->persistRelationship($entity, $association[0], $association[1], $association[2], $visited);
+                $entityB = $association->getValue($entity);
+                if (is_object($entityB)) {
+                    $this->persistRelationship($entity, $entityB, $association, $visited);
+                }
             }
         }
     }
 
-    public function persistRelationship($entityA, Relationship $relationship, $entityB, $field, array &$visited)
+    public function persistRelationship($entityA, $entityB, RelationshipMetadata $relationship, array &$visited)
     {
         $this->doPersist($entityB, $visited);
-        $this->relationshipsScheduledForCreated[] = [$entityA, $relationship, $entityB, $field];
+        $this->relationshipsScheduledForCreated[] = [$entityA, $relationship, $entityB, $relationship->getPropertyName()];
     }
 
     public function flush()

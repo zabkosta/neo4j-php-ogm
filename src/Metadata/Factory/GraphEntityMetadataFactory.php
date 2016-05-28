@@ -15,11 +15,13 @@ use Doctrine\Common\Annotations\Reader;
 use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Annotations\Node;
 use GraphAware\Neo4j\OGM\Annotations\GraphId;
+use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
 use GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\LabeledPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
+use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 
 class GraphEntityMetadataFactory
 {
@@ -63,6 +65,7 @@ class GraphEntityMetadataFactory
         $reflectionClass = new \ReflectionClass($className);
         $entityIdMetadata = null;
         $propertiesMetadata = [];
+        $relationshipsMetadata = [];
 
         if (null !== $annotation = $this->reader->getClassAnnotation($reflectionClass, Node::class)) {
             $annotationMetadata = $this->nodeAnnotationMetadataFactory->create($className);
@@ -81,12 +84,16 @@ class GraphEntityMetadataFactory
                     if ($annot instanceof Label) {
                         $propertiesMetadata[] = new LabeledPropertyMetadata($reflectionProperty->getName(), $reflectionProperty, $annot);
                     }
+
+                    if ($annot instanceof Relationship) {
+                        $relationshipsMetadata[] = new RelationshipMetadata($className, $reflectionProperty, $annot);
+                    }
                 }
             }
 
-            return new NodeEntityMetadata($className, $reflectionClass, $annotationMetadata, $entityIdMetadata, $propertiesMetadata);
+            return new NodeEntityMetadata($className, $reflectionClass, $annotationMetadata, $entityIdMetadata, $propertiesMetadata, $relationshipsMetadata);
         }
 
-        throw new MappingException(sprintf('The class "%s" is not a valid OGM entity'));
+        throw new MappingException(sprintf('The class "%s" is not a valid OGM entity', $className));
     }
 }
