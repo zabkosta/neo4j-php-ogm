@@ -4,6 +4,12 @@ namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 
+/**
+ * Class ManagedEntityFlushITest
+ * @package GraphAware\Neo4j\OGM\Tests\Integration
+ *
+ * @group manage-flush
+ */
 class ManagedEntityFlushITest extends IntegrationTestCase
 {
     public function setUp()
@@ -13,6 +19,7 @@ class ManagedEntityFlushITest extends IntegrationTestCase
     }
 
     /**
+     * @group flush-1
      * @group flush
      */
     public function testManagedEntityIsFlushedOnBooleanLabelUpdate()

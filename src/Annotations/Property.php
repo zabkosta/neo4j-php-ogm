@@ -8,26 +8,21 @@ use Doctrine\Common\Annotations\Annotation\Target;
  * @Annotation
  * @Target({"PROPERTY"})
  */
-class Property
+final class Property
 {
     /**
      * @var string
+     * @Enum({"string","boolean","array","int","float"})
      */
-    protected $type;
+    public $type;
 
     /**
-     * @param array $values
+     * @var string
      */
-    public function __construct(array $values)
-    {
-        $this->type = $values['type'];
-    }
+    public $key;
 
-    /**
-     * @return string
+    /*
+     * @var bool
      */
-    public function getType()
-    {
-        return $this->type;
-    }
+    public $nullable;
 }

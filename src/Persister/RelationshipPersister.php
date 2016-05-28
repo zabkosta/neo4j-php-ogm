@@ -4,13 +4,17 @@ namespace GraphAware\Neo4j\OGM\Persister;
 
 use GraphAware\Common\Cypher\Statement;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
+use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 
 class RelationshipPersister
 {
-    public function getRelationshipQuery($entityIdA, Relationship $relationship, $entityIdB)
+    public function getRelationshipQuery($entityIdA, RelationshipMetadata $relationship, $entityIdB)
     {
+        if ('' === trim($relationship->getType())) {
+            throw new \RuntimeException(sprintf('Cannot create empty relationship type', $relationship->getPropertyName()));
+        }
         $relString = '';
-        switch ($relationship->direction) {
+        switch ($relationship->getDirection()) {
             case 'OUTGOING':
                 $relString = '-[r:%s]->';
                 break;
@@ -33,10 +37,10 @@ class RelationshipPersister
         return Statement::create($query, ['ida' => $entityIdA, 'idb' => $entityIdB]);
     }
 
-    public function getDeleteRelationshipQuery($entityIdA, $entityIdB, Relationship $relationship)
+    public function getDeleteRelationshipQuery($entityIdA, $entityIdB, RelationshipMetadata $relationship)
     {
         $relString = '';
-        switch ($relationship->direction) {
+        switch ($relationship->getDirection()) {
             case 'OUTGOING':
                 $relString = '-[r:%s]->';
                 break;

@@ -8,18 +8,8 @@ namespace GraphAware\Neo4j\OGM\Annotations;
  */
 class EndNode
 {
-    protected $targetEntity;
-
-    public function __construct(array $values)
-    {
-        $this->targetEntity = $values['targetEntity'];
-    }
-
     /**
-     * @return mixed
+     * @var string
      */
-    public function getTargetEntity()
-    {
-        return $this->targetEntity;
-    }
+    public $targetEntity;
 }

@@ -2,29 +2,40 @@
 
 namespace GraphAware\Neo4j\OGM\Metadata;
 
-class ClassMetadata
+use GraphAware\Neo4j\OGM\Annotations\Entity;
+use GraphAware\Neo4j\OGM\Annotations\Node;
+use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
+use GraphAware\Neo4j\OGM\Exception\MappingException;
+
+final class ClassMetadata
 {
-    protected $className;
+    /**
+     * @var \GraphAware\Neo4j\OGM\Annotations\Entity|\GraphAware\Neo4j\OGM\Annotations\Node|\GraphAware\Neo4j\OGM\Annotations\RelationshipEntity
+     */
+    protected $entityAnnotation;
 
-    protected $type;
-
-    protected $fields = [];
-
-    protected $associations = [];
-
-    protected $relEntities = [];
-
-    protected $label;
-
-    protected $repository;
-
-    public function __construct($type, $label, array $fields, array $associations, array $relEntities)
+    /**
+     * @param \GraphAware\Neo4j\OGM\Annotations\Entity $entityAnnotation
+     */
+    public function __construct(Entity $entityAnnotation)
     {
-        $this->type = $type;
-        $this->label = $label;
-        $this->fields = $fields;
-        $this->associations = $associations;
-        $this->relEntities = $relEntities;
+        $this->entityAnnotation = $entityAnnotation;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isNodeEntity()
+    {
+        return $this->entityAnnotation instanceof Node;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRelationshipEntity()
+    {
+        return $this->entityAnnotation instanceof RelationshipEntity;
     }
 
     /**
@@ -32,101 +43,22 @@ class ClassMetadata
      */
     public function getLabel()
     {
-        return $this->label;
-    }
-
-    public function getFields()
-    {
-        return $this->fields;
-    }
-
-    /**
-     * @return \GraphAware\Neo4j\OGM\Annotations\Relationship[]
-     */
-    public function getAssociations()
-    {
-        return $this->associations;
-    }
-
-    public function addField(array $field)
-    {
-        $this->fields[$field[0]] = $field;
-    }
-
-    public function addAssociation(array $association)
-    {
-        $this->associations[$association[0]] = $association;
-    }
-
-    /**
-     * @param string $key
-     *
-     * @return \GraphAware\Neo4j\OGM\Annotations\Relationship
-     */
-    public function getAssociation($key)
-    {
-        if (isset($this->associations[$key])) {
-            return $this->associations[$key];
+        if (!$this->isNodeEntity()) {
+            throw new MappingException(sprintf('This class metadata is not for a node entity'));
         }
 
-        throw new \InvalidArgumentException(sprintf('No association with key "%s" found for class "%s"', $key, $this->className));
+        return $this->entityAnnotation->label;
     }
 
     /**
-     * @return \GraphAware\Neo4j\OGM\Annotations\Relationship[]
+     * @return string
      */
-    public function getRelationshipEntities()
+    public function getRelationshipType()
     {
-        return $this->relEntities;
-    }
-
-    /**
-     * @param string $key
-     *
-     * @return \GraphAware\Neo4j\OGM\Annotations\Relationship
-     */
-    public function getRelationshipEntity($key)
-    {
-        return $this->relEntities[$key];
-    }
-
-    public function getIdentityValue($entity)
-    {
-        $reflClass = new \ReflectionClass(get_class($entity));
-        $property = $reflClass->getProperty('id');
-        $property->setAccessible(true);
-
-        return $property->getValue($entity);
-    }
-
-    public function getAssociatedObjects($entity)
-    {
-        $relatedObjects = [];
-        $reflClass = new \ReflectionClass(get_class($entity));
-        foreach ($this->associations as $k => $assoc) {
-            $property = $reflClass->getProperty($k);
-            $property->setAccessible(true);
-            $value = $property->getValue($entity);
-            if (null !== $value) {
-                $relatedObjects[] = [$assoc, $value, $property->getName()];
-            }
+        if (!$this->isRelationshipEntity()) {
+            throw new MappingException(sprintf('This class metadata is not for a relationship entity'));
         }
 
-        return $relatedObjects;
-    }
-
-    public function setRepositoryClass($class)
-    {
-        $this->repository = $class;
-    }
-
-    public function hasCustomRepository()
-    {
-        return null !== $this->repository;
-    }
-
-    public function getRepositoryClass()
-    {
-        return $this->repository;
+        return $this->entityAnnotation->type;
     }
 }

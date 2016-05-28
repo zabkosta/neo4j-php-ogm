@@ -3,17 +3,21 @@
 namespace GraphAware\Neo4j\OGM\Persister;
 
 use GraphAware\Common\Cypher\Statement;
-use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
-use GraphAware\Neo4j\OGM\Annotations\Property;
-use GraphAware\Neo4j\OGM\Annotations\Label;
+use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 
 class EntityPersister
 {
+    /**
+     * @var \GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata
+     */
     protected $classMetadata;
 
+    /**
+     * @var string
+     */
     protected $className;
 
-    public function __construct($className, ClassMetadata $classMetadata)
+    public function __construct($className, NodeEntityMetadata $classMetadata)
     {
         $this->className = $className;
         $this->classMetadata = $classMetadata;
@@ -24,21 +28,15 @@ class EntityPersister
         $propertyValues = [];
         $extraLabels = [];
         $removeLabels = [];
-        $reflO = new \ReflectionObject($object);
-        foreach ($this->classMetadata->getFields() as $field => $meta) {
-            if ($meta instanceof Property) {
-                $p = $reflO->getProperty($field);
-                $p->setAccessible(true);
-                $propertyValues[$field] = $p->getValue($object);
-            } elseif ($meta instanceof Label) {
-                $p = $reflO->getProperty($field);
-                $p->setAccessible(true);
-                $v = $p->getValue($object);
-                if (true === $v) {
-                    $extraLabels[] = $meta->name;
-                } else {
-                    $removeLabels[] = $meta->name;
-                }
+        foreach ($this->classMetadata->getPropertiesMetadata() as $field => $meta) {
+            $propertyValues[$field] = $meta->getValue($object);
+        }
+
+        foreach ($this->classMetadata->getLabeledProperties() as $labeledProperty) {
+            if ($labeledProperty->isLabelSet($object)) {
+                $extraLabels[] = $labeledProperty->getLabelName();
+            } else {
+                $removeLabels[] = $labeledProperty->getLabelName();
             }
         }
 
@@ -62,32 +60,20 @@ class EntityPersister
     public function getUpdateQuery($object)
     {
         $propertyValues = [];
-        $reflO = new \ReflectionObject($object);
-        foreach ($this->classMetadata->getFields() as $field => $meta) {
-            $p = $reflO->getProperty($field);
-            $p->setAccessible(true);
-            $propertyValues[$field] = $p->getValue($object);
+        $extraLabels = [];
+        $removeLabels = [];
+        foreach ($this->classMetadata->getPropertiesMetadata() as $field => $meta) {
+            $propertyValues[$field] = $meta->getValue($object);
         }
-        $propId = $reflO->getProperty('id');
-        $propId->setAccessible(true);
-        $id = $propId->getValue($object);
 
-        foreach ($this->classMetadata->getFields() as $field => $meta) {
-            if ($meta instanceof Property) {
-                $p = $reflO->getProperty($field);
-                $p->setAccessible(true);
-                $propertyValues[$field] = $p->getValue($object);
-            } elseif ($meta instanceof Label) {
-                $p = $reflO->getProperty($field);
-                $p->setAccessible(true);
-                $v = $p->getValue($object);
-                if (true === $v) {
-                    $extraLabels[] = $meta->name;
-                } else {
-                    $removeLabels[] = $meta->name;
-                }
+        foreach ($this->classMetadata->getLabeledProperties() as $labeledProperty) {
+            if ($labeledProperty->isLabelSet($object)) {
+                $extraLabels[] = $labeledProperty->getLabelName();
+            } else {
+                $removeLabels[] = $labeledProperty->getLabelName();
             }
         }
+        $id = $this->classMetadata->getIdValue($object);
 
         $query = 'MATCH (n) WHERE id(n) = {id} SET n += {props}';
         if (!empty($extraLabels)) {

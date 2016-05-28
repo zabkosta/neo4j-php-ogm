@@ -10,4 +10,3 @@ require_once __DIR__.'/../Annotations/QueryResult.php';
 require_once __DIR__.'/../Annotations/Relationship.php';
 require_once __DIR__.'/../Annotations/RelationshipEntity.php';
 require_once __DIR__.'/../Annotations/StartNode.php';
-

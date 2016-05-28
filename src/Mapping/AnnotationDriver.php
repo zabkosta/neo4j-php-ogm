@@ -24,7 +24,7 @@ class AnnotationDriver
 
     public function __construct($cacheDirectory = null)
     {
-        $cacheDir = $cacheDirectory ? : sys_get_temp_dir();
+        $cacheDir = $cacheDirectory ?: sys_get_temp_dir();
         AnnotationRegistry::registerFile(__DIR__.'/Neo4jOGMAnnotations.php');
         $reader = new AnnotationReader();
         $this->reader = new FileCacheReader(
@@ -32,6 +32,11 @@ class AnnotationDriver
             $cacheDir,
             $debug = true
         );
+    }
+
+    public function getReader()
+    {
+        return $this->reader;
     }
 
     public function readQueryResult($class)

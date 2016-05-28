@@ -21,6 +21,10 @@ class RelationshipEntityITest extends IntegrationTestCase
         $this->playMovies();
     }
 
+    /**
+     *
+     * @group rel-entity-fetch
+     */
     public function testRelationshipEntitesAreRetrieved()
     {
         /** @var Person $tom */
@@ -79,6 +83,9 @@ class RelationshipEntityITest extends IntegrationTestCase
         $this->assertGraphExist('(p:Person {name:"ikwattro"})-[r:ACTED_IN {roles: ["Super Actor"]}]->(m:Movie {title:"Neo4j on the rocks"})');
     }
 
+    /**
+     * @group re-ffetch
+     */
     public function testRelationshipEntityAndFindAllFetch()
     {
         $actors = $this->em->getRepository(Person::class)->findAll();

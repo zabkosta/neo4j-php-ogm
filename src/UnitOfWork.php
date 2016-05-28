@@ -4,7 +4,7 @@ namespace GraphAware\Neo4j\OGM;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\Client\Stack;
-use GraphAware\Neo4j\OGM\Annotations\Relationship;
+use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
 use GraphAware\Neo4j\OGM\Persister\RelationshipEntityPersister;
 use GraphAware\Neo4j\OGM\Persister\RelationshipPersister;
@@ -114,23 +114,27 @@ class UnitOfWork
     public function cascadePersist($entity, array &$visited)
     {
         $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
-        $associations = $classMetadata->getAssociatedObjects($entity);
+        $associations = $classMetadata->getSimpleRelationships();
 
         foreach ($associations as $association) {
-            if (is_array($association[1]) || $association[1] instanceof ArrayCollection) {
-                foreach ($association[1] as $assoc) {
-                    $this->persistRelationship($entity, $association[0], $assoc, $association[2], $visited);
+            $value = $association->getValue($entity);
+            if (is_array($value) || $value instanceof ArrayCollection) {
+                foreach ($value as $assoc) {
+                    $this->persistRelationship($entity, $assoc, $association, $visited);
                 }
             } else {
-                $this->persistRelationship($entity, $association[0], $association[1], $association[2], $visited);
+                $entityB = $association->getValue($entity);
+                if (is_object($entityB)) {
+                    $this->persistRelationship($entity, $entityB, $association, $visited);
+                }
             }
         }
     }
 
-    public function persistRelationship($entityA, Relationship $relationship, $entityB, $field, array &$visited)
+    public function persistRelationship($entityA, $entityB, RelationshipMetadata $relationship, array &$visited)
     {
         $this->doPersist($entityB, $visited);
-        $this->relationshipsScheduledForCreated[] = [$entityA, $relationship, $entityB, $field];
+        $this->relationshipsScheduledForCreated[] = [$entityA, $relationship, $entityB, $relationship->getPropertyName()];
     }
 
     public function flush()
@@ -257,20 +261,17 @@ class UnitOfWork
     private function computeChanges($entityA, $entityB)
     {
         $classMetadata = $this->manager->getClassMetadataFor(get_class($entityA));
-        foreach ($classMetadata->getFields() as $field => $meta) {
-            $reflO = new \ReflectionObject($entityA);
-            $reflI = new \ReflectionObject($entityB);
-            $p1 = $reflO->getProperty($field);
-            $p1->setAccessible(true);
-            $p2 = $reflI->getProperty($field);
-            $p2->setAccessible(true);
-            if ($p1->getValue($entityA) !== $p2->getValue($entityB)) {
+        $propertyFields = array_merge($classMetadata->getPropertiesMetadata(), $classMetadata->getLabeledProperties());
+        foreach ($propertyFields as $field => $meta) {
+            $p1 = $meta->getValue($entityA);
+            $p2 = $meta->getValue($entityB);
+            if ($p1 !== $p2) {
                 $this->nodesScheduledForUpdate[spl_object_hash($entityA)] = $entityA;
             }
         }
     }
 
-    public function addManagedRelationshipReference($entityA, $entityB, $field, Relationship $relationship)
+    public function addManagedRelationshipReference($entityA, $entityB, $field, RelationshipMetadata $relationship)
     {
         $aoid = spl_object_hash($entityA);
         $boid = spl_object_hash($entityB);
@@ -300,15 +301,9 @@ class UnitOfWork
 
     private function computeRelationshipEntityChanges($entityA, $entityB)
     {
-        $classMetadata = $this->manager->getRelationshipEntityMetadata($entityA);
-        foreach ($classMetadata->getFields() as $field => $meta) {
-            $reflO = new \ReflectionObject($entityA);
-            $reflI = new \ReflectionObject($entityB);
-            $p1 = $reflO->getProperty($field);
-            $p1->setAccessible(true);
-            $p2 = $reflI->getProperty($field);
-            $p2->setAccessible(true);
-            if ($p1->getValue($entityA) !== $p2->getValue($entityB)) {
+        $classMetadata = $this->manager->getRelationshipEntityMetadata(get_class($entityA));
+        foreach ($classMetadata->getPropertiesMetadata() as $meta) {
+            if ($meta->getValue($entityA) !== $meta->getValue($entityB)) {
                 $this->relEntitesScheduledForUpdate[spl_object_hash($entityA)] = $entityA;
             }
         }
@@ -316,10 +311,10 @@ class UnitOfWork
 
     public function addManagedRelationshipEntity($entity, $pointOfView, $field)
     {
-        $id = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getObjectInternalId($entity);
+        $id = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($entity);
         $oid = spl_object_hash($entity);
         $this->relationshipEntityStates[$oid] = self::STATE_MANAGED;
-        $ref = clone($entity);
+        $ref = clone $entity;
         $this->reEntitiesById[$id] = $entity;
         $this->reEntityIds[$oid] = $id;
         $this->relationshipEntityReferences[$id] = $ref;
@@ -331,7 +326,7 @@ class UnitOfWork
     private function checkRelationshipEntityDeletions($entity)
     {
         $oid = spl_object_hash($entity);
-        $id = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getObjectInternalId($entity);
+        $id = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($entity);
         foreach ($this->managedRelationshipEntitiesMap[$oid] as $pov => $field) {
             $e = $this->entitiesById[$this->entityIds[$pov]];
             $reflClass = new \ReflectionClass(get_class($e));
@@ -339,7 +334,7 @@ class UnitOfWork
             $values = $reflP->getValue($e);
             $shouldBeDeleted = true;
             foreach ($values as $v) {
-                $id2 = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getObjectInternalId($v);
+                $id2 = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($v);
                 if ($id2 === $id) {
                     $shouldBeDeleted = false;
                 }
@@ -383,34 +378,27 @@ class UnitOfWork
         }
     }
 
-    public function scheduleRelationshipReferenceForDelete($entity, $target, Relationship $relationship)
+    public function scheduleRelationshipReferenceForDelete($entity, $target, RelationshipMetadata $relationship)
     {
-        $this->relationshipsScheduledForDelete[] = [$entity->getId(), $target->getId(), $relationship];
+        $eClass = $this->manager->getClassMetadataFor(get_class($entity));
+        $tClass = $this->manager->getClassMetadataFor(get_class($target));
+        $this->relationshipsScheduledForDelete[] = [$eClass->getIdValue($entity), $tClass->getIdValue($target), $relationship];
     }
 
     public function traverseRelationshipEntities($entity, array &$visited)
     {
         $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
-        $reflClass = new \ReflectionClass($entity);
-        foreach ($classMetadata->getRelationshipEntities() as $key => $relationship) {
-            $property = $reflClass->getProperty($key);
-            $property->setAccessible(true);
-            $value = $property->getValue($entity);
-            if (null === $value || ($relationship->getCollection() && count($value) === 0)) {
+        foreach ($classMetadata->getRelationshipEntities() as $relationshipMetadata) {
+            $value = $relationshipMetadata->getValue($entity);
+            if (null === $value || ($relationshipMetadata->isCollection() && count($value) === 0)) {
                 return;
             }
-            if ($relationship->getCollection()) {
+            if ($relationshipMetadata->isCollection()) {
                 foreach ($value as $v) {
                     $this->persistRelationshipEntity($v, get_class($entity));
                     $rem = $this->manager->getRelationshipEntityMetadata(get_class($v));
-                    $startKey = $rem->getStartNodeKey();
-                    $endKey = $rem->getEndNodeKey();
-                    $keyToUse = $relationship->direction === "OUTGOING" ? $endKey : $startKey;
-                    $reRefl = new \ReflectionClass(get_class($v));
-                    $oep = $reRefl->getProperty($keyToUse);
-                    $oep->setAccessible(true);
-                    $oev = $oep->getValue($v);
-                    $this->persist($oev, $visited);
+                    $toPersistProperty = $rem->getStartNode() === $classMetadata->getClassName() ? $rem->getEndNodeValue($v) : $rem->getStartNodeValue($v);
+                    $this->persist($toPersistProperty, $visited);
                 }
             }
         }
@@ -448,7 +436,7 @@ class UnitOfWork
     {
         $oid = spl_object_hash($entity);
         $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
-        $id = $classMetadata->getIdentityValue($entity);
+        $id = $classMetadata->getIdValue($entity);
         if (null === $id) {
             throw new \LogicException('Entity marked for managed but couldnt find identity');
         }
