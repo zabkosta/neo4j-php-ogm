@@ -164,13 +164,14 @@ class BaseRepository
 
             $relQueryPart = sprintf($relStr, strtolower($association->getType()), $association->getType());
             $query .= PHP_EOL;
-            $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$identifier.')';
+            $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$association->getPropertyName().')';
         }
 
         $query .= PHP_EOL;
         $query .= 'RETURN n';
         $assocReturns = [];
         foreach ($this->classMetadata->getSimpleRelationships() as $k => $association) {
+            $k = $association->getPropertyName();
             if ($association->isCollection()) {
                 $assocReturns[] = sprintf('collect(%s) as %s', $k, $k);
             } else {
@@ -287,11 +288,9 @@ class BaseRepository
                     if ($record->hasValue($key) && null !== $record->get($key)) {
                         if ($association->isCollection()) {
                             foreach ($record->get($key) as $v) {
-                                $property = $reflClass->getProperty($key);
-                                $property->setAccessible(true);
                                 $v2 = $this->hydrateNode($v, $this->getTargetFullClassName($association->getTargetEntity()));
-                                $property->getValue($baseInstance)->add($v2);
-                                $this->manager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $property->getName(), $association);
+                                $association->addToCollection($baseInstance, $v2);
+                                $this->manager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
                                 $this->setInversedAssociation($baseInstance, $v2, $key);
                             }
                         } else {

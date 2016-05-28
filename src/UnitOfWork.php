@@ -385,9 +385,11 @@ class UnitOfWork
         }
     }
 
-    public function scheduleRelationshipReferenceForDelete($entity, $target, Relationship $relationship)
+    public function scheduleRelationshipReferenceForDelete($entity, $target, RelationshipMetadata $relationship)
     {
-        $this->relationshipsScheduledForDelete[] = [$entity->getId(), $target->getId(), $relationship];
+        $eClass = $this->manager->getClassMetadataFor(get_class($entity));
+        $tClass = $this->manager->getClassMetadataFor(get_class($target));
+        $this->relationshipsScheduledForDelete[] = [$eClass->getIdValue($entity), $tClass->getIdValue($target), $relationship];
     }
 
     public function traverseRelationshipEntities($entity, array &$visited)

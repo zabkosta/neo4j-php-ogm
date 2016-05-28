@@ -156,11 +156,14 @@ final class NodeEntityMetadata extends GraphEntityMetadata
      */
     public function getSimpleRelationships()
     {
-        return array_map(function(RelationshipMetadata $relationshipMetadata) {
-            if (!$relationshipMetadata->isRelationshipEntity()) {
-                return $relationshipMetadata;
+        $coll = [];
+        foreach ($this->relationships as $relationship) {
+            if (!$relationship->isRelationshipEntity()) {
+                $coll[] = $relationship;
             }
-        }, $this->relationships);
+        }
+
+        return $coll;
     }
 
     /**

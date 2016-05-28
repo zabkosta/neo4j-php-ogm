@@ -137,6 +137,21 @@ final class RelationshipMetadata
     }
 
     /**
+     * @param object $object
+     * @param mixed $value
+     */
+    public function addToCollection($object, $value)
+    {
+        if (!$this->isCollection()) {
+            throw new \LogicException(sprintf('The property mapping this relationship is not of collection type in "%s"', $this->className));
+        }
+
+        /** @var Collection $coll */
+        $coll = $this->getValue($object);
+        $coll->add($value);
+    }
+
+    /**
      * @param $object
      *
      * @return mixed
