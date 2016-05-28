@@ -272,7 +272,7 @@ class UnitOfWork
         }
     }
 
-    public function addManagedRelationshipReference($entityA, $entityB, $field, Relationship $relationship)
+    public function addManagedRelationshipReference($entityA, $entityB, $field, RelationshipMetadata $relationship)
     {
         $aoid = spl_object_hash($entityA);
         $boid = spl_object_hash($entityB);

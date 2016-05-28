@@ -42,6 +42,11 @@ class RelationshipIntegrationTest extends IntegrationTestCase
         $this->assertGraphExist('(u:User {login:"ikwattro"})-[r:WORKS_AT]->(c:Company {name:"Acme"})');
     }
 
+    /**
+     * @throws \Exception
+     *
+     * @group rel-it-fetch
+     */
     public function testRelatedEntitiesAreFetched()
     {
         $company = new Company('Acme');

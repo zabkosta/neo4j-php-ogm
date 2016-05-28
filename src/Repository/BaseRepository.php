@@ -280,26 +280,24 @@ class BaseRepository
     private function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n', $className = null)
     {
         $classN = null !== $className ? $className : $this->className;
-        $reflClass = new \ReflectionClass($classN);
+        $metadata = $this->manager->getClassMetadataFor($classN);
         $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
         if ($andCheckAssociations) {
             foreach ($this->classMetadata->getSimpleRelationships() as $key => $association) {
                 if (!$association->isRelationshipEntity()) {
-                    if ($record->hasValue($key) && null !== $record->get($key)) {
+                    if ($record->hasValue($association->getPropertyName()) && null !== $record->get($association->getPropertyName())) {
                         if ($association->isCollection()) {
-                            foreach ($record->get($key) as $v) {
+                            foreach ($record->get($association->getPropertyName()) as $v) {
                                 $v2 = $this->hydrateNode($v, $this->getTargetFullClassName($association->getTargetEntity()));
                                 $association->addToCollection($baseInstance, $v2);
                                 $this->manager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
-                                $this->setInversedAssociation($baseInstance, $v2, $key);
+                                $this->setInversedAssociation($baseInstance, $v2, $association->getPropertyName());
                             }
                         } else {
-                            $property = $reflClass->getProperty($key);
-                            $property->setAccessible(true);
                             $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
-                            $relO = $hydrator->hydrateNode($record->get($key));
-                            $property->setValue($baseInstance, $relO);
-                            $this->setInversedAssociation($baseInstance, $relO, $key);
+                            $relO = $hydrator->hydrateNode($record->get($association->getPropertyName()));
+                            $association->setValue($baseInstance, $relO);
+                            $this->setInversedAssociation($baseInstance, $relO, $association->getPropertyName());
                         }
                     }
                 }
@@ -406,9 +404,9 @@ class BaseRepository
 
     private function setInversedAssociation($baseInstance, $otherInstance, $relationshipKey)
     {
-        $assoc = $this->classMetadata->getAssociation($relationshipKey);
-        if ($assoc->hasMappedBy()) {
-            $mappedBy = $assoc->getMappedBy();
+        $assoc = $this->classMetadata->getRelationship($relationshipKey);
+        if ($assoc->hasMappedByProperty()) {
+            $mappedBy = $assoc->getMappedByProperty();
             $reflClass = $this->getReflectionClass(get_class($otherInstance));
             $property = $reflClass->getProperty($mappedBy);
             $property->setAccessible(true);
