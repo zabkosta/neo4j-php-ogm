@@ -34,7 +34,7 @@ class BaseRepository
     /**
      * @var \GraphAware\Neo4j\OGM\EntityManager
      */
-    protected $manager;
+    protected $entityManager;
 
     /**
      * @var string
@@ -59,7 +59,7 @@ class BaseRepository
     public function __construct(NodeEntityMetadata $classMetadata, EntityManager $manager, $className)
     {
         $this->classMetadata = $classMetadata;
-        $this->manager = $manager;
+        $this->entityManager = $manager;
         $this->className = $className;
     }
 
@@ -130,7 +130,7 @@ class BaseRepository
             $parameters[self::FILTER_LIMIT] = $filters[self::FILTER_LIMIT];
         }
 
-        $result = $this->manager->getDatabaseDriver()->run($query, $parameters);
+        $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
 
         return $this->hydrateResultSet($result);
     }
@@ -194,7 +194,7 @@ class BaseRepository
 
         $parameters = [$key => $value];
 
-        $result = $this->manager->getDatabaseDriver()->run($query, $parameters);
+        $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
 
         return $this->hydrateResultSet($result);
     }
@@ -228,7 +228,7 @@ class BaseRepository
     protected function nativeQuery($query, $parameters = null, QueryResultMapping $resultMapping)
     {
         $parameters = null !== $parameters ? (array) $parameters : array();
-        $result = $this->manager->getDatabaseDriver()->run($query, $parameters);
+        $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
         if ($result->size() < 1) {
             return;
         }
@@ -238,7 +238,7 @@ class BaseRepository
         }
 
         $results = [];
-        $mappingMetadata = $this->manager->getResultMappingMetadata($resultMapping->getQueryResultClass());
+        $mappingMetadata = $this->entityManager->getResultMappingMetadata($resultMapping->getQueryResultClass());
         foreach ($result->records() as $record) {
             $results[] = $this->hydrateQueryRecord($mappingMetadata, $record);
         }
@@ -281,7 +281,7 @@ class BaseRepository
     private function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n', $className = null)
     {
         $classN = null !== $className ? $className : $this->className;
-        $metadata = $this->manager->getClassMetadataFor($classN);
+        $metadata = $this->entityManager->getClassMetadataFor($classN);
         $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
         if ($andCheckAssociations) {
             foreach ($this->classMetadata->getSimpleRelationships() as $key => $association) {
@@ -291,7 +291,7 @@ class BaseRepository
                             foreach ($record->get($association->getPropertyName()) as $v) {
                                 $v2 = $this->hydrateNode($v, $this->getTargetFullClassName($association->getTargetEntity()));
                                 $association->addToCollection($baseInstance, $v2);
-                                $this->manager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
+                                $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
                                 $this->setInversedAssociation($baseInstance, $v2, $association->getPropertyName());
                             }
                         } else {
@@ -311,9 +311,9 @@ class BaseRepository
                 }
                 $class = $this->getTargetFullClassName($relationshipEntity->getRelationshipEntityClass());
                 /** @var RelationshipEntityMetadata $reMetadata */
-                $reMetadata = $this->manager->getRelationshipEntityMetadata($class);
-                $startNodeMetadata = $this->manager->getClassMetadataFor($reMetadata->getStartNode());
-                $endNodeMetadata = $this->manager->getClassMetadataFor($reMetadata->getEndNode());
+                $reMetadata = $this->entityManager->getRelationshipEntityMetadata($class);
+                $startNodeMetadata = $this->entityManager->getClassMetadataFor($reMetadata->getStartNode());
+                $endNodeMetadata = $this->entityManager->getClassMetadataFor($reMetadata->getEndNode());
                 if ($relationshipEntity->isCollection()) {
                     $v = new \GraphAware\Neo4j\OGM\Common\Collection();
                     if (!is_array($record->get($recordKey))) {
@@ -335,7 +335,7 @@ class BaseRepository
                                 $reMetadata->getPropertyMetadata($field->getPropertyName())->setValue($reInstance, $rel->get($field->getPropertyName()));
                             }
                         }
-                        $this->manager->getUnitOfWork()->addManagedRelationshipEntity($reInstance, $baseInstance, $relationshipEntity->getPropertyName());
+                        $this->entityManager->getUnitOfWork()->addManagedRelationshipEntity($reInstance, $baseInstance, $relationshipEntity->getPropertyName());
                     }
                     $relationshipEntity->setValue($baseInstance, $v);
                 }
@@ -347,16 +347,16 @@ class BaseRepository
 
     private function getHydrator($target)
     {
-        return $this->manager->getRepository($target);
+        return $this->entityManager->getRepository($target);
     }
 
     private function hydrateNode(Node $node, $className = null)
     {
-        if ($entity = $this->manager->getUnitOfWork()->getEntityById($node->identity())) {
+        if ($entity = $this->entityManager->getUnitOfWork()->getEntityById($node->identity())) {
             return $entity;
         }
         $cl = $className !== null ? $className : $this->className;
-        $cm = $className === null ? $this->classMetadata : $this->manager->getClassMetadataFor($cl);
+        $cm = $className === null ? $this->classMetadata : $this->entityManager->getClassMetadataFor($cl);
         $instance = $cm->newInstance();
         foreach ($cm->getPropertiesMetadata() as $field => $meta) {
             if ($meta instanceof EntityPropertyMetadata) {
@@ -387,7 +387,7 @@ class BaseRepository
         }
 
         $cm->setId($instance, $node->identity());
-        $this->manager->getUnitOfWork()->addManaged($instance);
+        $this->entityManager->getUnitOfWork()->addManaged($instance);
 
         return $instance;
     }
@@ -400,7 +400,7 @@ class BaseRepository
             $reflClass = $this->getReflectionClass(get_class($otherInstance));
             $property = $reflClass->getProperty($mappedBy);
             $property->setAccessible(true);
-            $otherClassMetadata = $this->manager->getClassMetadataFor(get_class($otherInstance));
+            $otherClassMetadata = $this->entityManager->getClassMetadataFor(get_class($otherInstance));
             if ($otherClassMetadata->getAssociation($mappedBy)->isCollection()) {
                 if (null === $property->getValue($otherInstance)) {
                     $property->setValue($otherInstance, new ArrayCollection());
