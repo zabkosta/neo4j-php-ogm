@@ -35,9 +35,10 @@ abstract class GraphEntityMetadata
 
     /**
      * GraphEntityMetadata constructor.
+     *
      * @param \GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata $entityIdMetadata
-     * @param string $className
-     * @param \ReflectionClass $reflectionClass
+     * @param string                                          $className
+     * @param \ReflectionClass                                $reflectionClass
      * @param $entityPropertiesMetadata
      */
     public function __construct(EntityIdMetadata $entityIdMetadata, $className, \ReflectionClass $reflectionClass, array $entityPropertiesMetadata)
@@ -70,6 +71,7 @@ abstract class GraphEntityMetadata
 
     /**
      * @param $object
+     *
      * @return mixed
      */
     public function getIdValue($object)
@@ -104,6 +106,7 @@ abstract class GraphEntityMetadata
 
     /**
      * @param $key
+     *
      * @return \GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata
      */
     public function getPropertyMetadata($key)
@@ -112,5 +115,4 @@ abstract class GraphEntityMetadata
             return $this->entityPropertiesMetadata[$key];
         }
     }
-
 }

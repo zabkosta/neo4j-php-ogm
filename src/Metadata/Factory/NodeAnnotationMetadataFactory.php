@@ -34,6 +34,7 @@ final class NodeAnnotationMetadataFactory
     /**
      * @param string $nodeEntityClass
      * @param string $property
+     *
      * @return \GraphAware\Neo4j\OGM\Metadata\NodeAnnotationMetadata
      */
     public function create($nodeEntityClass)

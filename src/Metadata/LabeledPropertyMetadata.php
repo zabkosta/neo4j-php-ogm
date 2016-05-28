@@ -36,8 +36,8 @@ final class LabeledPropertyMetadata
     private $labelName;
 
     /**
-     * @param string $propertyName
-     * @param \ReflectionProperty $reflectionProperty
+     * @param string                                  $propertyName
+     * @param \ReflectionProperty                     $reflectionProperty
      * @param \GraphAware\Neo4j\OGM\Annotations\Label $annotation
      */
     public function __construct($propertyName, \ReflectionProperty $reflectionProperty, Label $annotation)
@@ -78,7 +78,7 @@ final class LabeledPropertyMetadata
 
     /**
      * @param object $object
-     * @param bool $value
+     * @param bool   $value
      */
     public function setLabel($object, $value)
     {

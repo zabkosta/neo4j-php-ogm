@@ -13,5 +13,4 @@ namespace GraphAware\Neo4j\OGM\Metadata;
 
 class IdAnnotationMetadata
 {
-
 }

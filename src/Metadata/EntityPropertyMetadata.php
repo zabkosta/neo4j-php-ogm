@@ -11,8 +11,6 @@
 
 namespace GraphAware\Neo4j\OGM\Metadata;
 
-use GraphAware\Neo4j\OGM\Common\Collection;
-
 class EntityPropertyMetadata
 {
     /**
@@ -37,7 +35,8 @@ class EntityPropertyMetadata
 
     /**
      * EntityPropertyMetadata constructor.
-     * @param string $propertyName
+     *
+     * @param string                                                    $propertyName
      * @param \GraphAware\Neo4j\OGM\Metadata\PropertyAnnotationMetadata $propertyAnnotationMetadata
      */
     public function __construct($propertyName, \ReflectionProperty $reflectionProperty, PropertyAnnotationMetadata $propertyAnnotationMetadata)
@@ -58,7 +57,7 @@ class EntityPropertyMetadata
 
     /**
      * @param object $object
-     * @param mixed $value
+     * @param mixed  $value
      */
     public function setValue($object, $value)
     {

@@ -39,6 +39,6 @@ class IdAnnotationMetadataFactory
             }
         }
 
-        return null;
+        return;
     }
 }

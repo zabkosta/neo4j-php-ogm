@@ -14,10 +14,8 @@ namespace GraphAware\Neo4j\OGM;
 use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\OGM\Mapping\AnnotationDriver;
 use GraphAware\Neo4j\Client\Client;
-use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
 use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactory;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
-use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
@@ -52,7 +50,7 @@ class Manager
 
     public static function create($host, $cacheDir = null)
     {
-        $cache = $cacheDir ? : sys_get_temp_dir();
+        $cache = $cacheDir ?: sys_get_temp_dir();
         $client = ClientBuilder::create()
             ->addConnection('default', $host)
             ->build();

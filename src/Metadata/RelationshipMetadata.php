@@ -38,9 +38,8 @@ final class RelationshipMetadata
     private $relationshipAnnotation;
 
     /**
-     * @param string $className
-     * @param \ReflectionProperty $reflectionProperty
-     *
+     * @param string                                         $className
+     * @param \ReflectionProperty                            $reflectionProperty
      * @param \GraphAware\Neo4j\OGM\Annotations\Relationship $relationshipAnnotation
      */
     public function __construct($className, \ReflectionProperty $reflectionProperty, Relationship $relationshipAnnotation)
@@ -137,7 +136,7 @@ final class RelationshipMetadata
 
     /**
      * @param object $object
-     * @param mixed $value
+     * @param mixed  $value
      */
     public function addToCollection($object, $value)
     {

@@ -13,5 +13,6 @@ namespace GraphAware\Neo4j\OGM\Common;
 
 use Doctrine\Common\Collections\ArrayCollection;
 
-class Collection extends ArrayCollection{}
-
+class Collection extends ArrayCollection
+{
+}

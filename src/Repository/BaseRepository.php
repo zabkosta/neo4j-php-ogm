@@ -6,7 +6,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Common\Result\Record;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
-use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Manager;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
@@ -14,10 +13,8 @@ use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
-use GraphAware\Neo4j\OGM\Annotations\Property;
 use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
-use phpDocumentor\Reflection\DocBlock\Type\Collection;
 
 class BaseRepository
 {
@@ -308,7 +305,6 @@ class BaseRepository
             }
 
             foreach ($this->classMetadata->getRelationshipEntities() as $key => $relationshipEntity) {
-
                 $recordKey = 'rel_'.strtolower($relationshipEntity->getType());
                 if (null === $record->get($recordKey) || empty($record->get($recordKey))) {
                     continue;
@@ -338,7 +334,6 @@ class BaseRepository
                             if ($rel->hasValue($field->getPropertyName())) {
                                 $reMetadata->getPropertyMetadata($field->getPropertyName())->setValue($reInstance, $rel->get($field->getPropertyName()));
                             }
-
                         }
                         $this->manager->getUnitOfWork()->addManagedRelationshipEntity($reInstance, $baseInstance, $relationshipEntity->getPropertyName());
                     }

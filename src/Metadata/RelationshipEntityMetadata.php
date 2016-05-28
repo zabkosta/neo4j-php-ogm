@@ -32,13 +32,14 @@ final class RelationshipEntityMetadata extends GraphEntityMetadata
 
     /**
      * RelationshipEntityMetadata constructor.
-     * @param string $class
-     * @param \ReflectionClass $reflectionClass
+     *
+     * @param string                                               $class
+     * @param \ReflectionClass                                     $reflectionClass
      * @param \GraphAware\Neo4j\OGM\Annotations\RelationshipEntity $annotation
-     * @param \GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata $entityIdMetadata
-     * @param string $startNodeClass
-     * @param string $endNodeClass
-     * @param array $entityPropertiesMetadata
+     * @param \GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata      $entityIdMetadata
+     * @param string                                               $startNodeClass
+     * @param string                                               $endNodeClass
+     * @param array                                                $entityPropertiesMetadata
      */
     public function __construct($class, \ReflectionClass $reflectionClass, RelationshipEntity $annotation, EntityIdMetadata $entityIdMetadata, $startNodeClass, $startNodeKey, $endNodeClass, $endNodeKey, array $entityPropertiesMetadata)
     {

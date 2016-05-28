@@ -29,8 +29,8 @@ final class EntityIdMetadata
     private $idAnnotationMetadata;
 
     /**
-     * @param string $propertyName
-     * @param \ReflectionProperty $reflectionProperty
+     * @param string                                              $propertyName
+     * @param \ReflectionProperty                                 $reflectionProperty
      * @param \GraphAware\Neo4j\OGM\Metadata\IdAnnotationMetadata $idAnnotationMetadata
      */
     public function __construct($propertyName, \ReflectionProperty $reflectionProperty, IdAnnotationMetadata $idAnnotationMetadata)
@@ -42,6 +42,7 @@ final class EntityIdMetadata
 
     /**
      * @param $object
+     *
      * @return mixed
      */
     public function getValue($object)

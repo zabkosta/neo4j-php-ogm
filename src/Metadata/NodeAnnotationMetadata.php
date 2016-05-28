@@ -24,7 +24,7 @@ final class NodeAnnotationMetadata
     private $customRepository;
 
     /**
-     * @param string $label
+     * @param string      $label
      * @param string|null $repository
      */
     public function __construct($label, $repository)

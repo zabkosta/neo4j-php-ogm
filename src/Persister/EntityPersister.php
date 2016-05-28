@@ -3,8 +3,6 @@
 namespace GraphAware\Neo4j\OGM\Persister;
 
 use GraphAware\Common\Cypher\Statement;
-use GraphAware\Neo4j\OGM\Annotations\Property;
-use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 
 class EntityPersister

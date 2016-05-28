@@ -14,7 +14,6 @@ namespace GraphAware\Neo4j\OGM\Metadata\Factory;
 use Doctrine\Common\Annotations\Reader;
 use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Annotations\Node;
-use GraphAware\Neo4j\OGM\Annotations\GraphId;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
 use GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata;
@@ -65,6 +64,7 @@ class GraphEntityMetadataFactory
 
     /**
      * @param string $className
+     *
      * @return \GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata
      */
     public function create($className)
@@ -80,8 +80,7 @@ class GraphEntityMetadataFactory
                 $propertyAnnotationMetadata = $this->propertyAnnotationMetadataFactory->create($className, $reflectionProperty->getName());
                 if (null !== $propertyAnnotationMetadata) {
                     $propertiesMetadata[] = new EntityPropertyMetadata($reflectionProperty->getName(), $reflectionProperty, $propertyAnnotationMetadata);
-                }
-                else {
+                } else {
                     $idA = $this->IdAnnotationMetadataFactory->create($className, $reflectionProperty);
                     if (null !== $idA) {
                         $entityIdMetadata = new EntityIdMetadata($reflectionProperty->getName(), $reflectionProperty, $idA);
@@ -99,7 +98,6 @@ class GraphEntityMetadataFactory
             }
 
             return new NodeEntityMetadata($className, $reflectionClass, $annotationMetadata, $entityIdMetadata, $propertiesMetadata, $relationshipsMetadata);
-
         } elseif (null !== $annotation = $this->reader->getClassAnnotation($reflectionClass, RelationshipEntity::class)) {
             return $this->relationshipEntityMetadataFactory->create($className);
         }

@@ -4,8 +4,6 @@ namespace GraphAware\Neo4j\OGM;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\Client\Stack;
-use GraphAware\Neo4j\OGM\Annotations\Relationship;
-use GraphAware\Neo4j\OGM\Common\Collection;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
 use GraphAware\Neo4j\OGM\Persister\RelationshipEntityPersister;
@@ -316,7 +314,7 @@ class UnitOfWork
         $id = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($entity);
         $oid = spl_object_hash($entity);
         $this->relationshipEntityStates[$oid] = self::STATE_MANAGED;
-        $ref = clone($entity);
+        $ref = clone $entity;
         $this->reEntitiesById[$id] = $entity;
         $this->reEntityIds[$oid] = $id;
         $this->relationshipEntityReferences[$id] = $ref;

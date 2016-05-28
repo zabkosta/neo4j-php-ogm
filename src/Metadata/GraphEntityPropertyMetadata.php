@@ -30,8 +30,9 @@ final class GraphEntityPropertyMetadata
 
     /**
      * GraphEntityPropertyMetadata constructor.
-     * @param string $propertyName
-     * @param \ReflectionProperty $reflectionProperty
+     *
+     * @param string                                                    $propertyName
+     * @param \ReflectionProperty                                       $reflectionProperty
      * @param \GraphAware\Neo4j\OGM\Metadata\PropertyAnnotationMetadata $propertyAnnotationMetadata
      */
     public function __construct($propertyName, \ReflectionProperty $reflectionProperty, PropertyAnnotationMetadata $propertyAnnotationMetadata)
