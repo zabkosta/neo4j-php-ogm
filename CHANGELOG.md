@@ -1,3 +1,7 @@
+1.0.0-beta3
+
+- BC : Renamed `Manager` to `EntityManager`
+
 1.0.0-beta2
 
 -  Fixed a bug where a related entity was not set on the inversed side
