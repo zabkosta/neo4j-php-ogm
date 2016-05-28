@@ -14,6 +14,7 @@ namespace GraphAware\Neo4j\OGM\Persister;
 
 use GraphAware\Neo4j\Client\Stack;
 use GraphAware\Neo4j\OGM\EntityManager;
+use GraphAware\Neo4j\OGM\Metadata\LabeledPropertyMetadata;
 
 class FlushOperationProcessor
 {
@@ -40,21 +41,34 @@ class FlushOperationProcessor
     private function createLabeledNodesCreationStack(array $byLabelsMap)
     {
         $stack = Stack::create(self::TAG_NODES_CREATE);
+        $statements = [];
         foreach ($byLabelsMap as $label => $entities) {
-            $query = sprintf('UNWIND {nodes} as node
-            CREATE (n:`%s`) SET n += node.props
-            RETURN id(n) as id, node.oid as oid', $label);
 
-            $batch = [];
             foreach ($entities as $entity) {
+                $query = sprintf('UNWIND {nodes} as node
+                CREATE (n:`%s`) SET n += node.props', $label);
                 $metadata = $this->em->getClassMetadataFor(get_class($entity));
                 $oid = spl_object_hash($entity);
-                $batch[] = [
+                $labeledProperties = $metadata->getLabeledPropertiesToBeSet($entity);
+                $lblKey = sprintf('%s_%s', $metadata->getLabel(), implode('_', array_map(function (LabeledPropertyMetadata $labeledPropertyMetadata) {
+                    return $labeledPropertyMetadata->getLabelName();
+                }, $labeledProperties)));
+
+                foreach ($labeledProperties as $labeledPropertyMetadata) {
+                    $query .= sprintf(' SET n:`%s`', $labeledPropertyMetadata->getLabelName());
+                }
+
+                $query .= ' RETURN id(n) as id, node.oid as oid';
+                $statements[$lblKey]['query'] = $query;
+                $statements[$lblKey]['nodes'][] = [
                     'props' => $metadata->getPropertyValuesArray($entity),
                     'oid' => $oid
                 ];
             }
-            $stack->push($query, ['nodes' => $batch]);
+        }
+
+        foreach ($statements as $key => $statement) {
+            $stack->push($statement['query'], ['nodes' => $statement['nodes']], $key);
         }
 
         return $stack;

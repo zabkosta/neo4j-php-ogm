@@ -95,6 +95,17 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     }
 
     /**
+     * @param $object
+     * @return LabeledPropertyMetadata[]
+     */
+    public function getLabeledPropertiesToBeSet($object)
+    {
+        return array_filter($this->getLabeledProperties(), function(LabeledPropertyMetadata $labeledPropertyMetadata) use ($object) {
+            return true === $labeledPropertyMetadata->getValue($object);
+        });
+    }
+
+    /**
      * @return bool
      */
     public function hasCustomRepository()
