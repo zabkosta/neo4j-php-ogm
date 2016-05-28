@@ -303,15 +303,9 @@ class UnitOfWork
 
     private function computeRelationshipEntityChanges($entityA, $entityB)
     {
-        $classMetadata = $this->manager->getRelationshipEntityMetadata($entityA);
-        foreach ($classMetadata->getFields() as $field => $meta) {
-            $reflO = new \ReflectionObject($entityA);
-            $reflI = new \ReflectionObject($entityB);
-            $p1 = $reflO->getProperty($field);
-            $p1->setAccessible(true);
-            $p2 = $reflI->getProperty($field);
-            $p2->setAccessible(true);
-            if ($p1->getValue($entityA) !== $p2->getValue($entityB)) {
+        $classMetadata = $this->manager->getRelationshipEntityMetadata(get_class($entityA));
+        foreach ($classMetadata->getPropertiesMetadata() as $meta) {
+            if ($meta->getValue($entityA) !== $meta->getValue($entityB)) {
                 $this->relEntitesScheduledForUpdate[spl_object_hash($entityA)] = $entityA;
             }
         }
@@ -334,7 +328,7 @@ class UnitOfWork
     private function checkRelationshipEntityDeletions($entity)
     {
         $oid = spl_object_hash($entity);
-        $id = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getObjectInternalId($entity);
+        $id = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($entity);
         foreach ($this->managedRelationshipEntitiesMap[$oid] as $pov => $field) {
             $e = $this->entitiesById[$this->entityIds[$pov]];
             $reflClass = new \ReflectionClass(get_class($e));
@@ -342,7 +336,7 @@ class UnitOfWork
             $values = $reflP->getValue($e);
             $shouldBeDeleted = true;
             foreach ($values as $v) {
-                $id2 = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getObjectInternalId($v);
+                $id2 = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($v);
                 if ($id2 === $id) {
                     $shouldBeDeleted = false;
                 }
