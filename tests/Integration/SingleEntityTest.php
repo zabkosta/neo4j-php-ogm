@@ -2,6 +2,7 @@
 
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 
 /**
@@ -91,6 +92,22 @@ class SingleEntityTest extends IntegrationTestCase
         $this->em->persist($user);
         $this->em->flush();
         $this->assertGraphNotExist('(u:User:Active {login:"ikwattro"})');
+    }
+
+    /**
+     * @group label-multiple
+     */
+    public function testMultipleNodesWithDifferentLabelsArePersisted()
+    {
+        $user = new User('ikwattro');
+        $user->setActive();
+        $this->em->persist($user);
+        $movie = new Movie('Jumanji');
+        $movie->setReleased();
+        $this->em->persist($movie);
+        $this->em->flush();
+        $this->assertGraphExist('(u:User:Active {login:"ikwattro"})');
+        $this->assertGraphExist('(m:Movie:Released {title:"Jumanji"})');
     }
 
     /**

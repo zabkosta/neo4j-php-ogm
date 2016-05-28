@@ -21,6 +21,11 @@ class Movie
     public $title;
 
     /**
+     * @OGM\Label(name="Released")
+     */
+    protected $isReleased;
+
+    /**
      * @OGM\Relationship(targetEntity="Person", type="ACTED_IN", direction="INCOMING", collection=true)
      */
     public $actors;
@@ -31,5 +36,10 @@ class Movie
             $this->title = $title;
         }
         $this->actors = new ArrayCollection();
+    }
+
+    public function setReleased()
+    {
+        $this->isReleased = true;
     }
 }
