@@ -94,4 +94,23 @@ abstract class GraphEntityMetadata
         return $this->entityIdMetadata->getPropertyName();
     }
 
+    /**
+     * @return \GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata[]
+     */
+    public function getPropertiesMetadata()
+    {
+        return $this->entityPropertiesMetadata;
+    }
+
+    /**
+     * @param $key
+     * @return \GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata
+     */
+    public function getPropertyMetadata($key)
+    {
+        if (array_key_exists($key, $this->entityPropertiesMetadata)) {
+            return $this->entityPropertiesMetadata[$key];
+        }
+    }
+
 }

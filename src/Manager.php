@@ -165,10 +165,11 @@ class Manager
      */
     public function getRelationshipEntityMetadata($class)
     {
-        $metadata = $this->annotationDriver->readAnnotations($class);
-        $relEntityMetadata = new RelationshipEntityMetadata($metadata);
+        if (!array_key_exists($class, $this->loadedMetadata)) {
+            $this->loadedMetadata[$class] = $this->metadataFactory->create($class);
+        }
 
-        return $relEntityMetadata;
+        return $this->loadedMetadata[$class];
     }
 
     /**

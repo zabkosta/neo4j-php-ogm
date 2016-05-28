@@ -53,7 +53,10 @@ class ResultField
         return $this->fieldType === self::FIELD_TYPE_ENTITY;
     }
 
-    public function setMetadata(ClassMetadata $metadata)
+    /**
+     * @param \GraphAware\Neo4j\OGM\Metadata\GraphEntityMetadata $metadata
+     */
+    public function setMetadata(GraphEntityMetadata $metadata)
     {
         $this->targetMetadata = $metadata;
     }

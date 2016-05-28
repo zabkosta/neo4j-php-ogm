@@ -12,6 +12,7 @@
 namespace GraphAware\Neo4j\OGM\Metadata;
 
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
+use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 final class NodeEntityMetadata extends GraphEntityMetadata
@@ -72,25 +73,6 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     public function getLabel()
     {
         return $this->nodeAnnotationMetadata->getLabel();
-    }
-
-    /**
-     * @return \GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata[]
-     */
-    public function getPropertiesMetadata()
-    {
-        return $this->entityPropertiesMetadata;
-    }
-
-    /**
-     * @param $key
-     * @return \GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata
-     */
-    public function getPropertyMetadata($key)
-    {
-        if (array_key_exists($key, $this->entityPropertiesMetadata)) {
-            return $this->entityPropertiesMetadata[$key];
-        }
     }
 
     /**
@@ -167,7 +149,7 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     }
 
     /**
-     * @return RelationshipMetadata[]
+     * @return RelationshipMetadata[]|RelationshipEntityMetadata[]
      */
     public function getRelationshipEntities()
     {

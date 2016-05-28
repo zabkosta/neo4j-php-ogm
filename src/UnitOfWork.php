@@ -319,7 +319,7 @@ class UnitOfWork
 
     public function addManagedRelationshipEntity($entity, $pointOfView, $field)
     {
-        $id = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getObjectInternalId($entity);
+        $id = $this->manager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($entity);
         $oid = spl_object_hash($entity);
         $this->relationshipEntityStates[$oid] = self::STATE_MANAGED;
         $ref = clone($entity);

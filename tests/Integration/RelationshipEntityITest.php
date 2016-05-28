@@ -21,6 +21,10 @@ class RelationshipEntityITest extends IntegrationTestCase
         $this->playMovies();
     }
 
+    /**
+     *
+     * @group rel-entity-fetch
+     */
     public function testRelationshipEntitesAreRetrieved()
     {
         /** @var Person $tom */

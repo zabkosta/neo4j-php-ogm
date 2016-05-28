@@ -22,6 +22,7 @@ use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\LabeledPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
+use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
 
 class GraphEntityMetadataFactory
 {
@@ -46,6 +47,11 @@ class GraphEntityMetadataFactory
     private $IdAnnotationMetadataFactory;
 
     /**
+     * @var \GraphAware\Neo4j\OGM\Metadata\Factory\RelationshipEntityMetadataFactory
+     */
+    private $relationshipEntityMetadataFactory;
+
+    /**
      * @param \Doctrine\Common\Annotations\Reader $reader
      */
     public function __construct(Reader $reader)
@@ -54,6 +60,7 @@ class GraphEntityMetadataFactory
         $this->nodeAnnotationMetadataFactory = new NodeAnnotationMetadataFactory($reader);
         $this->propertyAnnotationMetadataFactory = new PropertyAnnotationMetadataFactory($reader);
         $this->IdAnnotationMetadataFactory = new IdAnnotationMetadataFactory($reader);
+        $this->relationshipEntityMetadataFactory = new RelationshipEntityMetadataFactory($reader);
     }
 
     /**
@@ -92,6 +99,9 @@ class GraphEntityMetadataFactory
             }
 
             return new NodeEntityMetadata($className, $reflectionClass, $annotationMetadata, $entityIdMetadata, $propertiesMetadata, $relationshipsMetadata);
+
+        } elseif (null !== $annotation = $this->reader->getClassAnnotation($reflectionClass, RelationshipEntity::class)) {
+            return $this->relationshipEntityMetadataFactory->create($className);
         }
 
         throw new MappingException(sprintf('The class "%s" is not a valid OGM entity', $className));
