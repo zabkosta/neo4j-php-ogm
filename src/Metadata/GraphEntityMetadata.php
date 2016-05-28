@@ -115,4 +115,18 @@ abstract class GraphEntityMetadata
             return $this->entityPropertiesMetadata[$key];
         }
     }
+
+    /**
+     * @param object $object
+     * @return array
+     */
+    public function getPropertyValuesArray($object)
+    {
+        $values = [];
+        foreach ($this->entityPropertiesMetadata as $entityPropertyMetadata) {
+            $values[$entityPropertyMetadata->getPropertyName()] = $entityPropertyMetadata->getValue($object);
+        }
+
+        return $values;
+    }
 }

@@ -3,9 +3,11 @@
 namespace GraphAware\Neo4j\OGM;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use GraphAware\Common\Result\Record;
 use GraphAware\Neo4j\Client\Stack;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
+use GraphAware\Neo4j\OGM\Persister\FlushOperationProcessor;
 use GraphAware\Neo4j\OGM\Persister\RelationshipEntityPersister;
 use GraphAware\Neo4j\OGM\Persister\RelationshipPersister;
 
@@ -18,6 +20,8 @@ class UnitOfWork
     const STATE_DELETED = 'STATE_DELETED';
 
     protected $entityManager;
+
+    protected $flushOperationProcessor;
 
     protected $managedEntities = [];
 
@@ -75,6 +79,7 @@ class UnitOfWork
     {
         $this->entityManager = $manager;
         $this->relationshipPersister = new RelationshipPersister();
+        $this->flushOperationProcessor = new FlushOperationProcessor($this->entityManager);
     }
 
     public function persist($entity)
@@ -153,20 +158,19 @@ class UnitOfWork
         $tx = $this->entityManager->getDatabaseDriver()->transaction();
         $tx->begin();
 
-        $stack = $this->entityManager->getDatabaseDriver()->stack('create_schedule');
-        foreach ($statements as $statement) {
-            $stack->push($statement->text(), $statement->parameters(), $statement->getTag());
-        }
-        $results = $tx->runStack($stack);
+        $nodesCreationStack = $this->flushOperationProcessor->processNodesCreationJob($this->nodesScheduledForCreate);
+        $results = $tx->runStack($nodesCreationStack);
 
         foreach ($results as $result) {
-            $oid = $result->statement()->getTag();
-            $gid = $result->records()[0]->value('id');
-            $this->hydrateGraphId($oid, $gid);
-            $this->entitiesById[$gid] = $this->nodesScheduledForCreate[$oid];
-            $this->entityIds[$oid] = $gid;
-            $this->entityStates[$oid] = self::STATE_MANAGED;
-            $this->manageEntityReference($oid);
+            foreach ($result->records() as $record) {
+                $oid = $record->get('oid');
+                $gid = $record->get('id');
+                $this->hydrateGraphId($oid, $gid);
+                $this->entitiesById[$gid] = $this->nodesScheduledForCreate[$oid];
+                $this->entityIds[$oid] = $gid;
+                $this->entityStates[$oid] = self::STATE_MANAGED;
+                $this->manageEntityReference($oid);
+            }
         }
 
         $relStack = $this->entityManager->getDatabaseDriver()->stack('rel_create_schedule');

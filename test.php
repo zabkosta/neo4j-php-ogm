@@ -2,22 +2,19 @@
 
 $loader = require_once __DIR__.'/vendor/autoload.php';
 
-$personA = new \GraphAware\Neo4j\OGM\Tests\Integration\Model\Person('ikwattro');
-$personB = new \GraphAware\Neo4j\OGM\Tests\Integration\Model\Person('jexp');
-$ca = clone($personA);
-$arr = [
-    'a' => spl_object_hash($personA),
-    'b' => spl_object_hash($personB),
-    'c' => spl_object_hash($ca)
-];
-$arr2 = [
-    'a' => $personA
-];
+use GraphAware\Neo4j\OGM\EntityManager;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 
-print_r($arr);
+$em = EntityManager::create("http://localhost:7676", __DIR__.'/_var');
+$em->getDatabaseDriver()->run("MATCH (n) DETACH DELETE n");
 
-unset($personA);
+$personA = new User('ikwattro');
 
-print_r($arr2);
-print_r($arr);
+for ($i = 1; $i < 100; ++$i) {
+   $friend = new User(sprintf('friend%d', $i));
+    $personA->getFriends()->add($friend);
+}
+$em->persist($personA);
+$em->flush();
+
 
