@@ -2,12 +2,12 @@
 
 require_once __DIR__.'/../../../vendor/autoload.php';
 
-use GraphAware\Neo4j\OGM\Manager;
+use GraphAware\Neo4j\OGM\EntityManager;
 use Movies\Person;
 use Movies\User;
 use Movies\Movie;
 // Entity manager setup
-$manager = Manager::create('http://localhost:7676');
+$manager = EntityManager::create('http://localhost:7676');
 playMovies($manager->getDatabaseDriver());
 
 // Retrieving a node

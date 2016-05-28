@@ -2,8 +2,7 @@
 
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
-use GraphAware\Neo4j\Client\ClientBuilder;
-use GraphAware\Neo4j\OGM\Manager;
+use GraphAware\Neo4j\OGM\EntityManager;
 
 class IntegrationTestCase extends \PHPUnit_Framework_TestCase
 {
@@ -13,13 +12,13 @@ class IntegrationTestCase extends \PHPUnit_Framework_TestCase
     protected $client;
 
     /**
-     * @var \GraphAware\Neo4j\OGM\Manager
+     * @var \GraphAware\Neo4j\OGM\EntityManager
      */
     protected $em;
 
     public function setUp()
     {
-        $this->em = Manager::create('http://localhost:7474', __DIR__.'/../../_var/cache');
+        $this->em = EntityManager::create('http://localhost:7474', __DIR__.'/../../_var/cache');
         $this->client = $this->em->getDatabaseDriver();
     }
 

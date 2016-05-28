@@ -120,17 +120,17 @@ The type argument defines the internal type (php) of the property, common types 
 
 Currently, the exact property name used in your domain model is used as property key on the database node. (This will evolve).
 
-### Entity Manager
+### Entity EntityManager
 
 As of now, we are able to load / save `Person` entities to the database, as well as handling updates. Before we need to create
 the entity manager which will be the central point of operations.
 
-Creating the manager is just instantiating a new `GraphAware\Neo4j\OGM\Manager` object and passing your neo4j host url :
+Creating the manager is just instantiating a new `GraphAware\Neo4j\OGM\EntityManager` object and passing your neo4j host url :
 
 ```php
-use GraphAware\Neo4j\OGM\Manager;
+use GraphAware\Neo4j\OGM\EntityManager;
 
-$manager = Manager::create('http://localhost:7474');
+$manager = EntityManager::create('http://localhost:7474');
 ```
 
 #### Repository
@@ -139,10 +139,10 @@ Finding nodes from the database is done via their repository, retrieving the cor
 entity class name to the `getRepository` method :
 
 ```php
-use GraphAware\Neo4j\OGM\Manager;
+use GraphAware\Neo4j\OGM\EntityManager;
 use Movies\Person;
 
-$manager = Manager::create('http://localhost:7474');
+$manager = EntityManager::create('http://localhost:7474');
 
 $personRepository = $manager->getRepository(Person::class);
 ```
@@ -150,10 +150,10 @@ $personRepository = $manager->getRepository(Person::class);
 Once you have the repository, you can retrieve node from the database, let's find `Tom Hanks` :
 
 ```php
-use GraphAware\Neo4j\OGM\Manager;
+use GraphAware\Neo4j\OGM\EntityManager;
 use Movies\Person;
 
-$manager = Manager::create('http://localhost:7474');
+$manager = EntityManager::create('http://localhost:7474');
 
 $personRepository = $manager->getRepository(Person::class);
 $tomHanks = $personRepository->findOneBy('name', 'Tom Hanks');
@@ -170,7 +170,7 @@ The available methods on the repository are :
 
 Persistence is handled by the OGM with two main methods, `persist()` and `flush()`.
 
-To briefly summarize the difference, the objects you pass to the `persist` method become `managed` by the Entity Manager,
+To briefly summarize the difference, the objects you pass to the `persist` method become `managed` by the Entity EntityManager,
 keeping track of their changes and reflecting the changes at the next `flush()` operation.
 
 Let's create a new actor, named `Kevin Ross` and born in `1976` :
@@ -185,7 +185,7 @@ And verify our database :
 
 ![New entity persisted](_02-newactor.png)
 
-The entity remains to be managed by the Entity Manager, this means that any update to your object will be reflected on next flush.
+The entity remains to be managed by the Entity EntityManager, this means that any update to your object will be reflected on next flush.
 This is also the case when you load entities from the database, they become automtically managed, let's modify Tom Hank's year of birth :
 
 ```php

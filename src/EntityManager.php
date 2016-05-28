@@ -19,7 +19,7 @@ use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
-class Manager
+class EntityManager
 {
     /**
      * @var \GraphAware\Neo4j\OGM\UnitOfWork
@@ -61,7 +61,7 @@ class Manager
     /**
      * @param string $host
      *
-     * @return \GraphAware\Neo4j\OGM\Manager
+     * @return \GraphAware\Neo4j\OGM\EntityManager
      */
     public static function buildWithHost($host)
     {
@@ -98,7 +98,7 @@ class Manager
     public function persist($entity)
     {
         if (!is_object($entity)) {
-            throw new \Exception('Manager::persist() expects an object');
+            throw new \Exception('EntityManager::persist() expects an object');
         }
 
         $this->uow->persist($entity);
@@ -187,7 +187,7 @@ class Manager
     }
 
     /**
-     * Clear the Entity Manager
+     * Clear the Entity EntityManager
      * All entities that were managed by the unitOfWork become detached.
      */
     public function clear()

@@ -6,7 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Common\Result\Record;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
-use GraphAware\Neo4j\OGM\Manager;
+use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
@@ -32,7 +32,7 @@ class BaseRepository
     protected $classMetadata;
 
     /**
-     * @var \GraphAware\Neo4j\OGM\Manager
+     * @var \GraphAware\Neo4j\OGM\EntityManager
      */
     protected $manager;
 
@@ -53,10 +53,10 @@ class BaseRepository
 
     /**
      * @param \GraphAware\Neo4j\OGM\Metadata\ClassMetadata $classMetadata
-     * @param \GraphAware\Neo4j\OGM\Manager                $manager
+     * @param \GraphAware\Neo4j\OGM\EntityManager                $manager
      * @param string                                       $className
      */
-    public function __construct(NodeEntityMetadata $classMetadata, Manager $manager, $className)
+    public function __construct(NodeEntityMetadata $classMetadata, EntityManager $manager, $className)
     {
         $this->classMetadata = $classMetadata;
         $this->manager = $manager;

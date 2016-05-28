@@ -71,7 +71,7 @@ class UnitOfWork
 
     protected $managedRelationshipEntitiesMap = [];
 
-    public function __construct(Manager $manager)
+    public function __construct(EntityManager $manager)
     {
         $this->manager = $manager;
         $this->relationshipPersister = new RelationshipPersister();

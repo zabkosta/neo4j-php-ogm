@@ -3,7 +3,7 @@
 namespace GraphAware\Neo4j\OGM\Persister;
 
 use GraphAware\Common\Cypher\Statement;
-use GraphAware\Neo4j\OGM\Manager;
+use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
@@ -18,7 +18,7 @@ class RelationshipEntityPersister
      */
     protected $classMetadata;
 
-    public function __construct(Manager $manager, $className, RelationshipEntityMetadata $classMetadata)
+    public function __construct(EntityManager $manager, $className, RelationshipEntityMetadata $classMetadata)
     {
         $this->em = $manager;
         $this->class = $className;
