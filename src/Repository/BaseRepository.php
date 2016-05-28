@@ -12,6 +12,7 @@ use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
+use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
 use GraphAware\Neo4j\OGM\Annotations\Property;
 use GraphAware\Neo4j\OGM\Annotations\Label;
@@ -75,9 +76,9 @@ class BaseRepository
         $parameters = [];
         $label = $this->classMetadata->getLabel();
         $query = sprintf('MATCH (n:%s)', $label);
-        /** @var Relationship[] $associations */
-        $associations = array_merge($this->classMetadata->getAssociatedObjects(), $this->classMetadata->getRelationshipEntities());
-        foreach ($associations as $identifier => $association) {
+        /** @var RelationshipMetadata[] $associations */
+        $associations = $this->classMetadata->getRelationships();
+        foreach ($associations as $association) {
             switch ($association->getDirection()) {
                 case 'INCOMING':
                     $relStr = '<-[rel_%s:%s]-';
@@ -92,13 +93,14 @@ class BaseRepository
 
             $relQueryPart = sprintf($relStr, strtolower($association->getType()), $association->getType());
             $query .= PHP_EOL;
-            $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$identifier.')';
+            $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$association->getPropertyName().')';
         }
 
         $query .= PHP_EOL;
         $query .= 'RETURN n';
         $assocReturns = [];
-        foreach ($this->classMetadata->getAssociatedObjects() as $k => $association) {
+        foreach ($this->classMetadata->getRelationships() as $association) {
+            $k = $association->getPropertyName();
             if ($association->isCollection()) {
                 $assocReturns[] = sprintf('collect(%s) as %s', $k, $k);
             } else {
@@ -338,7 +340,7 @@ class BaseRepository
                             }
 
                         }
-                        $this->manager->getUnitOfWork()->addManagedRelationshipEntity($reInstance, $baseInstance, $key);
+                        $this->manager->getUnitOfWork()->addManagedRelationshipEntity($reInstance, $baseInstance, $relationshipEntity->getPropertyName());
                     }
                     $relationshipEntity->setValue($baseInstance, $v);
                 }

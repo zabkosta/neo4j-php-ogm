@@ -28,16 +28,11 @@ class RelationshipEntityPersister
     public function getCreateQuery($entity, $pov)
     {
         $class = ClassUtils::getFullClassName(get_class($entity), $pov);
-        $reflClass = new \ReflectionClass($class);
-        $startNodeProperty = $reflClass->getProperty($this->classMetadata->getStartNodeKey());
-        $startNodeProperty->setAccessible(true);
-        $startNode = $startNodeProperty->getValue($entity);
-        $startNodeId = $this->em->getClassMetadataFor(ClassUtils::getFullClassName($this->classMetadata->getStartNode()->getTargetEntity(), $pov))->getIdentityValue($startNode);
-
-        $endNodeProperty = $reflClass->getProperty($this->classMetadata->getEndNodeKey());
-        $endNodeProperty->setAccessible(true);
-        $endNode = $endNodeProperty->getValue($entity);
-        $endNodeId = $this->em->getClassMetadataFor(ClassUtils::getFullClassName($this->classMetadata->getEndNode()->getTargetEntity(), $pov))->getIdentityValue($endNode);
+        $relationshipEntityMetadata = $this->em->getRelationshipEntityMetadata($class);
+        $startNode = $relationshipEntityMetadata->getStartNodeValue($entity);
+        $startNodeId = $this->em->getClassMetadataFor(get_class($startNode))->getIdValue($startNode);
+        $endNode = $relationshipEntityMetadata->getEndNodeValue($entity);
+        $endNodeId = $this->em->getClassMetadataFor(get_class($endNode))->getIdValue($endNode);
 
         $relType = $this->classMetadata->getType();
 
@@ -51,11 +46,9 @@ class RelationshipEntityPersister
             'fields' => [],
         ];
 
-        foreach ($this->classMetadata->getFields() as $field => $annot) {
-            $prop = $reflClass->getProperty($field);
-            $prop->setAccessible(true);
-            $v = $prop->getValue($entity);
-            $parameters['fields'][$field] = $v;
+        foreach ($this->classMetadata->getPropertiesMetadata() as $propertyMetadata) {
+            $v = $propertyMetadata->getValue($entity);
+            $parameters['fields'][$propertyMetadata->getPropertyName()] = $v;
         }
 
         return Statement::create($query, $parameters);
@@ -63,8 +56,7 @@ class RelationshipEntityPersister
 
     public function getUpdateQuery($entity)
     {
-        $reflClass = new \ReflectionClass(get_class($entity));
-        $id = $this->classMetadata->getObjectInternalId($entity);
+        $id = $this->classMetadata->getIdValue($entity);
 
         $query = sprintf('START rel=rel(%d) SET rel += {fields}', $id);
 
@@ -72,11 +64,9 @@ class RelationshipEntityPersister
             'fields' => [],
         ];
 
-        foreach ($this->classMetadata->getFields() as $field => $annot) {
-            $prop = $reflClass->getProperty($field);
-            $prop->setAccessible(true);
-            $v = $prop->getValue($entity);
-            $parameters['fields'][$field] = $v;
+        foreach ($this->classMetadata->getPropertiesMetadata() as $propertyMetadata) {
+            $v = $propertyMetadata->getValue($entity);
+            $parameters['fields'][$propertyMetadata->getPropertyName()] = $v;
         }
 
         return Statement::create($query, $parameters);
@@ -84,7 +74,7 @@ class RelationshipEntityPersister
 
     public function getDeleteQuery($entity)
     {
-        $id = $this->classMetadata->getObjectInternalId($entity);
+        $id = $this->classMetadata->getIdValue($entity);
         $query = 'START rel=rel('.$id.') DELETE rel';
 
         return Statement::create($query);

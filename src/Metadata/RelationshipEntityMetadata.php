@@ -69,6 +69,14 @@ final class RelationshipEntityMetadata extends GraphEntityMetadata
         return $this->endNodeEntityMetadata;
     }
 
+    /**
+     * @return string
+     */
+    public function getStartNodePropertyName()
+    {
+        return $this->startNodeReflectionProperty->getName();
+    }
+
     public function setStartNodeProperty($object, $value)
     {
         $this->startNodeReflectionProperty->setAccessible(true);
@@ -82,6 +90,11 @@ final class RelationshipEntityMetadata extends GraphEntityMetadata
         return $this->startNodeReflectionProperty->getValue($object);
     }
 
+    public function getEndNodePropertyName()
+    {
+        return $this->endNodeReflectionProperty->getName();
+    }
+
     public function setEndNodeProperty($object, $value)
     {
         $this->endNodeReflectionProperty->setAccessible(true);
@@ -89,6 +102,13 @@ final class RelationshipEntityMetadata extends GraphEntityMetadata
     }
 
     public function getEndNodeProperty($object, $value)
+    {
+        $this->endNodeReflectionProperty->setAccessible(true);
+
+        return $this->endNodeReflectionProperty->getValue($object);
+    }
+
+    public function getEndNodeValue($object)
     {
         $this->endNodeReflectionProperty->setAccessible(true);
 

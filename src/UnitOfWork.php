@@ -390,26 +390,17 @@ class UnitOfWork
     public function traverseRelationshipEntities($entity, array &$visited)
     {
         $classMetadata = $this->manager->getClassMetadataFor(get_class($entity));
-        $reflClass = new \ReflectionClass($entity);
-        foreach ($classMetadata->getRelationshipEntities() as $key => $relationship) {
-            $property = $reflClass->getProperty($key);
-            $property->setAccessible(true);
-            $value = $property->getValue($entity);
-            if (null === $value || ($relationship->getCollection() && count($value) === 0)) {
+        foreach ($classMetadata->getRelationshipEntities() as $relationshipMetadata) {
+            $value = $relationshipMetadata->getValue($entity);
+            if (null === $value || ($relationshipMetadata->isCollection() && count($value) === 0)) {
                 return;
             }
-            if ($relationship->getCollection()) {
+            if ($relationshipMetadata->isCollection()) {
                 foreach ($value as $v) {
                     $this->persistRelationshipEntity($v, get_class($entity));
                     $rem = $this->manager->getRelationshipEntityMetadata(get_class($v));
-                    $startKey = $rem->getStartNodeKey();
-                    $endKey = $rem->getEndNodeKey();
-                    $keyToUse = $relationship->direction === "OUTGOING" ? $endKey : $startKey;
-                    $reRefl = new \ReflectionClass(get_class($v));
-                    $oep = $reRefl->getProperty($keyToUse);
-                    $oep->setAccessible(true);
-                    $oev = $oep->getValue($v);
-                    $this->persist($oev, $visited);
+                    $toPersistProperty = $rem->getStartNode() === $classMetadata->getClassName() ? $rem->getEndNodeValue($v) : $rem->getStartNodeValue($v);
+                    $this->persist($toPersistProperty, $visited);
                 }
             }
         }
