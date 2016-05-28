@@ -19,7 +19,7 @@ class IntegrationTestCase extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->em = Manager::create('http://localhost:7676', __DIR__.'/../../_var/cache');
+        $this->em = Manager::create('http://localhost:7474', __DIR__.'/../../_var/cache');
         $this->client = $this->em->getDatabaseDriver();
     }
 
