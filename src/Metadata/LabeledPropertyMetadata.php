@@ -57,6 +57,18 @@ final class LabeledPropertyMetadata
     }
 
     /**
+     * @param object $object
+     *
+     * @return mixed
+     */
+    public function getValue($object)
+    {
+        $this->reflectionProperty->setAccessible(true);
+
+        return $this->reflectionProperty->getValue($object);
+    }
+
+    /**
      * @return string
      */
     public function getLabelName()

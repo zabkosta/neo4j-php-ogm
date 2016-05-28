@@ -11,7 +11,6 @@ class RelationshipPersister
     public function getRelationshipQuery($entityIdA, RelationshipMetadata $relationship, $entityIdB)
     {
         if ("" === trim($relationship->getType())) {
-            var_dump($relationship);
             throw new \RuntimeException(sprintf('Cannot create empty relationship type', $relationship->getPropertyName()));
         }
         $relString = '';

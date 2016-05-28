@@ -263,7 +263,8 @@ class UnitOfWork
     private function computeChanges($entityA, $entityB)
     {
         $classMetadata = $this->manager->getClassMetadataFor(get_class($entityA));
-        foreach ($classMetadata->getPropertiesMetadata() as $field => $meta) {
+        $propertyFields = array_merge($classMetadata->getPropertiesMetadata(), $classMetadata->getLabeledProperties());
+        foreach ($propertyFields as $field => $meta) {
             $p1 = $meta->getValue($entityA);
             $p2 = $meta->getValue($entityB);
             if ($p1 !== $p2) {

@@ -64,7 +64,6 @@ final class RelationshipMetadata
      */
     public function getType()
     {
-        var_dump($this->relationshipAnnotation->type);
         return $this->relationshipAnnotation->type;
     }
 
