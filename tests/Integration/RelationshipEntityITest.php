@@ -116,6 +116,27 @@ class RelationshipEntityITest extends IntegrationTestCase
     }
 
     /**
+     * @throws \GraphAware\Neo4j\Client\Exception\Neo4jException
+     *
+     * @group re-single-all
+     */
+    public function testSingleRelEntityAndFindAll()
+    {
+        $this->clearDb();
+        $this->playMovies();
+        $this->client->run("MATCH (m:Movie {title:'The Matrix'})
+        CREATE (m)-[:HAS_SCORE {finalScore: 6.74}]->(:Score {value: 7})");
+        /** @var Movie[] $movies */
+        $movies = $this->em->getRepository(Movie::class)->findAll();
+        foreach ($movies as $movie) {
+            if ($movie->title === 'The Matrix') {
+                $this->assertInstanceOf(ScoreRel::class, $movie->getScore());
+                $this->assertEquals(6.74, $movie->getScore()->getFinalScore());
+            }
+        }
+    }
+
+    /**
      * @param string $name
      * @return Person
      * @throws \Exception

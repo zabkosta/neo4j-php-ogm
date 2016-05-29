@@ -76,7 +76,8 @@ class BaseRepository
         $query = sprintf('MATCH (n:%s)', $label);
         /** @var RelationshipMetadata[] $associations */
         $associations = $this->classMetadata->getRelationships();
-        foreach ($associations as $association) {
+        $assocReturns = [];
+        foreach ($associations as $identifier => $association) {
             switch ($association->getDirection()) {
                 case 'INCOMING':
                     $relStr = '<-[rel_%s:%s]-';
@@ -92,30 +93,25 @@ class BaseRepository
             $relQueryPart = sprintf($relStr, strtolower($association->getType()), $association->getType());
             $query .= PHP_EOL;
             $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$association->getPropertyName().')';
+            $query .= ' WITH n, ';
+            $query .= implode(', ', $assocReturns);
+            if (!empty($assocReturns)) {
+                $query .= ', ';
+            }
+            $relid = 'rel_'.strtolower($association->getType());
+            if ($association->isCollection() || $association->isRelationshipEntity()) {
+                $query .= sprintf(' CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
+                $assocReturns[] = $relid;
+            } else {
+                $query .= $association->getPropertyName();
+                $assocReturns[] = $association->getPropertyName();
+            }
         }
 
         $query .= PHP_EOL;
         $query .= 'RETURN n';
-        $assocReturns = [];
-        foreach ($this->classMetadata->getRelationships() as $association) {
-            $k = $association->getPropertyName();
-            if ($association->isCollection()) {
-                $assocReturns[] = sprintf('collect(%s) as %s', $k, $k);
-            } else {
-                $assocReturns[] = $k;
-            }
-        }
-
-        foreach ($this->classMetadata->getRelationshipEntities() as $relationshipEntity) {
-            $relid = 'rel_'.strtolower($relationshipEntity->getType());
-            if ($relationshipEntity->isCollection()) {
-                $assocReturns[] = sprintf('CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
-            }
-        }
-
-        if (count($associations) > 0) {
-            $query .= ', ';
-            $query .= implode(', ', $assocReturns);
+        if (!empty($assocReturns)) {
+            $query .= ', ' . implode(', ', $assocReturns);
         }
 
         if (isset($filters[self::FILTER_ORDER])) {
@@ -193,7 +189,7 @@ class BaseRepository
 
         $parameters = [$key => $value];
 
-        print_r($query);
+        //print_r($query);
 
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
 
