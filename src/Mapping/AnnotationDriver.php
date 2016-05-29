@@ -3,6 +3,7 @@
 namespace GraphAware\Neo4j\OGM\Mapping;
 
 use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\AnnotationRegistry;
 use Doctrine\Common\Annotations\FileCacheReader;
 use GraphAware\Neo4j\OGM\Annotations\MappedResult;
 use GraphAware\Neo4j\OGM\Annotations\Node;
@@ -23,11 +24,19 @@ class AnnotationDriver
 
     public function __construct($cacheDirectory = null)
     {
+        $cacheDir = $cacheDirectory ?: sys_get_temp_dir();
+        AnnotationRegistry::registerFile(__DIR__.'/Neo4jOGMAnnotations.php');
+        $reader = new AnnotationReader();
         $this->reader = new FileCacheReader(
-            new AnnotationReader(),
-            sys_get_temp_dir(),
+            $reader,
+            $cacheDir,
             $debug = true
         );
+    }
+
+    public function getReader()
+    {
+        return $this->reader;
     }
 
     public function readQueryResult($class)
@@ -88,9 +97,9 @@ class AnnotationDriver
             foreach ($this->reader->getPropertyAnnotations($property) as $propertyAnnotation) {
                 if ($propertyAnnotation instanceof Property) {
                     $metadata['fields'][$property->getName()] = $propertyAnnotation;
-                } elseif ($propertyAnnotation instanceof Relationship && !$propertyAnnotation->isRelationshipEntity()) {
+                } elseif ($propertyAnnotation instanceof Relationship && null !== $propertyAnnotation->getTargetEntity()) {
                     $metadata['associations'][$property->getName()] = $propertyAnnotation;
-                } elseif ($propertyAnnotation instanceof Relationship && $propertyAnnotation->isRelationshipEntity()) {
+                } elseif ($propertyAnnotation instanceof Relationship && null === $propertyAnnotation->getTargetEntity()) {
                     $metadata['relationshipEntities'][$property->getName()] = $propertyAnnotation;
                 } elseif ($propertyAnnotation instanceof StartNode) {
                     $metadata['start_node'] = $propertyAnnotation;
@@ -110,6 +119,7 @@ class AnnotationDriver
     /**
      * @param string $class
      * @param string $pointOfView
+     *
      * @return string
      */
     private function getRepositoryFullClassName($class, $pointOfView)
@@ -118,7 +128,7 @@ class AnnotationDriver
         if (1 === count($expl)) {
             $expl2 = explode('\\', $pointOfView);
             if (1 !== count($expl2)) {
-                unset($expl2[count($expl2)-1]);
+                unset($expl2[count($expl2) - 1]);
                 $class = sprintf('%s\\%s', implode('\\', $expl2), $class);
             }
         }

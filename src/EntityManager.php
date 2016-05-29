@@ -1,22 +1,26 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM;
 
+use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\OGM\Mapping\AnnotationDriver;
 use GraphAware\Neo4j\Client\Client;
-use GraphAware\Neo4j\OGM\Metadata\ClassMetadata;
+use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactory;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
-use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
-class Manager
+class EntityManager
 {
-    /**
-     * @var \GraphAware\Neo4j\OGM\Mapping\AnnotationDriver
-     */
-    protected $annotationDriver;
-
     /**
      * @var \GraphAware\Neo4j\OGM\UnitOfWork
      */
@@ -27,6 +31,9 @@ class Manager
      */
     protected $databaseDriver;
 
+    /**
+     * @var \GraphAware\Neo4j\OGM\Repository\BaseRepository[]
+     */
     protected $repositories = [];
 
     /**
@@ -34,11 +41,43 @@ class Manager
      */
     protected $resultMappers = [];
 
-    public function __construct(Client $databaseDriver)
+    protected $loadedMetadata = [];
+
+    /**
+     * @var \GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactory
+     */
+    protected $metadataFactory;
+
+    public static function create($host, $cacheDir = null)
     {
-        $this->annotationDriver = new AnnotationDriver();
+        $cache = $cacheDir ?: sys_get_temp_dir();
+        $client = ClientBuilder::create()
+            ->addConnection('default', $host)
+            ->build();
+
+        return new self($client, $cache);
+    }
+
+    /**
+     * @param string $host
+     *
+     * @return \GraphAware\Neo4j\OGM\EntityManager
+     */
+    public static function buildWithHost($host)
+    {
+        $client = ClientBuilder::create()
+            ->addConnection('default', $host)
+            ->build();
+
+        return new self($client);
+    }
+
+    public function __construct(Client $databaseDriver, $cacheDirectory = null)
+    {
+        $this->annotationDriver = new AnnotationDriver($cacheDirectory);
         $this->uow = new UnitOfWork($this);
         $this->databaseDriver = $databaseDriver;
+        $this->metadataFactory = new GraphEntityMetadataFactory($this->annotationDriver->getReader());
     }
 
     /**
@@ -59,7 +98,7 @@ class Manager
     public function persist($entity)
     {
         if (!is_object($entity)) {
-            throw new \Exception('Manager::persist() expects an object');
+            throw new \Exception('EntityManager::persist() expects an object');
         }
 
         $this->uow->persist($entity);
@@ -102,21 +141,17 @@ class Manager
     }
 
     /**
-     * @param string $class
+     * @param $class
      *
-     * @return \GraphAware\Neo4j\OGM\Metadata\ClassMetadata
-     *
-     * @throws \Exception
+     * @return \GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata
      */
     public function getClassMetadataFor($class)
     {
-        $metadata = $this->annotationDriver->readAnnotations($class);
-        $metadataClass = new ClassMetadata($metadata['type'], $metadata['label'], $metadata['fields'], $metadata['associations'], $metadata['relationshipEntities']);
-        if (array_key_exists('repository', $metadata)) {
-            $metadataClass->setRepositoryClass($metadata['repository']);
+        if (!array_key_exists($class, $this->loadedMetadata)) {
+            $this->loadedMetadata[$class] = $this->metadataFactory->create($class);
         }
 
-        return $metadataClass;
+        return $this->loadedMetadata[$class];
     }
 
     /**
@@ -128,10 +163,11 @@ class Manager
      */
     public function getRelationshipEntityMetadata($class)
     {
-        $metadata = $this->annotationDriver->readAnnotations($class);
-        $relEntityMetadata = new RelationshipEntityMetadata($metadata);
+        if (!array_key_exists($class, $this->loadedMetadata)) {
+            $this->loadedMetadata[$class] = $this->metadataFactory->create($class);
+        }
 
-        return $relEntityMetadata;
+        return $this->loadedMetadata[$class];
     }
 
     /**
@@ -151,7 +187,7 @@ class Manager
     }
 
     /**
-     * Clear the Entity Manager
+     * Clear the Entity EntityManager
      * All entities that were managed by the unitOfWork become detached.
      */
     public function clear()

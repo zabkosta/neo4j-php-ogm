@@ -1,6 +1,6 @@
 <?php
 
-namespace Demo\Entity;
+namespace Movies;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
@@ -16,23 +16,29 @@ class Rating
     protected $id;
 
     /**
-     * @OGM\StartNode(targetEntity="\Demo\Entity\User")
+     * @OGM\StartNode(targetEntity="User")
      * @var User
      */
     protected $user;
 
     /**
-     * @OGM\EndNode(targetEntity="\Demo\Entity\Movie")
+     * @OGM\EndNode(targetEntity="Movie")
      * @var Movie
      */
     protected $movie;
 
     /**
-     * @OGM\Property(type="int")
-     * @var int
+     * @OGM\Property(type="float")
+     * @var float
      */
     protected $score;
 
+    /**
+     * Rating constructor.
+     * @param \Movies\User $user
+     * @param \Movies\Movie $movie
+     * @param float $score
+     */
     public function __construct(User $user, Movie $movie, $score)
     {
         $this->user = $user;
@@ -41,7 +47,7 @@ class Rating
     }
 
     /**
-     * @return mixed
+     * @return int
      */
     public function getId()
     {
@@ -49,7 +55,7 @@ class Rating
     }
 
     /**
-     * @return mixed
+     * @return User
      */
     public function getUser()
     {
@@ -57,7 +63,7 @@ class Rating
     }
 
     /**
-     * @return mixed
+     * @return Movie
      */
     public function getMovie()
     {
@@ -65,7 +71,7 @@ class Rating
     }
 
     /**
-     * @return int
+     * @return float
      */
     public function getScore()
     {

@@ -5,6 +5,12 @@
             <directory>./tests</directory>
         </testsuite>
     </testsuites>
+
+    <groups>
+        <exclude>
+            <group>perf-test</group>
+        </exclude>
+    </groups>
     <filter>
         <blacklist>
             <directory>tests</directory>

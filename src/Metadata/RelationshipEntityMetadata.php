@@ -1,82 +1,118 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Metadata;
 
-class RelationshipEntityMetadata
+use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
+
+final class RelationshipEntityMetadata extends GraphEntityMetadata
 {
-    protected $type;
+    /**
+     * @var string
+     */
+    private $type;
+
+    private $relationshipEntityAnnotation;
+
+    private $startNodeEntityMetadata;
+
+    private $startNodeReflectionProperty;
+
+    private $endNodeReflectionProperty;
+
+    private $endNodeEntityMetadata;
 
     /**
-     * @var \GraphAware\Neo4j\OGM\Annotations\StartNode
+     * RelationshipEntityMetadata constructor.
+     *
+     * @param string                                               $class
+     * @param \ReflectionClass                                     $reflectionClass
+     * @param \GraphAware\Neo4j\OGM\Annotations\RelationshipEntity $annotation
+     * @param \GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata      $entityIdMetadata
+     * @param string                                               $startNodeClass
+     * @param string                                               $endNodeClass
+     * @param array                                                $entityPropertiesMetadata
      */
-    protected $startNode;
-
-    protected $startNodeKey;
-
-    /**
-     * @var \GraphAware\Neo4j\OGM\Annotations\EndNode
-     */
-    protected $endNode;
-
-    protected $endNodeKey;
-
-    protected $fields;
-
-    public function __construct(array $metadata)
+    public function __construct($class, \ReflectionClass $reflectionClass, RelationshipEntity $annotation, EntityIdMetadata $entityIdMetadata, $startNodeClass, $startNodeKey, $endNodeClass, $endNodeKey, array $entityPropertiesMetadata)
     {
-        $this->type = $metadata['relType'];
-        $this->startNode = $metadata['start_node'];
-        $this->startNodeKey = $metadata['start_node_key'];
-        $this->endNode = $metadata['end_node'];
-        $this->endNodeKey = $metadata['end_node_key'];
-        $this->fields = $metadata['fields'];
+        parent::__construct($entityIdMetadata, $class, $reflectionClass, $entityPropertiesMetadata);
+        $this->relationshipEntityAnnotation = $annotation;
+        $this->startNodeEntityMetadata = $startNodeClass;
+        $this->endNodeEntityMetadata = $endNodeClass;
+        $this->type = $annotation->type;
+        $this->startNodeReflectionProperty = $this->reflectionClass->getProperty($startNodeKey);
+        $this->endNodeReflectionProperty = $this->reflectionClass->getProperty($endNodeKey);
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getType()
     {
         return $this->type;
     }
 
-    /**
-     * @return \GraphAware\Neo4j\OGM\Annotations\StartNode
-     */
     public function getStartNode()
     {
-        return $this->startNode;
+        return $this->startNodeEntityMetadata;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getStartNodeKey()
-    {
-        return $this->startNodeKey;
-    }
-
-    /**
-     * @return \GraphAware\Neo4j\OGM\Annotations\EndNode
-     */
     public function getEndNode()
     {
-        return $this->endNode;
+        return $this->endNodeEntityMetadata;
     }
 
     /**
-     * @return mixed
+     * @return string
      */
-    public function getEndNodeKey()
+    public function getStartNodePropertyName()
     {
-        return $this->endNodeKey;
+        return $this->startNodeReflectionProperty->getName();
     }
 
-    /**
-     * @return mixed
-     */
-    public function getFields()
+    public function setStartNodeProperty($object, $value)
     {
-        return $this->fields;
+        $this->startNodeReflectionProperty->setAccessible(true);
+        $this->startNodeReflectionProperty->setValue($object, $value);
+    }
+
+    public function getStartNodeValue($object)
+    {
+        $this->startNodeReflectionProperty->setAccessible(true);
+
+        return $this->startNodeReflectionProperty->getValue($object);
+    }
+
+    public function getEndNodePropertyName()
+    {
+        return $this->endNodeReflectionProperty->getName();
+    }
+
+    public function setEndNodeProperty($object, $value)
+    {
+        $this->endNodeReflectionProperty->setAccessible(true);
+        $this->endNodeReflectionProperty->setValue($object, $value);
+    }
+
+    public function getEndNodeProperty($object, $value)
+    {
+        $this->endNodeReflectionProperty->setAccessible(true);
+
+        return $this->endNodeReflectionProperty->getValue($object);
+    }
+
+    public function getEndNodeValue($object)
+    {
+        $this->endNodeReflectionProperty->setAccessible(true);
+
+        return $this->endNodeReflectionProperty->getValue($object);
     }
 }

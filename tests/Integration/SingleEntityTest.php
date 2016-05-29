@@ -2,8 +2,15 @@
 
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 
+/**
+ * Class SingleEntityTest
+ * @package GraphAware\Neo4j\OGM\Tests\Integration
+ *
+ * @group single-entity
+ */
 class SingleEntityTest extends IntegrationTestCase
 {
     public function setUp()
@@ -85,5 +92,64 @@ class SingleEntityTest extends IntegrationTestCase
         $this->em->persist($user);
         $this->em->flush();
         $this->assertGraphNotExist('(u:User:Active {login:"ikwattro"})');
+    }
+
+    /**
+     * @group label-multiple
+     */
+    public function testMultipleNodesWithDifferentLabelsArePersisted()
+    {
+        $user = new User('ikwattro');
+        $user->setActive();
+        $this->em->persist($user);
+        $movie = new Movie('Jumanji');
+        $movie->setReleased();
+        $this->em->persist($movie);
+        $this->em->flush();
+        $this->assertGraphExist('(u:User:Active {login:"ikwattro"})');
+        $this->assertGraphExist('(m:Movie:Released {title:"Jumanji"})');
+    }
+
+    /**
+     * @group label
+     */
+    public function testExtraLabelsAreHydrated()
+    {
+        $user = new User('ikwattro');
+        $user->setActive();
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->em->clear();
+        /** @var User $ikwattro */
+        $ikwattro = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
+        $this->assertTrue($ikwattro->isActive());
+    }
+
+    /**
+     * @group label
+     */
+    public function testExtraLabelsHydrateFalseWhenNodeDontHaveLabel()
+    {
+        $user = new User('ikwattro');
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->em->clear();
+        /** @var User $ikwattro */
+        $ikwattro = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
+        $this->assertFalse($ikwattro->isActive());
+    }
+
+    /**
+     * @group internal-id
+     */
+    public function testFindById()
+    {
+        $q = 'CREATE (n:User) RETURN n';
+        $result = $this->client->run($q);
+        $id = $result->firstRecord()->get('n')->identity();
+
+        $user = $this->em->getRepository(User::class)->findOneById($id);
+        $this->assertInstanceOf(User::class, $user);
+        $this->assertEquals($id, $user->getId());
     }
 }

@@ -1,34 +1,20 @@
 # GraphAware Neo4j PHP OGM
 
-## PHP Object Graph Mapper for Neo4j
+## Object Graph Mapper for Neo4j in PHP
 
-!! WIP
+[![Build Status](https://travis-ci.org/graphaware/neo4j-php-ogm.svg?branch=1.0)](https://travis-ci.org/graphaware/neo4j-php-ogm)
+[![Latest Stable Version](https://poser.pugx.org/graphaware/neo4j-php-ogm/v/stable.svg)](https://packagist.org/packages/graphaware/neo4j-php-ogm)
+[![Latest Unstable Version](https://poser.pugx.org/graphaware/neo4j-php-ogm/v/unstable)](https://packagist.org/packages/graphaware/neo4j-php-ogm)
+[![Total Downloads](https://poser.pugx.org/graphaware/neo4j-php-ogm/downloads)](https://packagist.org/packages/graphaware/neo4j-php-ogm)
+[![License](https://poser.pugx.org/graphaware/neo4j-php-ogm/license)](https://packagist.org/packages/graphaware/neo4j-php-ogm)
 
-### Usage :
+**Current Release** : `1.0.0-beta2`
 
-Initialize the library :
+### Basic Usage :
 
-```php
-
-// Note that this will generally be done in your application by using dependency injection
-
-require_once __DIR__.'/vendor/autoload.php';
-
-use GraphAware\Neo4j\Client\ClientBuilder;
-use GraphAware\Neo4j\OGM\Manager;
-
-$client = ClientBuilder::create()
-    ->addConnection('default', 'http://neo4j:neo4j@localhost:7474')
-    ->build();
-
-$entityManager = new Manager($client);
-```
-
-
-### Add annotations to your domain objects :
+Storing / retrieving entities is done by declaring your entities with mapping annotations. It is very similar to the Doctrine2 ORM.
 
 ```php
-
 <?php
 
 namespace Demo;
@@ -48,7 +34,7 @@ class User
     /**
      * @OGM\Property(type="string")
      */
-    protected $login;
+    protected $name;
 
     /**
      * @OGM\Property(type="int")
@@ -60,11 +46,39 @@ class User
 }
 ```
 
-### Persisting and Flushing entities :
-
 ```php
+$this->em = $this->getEntityManager();
+// The entity manager is generally created somewhere else in your application and available in the dependency injection container.
+// More info about the creation is in the documentation
 
-$me = new User('me', 33);
-$entityManager->persist($me);
-$entityManager->flush();
+// Creating and Persisting a User
+
+$bart = new User('Bart Johnson', 33);
+$this->em->persist($bart);
+$this->em->flush();
+
+// Retrieving from the database
+
+$john = $this->em->getRepository(User::class)->findOneBy('name', 'John Doe');
+echo $john->getAge();
+
+// Updating
+$john->setAge(35);
+$this->em->flush();
 ```
+
+---
+
+## Documentation
+
+The documentation is available [here](docs/01-intro.md).
+
+## Getting Help
+
+For questions, please open a new thread on [StackOverflow](https://stackoverflow.com) with the `graphaware`, `neo4j` and `neo4j-php-ogm` tags.
+
+For isses, please raise a Github issue in the repository.
+
+## License
+
+The library is released under the MIT License, refer to the LICENSE file bundled with this package.

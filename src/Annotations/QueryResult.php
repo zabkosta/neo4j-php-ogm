@@ -8,4 +8,6 @@ use Doctrine\Common\Annotations\Annotation\Target;
  * @Annotation
  * @Target({"CLASS"})
  */
-final class QueryResult{}
+final class QueryResult
+{
+}
