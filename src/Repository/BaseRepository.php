@@ -176,8 +176,13 @@ class BaseRepository
                 $query .= ', ';
             }
             $relid = 'rel_'.strtolower($association->getType());
-            $query .= sprintf(' CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
-            $assocReturns[] = $relid;
+            if ($association->isCollection() || $association->isRelationshipEntity()) {
+                $query .= sprintf(' CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
+                $assocReturns[] = $relid;
+            } else {
+                $query .= $association->getPropertyName();
+                $assocReturns[] = $association->getPropertyName();
+            }
         }
 
         $query .= PHP_EOL;
@@ -187,6 +192,8 @@ class BaseRepository
         }
 
         $parameters = [$key => $value];
+
+        print_r($query);
 
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
 
@@ -275,25 +282,25 @@ class BaseRepository
     private function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n', $className = null)
     {
         $classN = null !== $className ? $className : $this->className;
-        $metadata = $this->entityManager->getClassMetadataFor($classN);
         $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
         if ($andCheckAssociations) {
             foreach ($this->classMetadata->getSimpleRelationships() as $key => $association) {
-                if (!$association->isRelationshipEntity()) {
-                    if ($record->hasValue($association->getPropertyName()) && null !== $record->get($association->getPropertyName())) {
-                        if ($association->isCollection()) {
-                            foreach ($record->get($association->getPropertyName()) as $v) {
-                                $v2 = $this->hydrateNode($v, $this->getTargetFullClassName($association->getTargetEntity()));
-                                $association->addToCollection($baseInstance, $v2);
-                                $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
-                                $this->setInversedAssociation($baseInstance, $v2, $association->getPropertyName());
-                            }
-                        } else {
-                            $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
-                            $relO = $hydrator->hydrateNode($record->get($association->getPropertyName()));
-                            $association->setValue($baseInstance, $relO);
-                            $this->setInversedAssociation($baseInstance, $relO, $association->getPropertyName());
+                $relKey = $association->isCollection() ? sprintf('rel_%s', strtolower($association->getType())) : $association->getPropertyName();
+                if ($record->hasValue($relKey) && null !== $record->get($relKey)) {
+                    if ($association->isCollection()) {
+                        $association->initializeCollection($baseInstance);
+                        foreach ($record->get($relKey) as $v) {
+                            $nodeToUse = $association->getDirection() === "OUTGOING" ? $v['end'] : $v['start'];
+                            $v2 = $this->hydrateNode($nodeToUse, $this->getTargetFullClassName($association->getTargetEntity()));
+                            $association->addToCollection($baseInstance, $v2);
+                            $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
+                            $this->setInversedAssociation($baseInstance, $v2, $association->getPropertyName());
                         }
+                    } else {
+                        $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
+                        $relO = $hydrator->hydrateNode($record->get($relKey));
+                        $association->setValue($baseInstance, $relO);
+                        $this->setInversedAssociation($baseInstance, $relO, $relKey);
                     }
                 }
             }
