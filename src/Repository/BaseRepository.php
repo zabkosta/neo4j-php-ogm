@@ -6,6 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Common\Result\Record;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
+use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
@@ -130,6 +131,8 @@ class BaseRepository
             $parameters[self::FILTER_LIMIT] = $filters[self::FILTER_LIMIT];
         }
 
+        //print_r($query);
+
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
 
         return $this->hydrateResultSet($result);
@@ -150,6 +153,7 @@ class BaseRepository
         $query = sprintf('MATCH (n:%s) WHERE %s = {%s}', $label, $idId, $key);
         /** @var \GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata[] $associations */
         $associations = $this->classMetadata->getRelationships();
+        $assocReturns = [];
         foreach ($associations as $identifier => $association) {
             switch ($association->getDirection()) {
                 case 'INCOMING':
@@ -166,30 +170,20 @@ class BaseRepository
             $relQueryPart = sprintf($relStr, strtolower($association->getType()), $association->getType());
             $query .= PHP_EOL;
             $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$association->getPropertyName().')';
+            $query .= ' WITH n, ';
+            $query .= implode(', ', $assocReturns);
+            if (!empty($assocReturns)) {
+                $query .= ', ';
+            }
+            $relid = 'rel_'.strtolower($association->getType());
+            $query .= sprintf(' CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
+            $assocReturns[] = $relid;
         }
 
         $query .= PHP_EOL;
         $query .= 'RETURN n';
-        $assocReturns = [];
-        foreach ($this->classMetadata->getRelationships() as $k => $association) {
-            $k = $association->getPropertyName();
-            if ($association->isCollection()) {
-                $assocReturns[] = sprintf('collect(%s) as %s', $k, $k);
-            } else {
-                $assocReturns[] = $k;
-            }
-        }
-
-        foreach ($this->classMetadata->getRelationshipEntities() as $relationshipEntity) {
-            $relid = 'rel_'.strtolower($relationshipEntity->getType());
-            if ($relationshipEntity->isCollection()) {
-                $assocReturns[] = sprintf('CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
-            }
-        }
-
-        if (count($associations) > 0) {
-            $query .= ', ';
-            $query .= implode(', ', $assocReturns);
+        if (!empty($assocReturns)) {
+            $query .= ', ' . implode(', ', $assocReturns);
         }
 
         $parameters = [$key => $value];
@@ -320,29 +314,52 @@ class BaseRepository
                         throw new \LogicException('Expected array record value');
                     }
                     foreach ($record->get($recordKey) as $reMap) {
-                        $reInstance = $reMetadata->newInstance();
-                        $start = $this->hydrateNode($reMap['start'], $startNodeMetadata->getClassName());
-                        $end = $this->hydrateNode($reMap['end'], $endNodeMetadata->getClassName());
-                        /** @var \GraphAware\Neo4j\Client\Formatter\Type\Relationship $rel */
-                        $rel = $reMap['rel'];
-                        $relId = $rel->identity();
-                        $reMetadata->setStartNodeProperty($reInstance, $start);
-                        $reMetadata->setEndNodeProperty($reInstance, $end);
-                        $v->add($reInstance);
-                        $reMetadata->setId($reInstance, $relId);
-                        foreach ($reMetadata->getPropertiesMetadata() as $field) {
-                            if ($rel->hasValue($field->getPropertyName())) {
-                                $reMetadata->getPropertyMetadata($field->getPropertyName())->setValue($reInstance, $rel->get($field->getPropertyName()));
-                            }
-                        }
-                        $this->entityManager->getUnitOfWork()->addManagedRelationshipEntity($reInstance, $baseInstance, $relationshipEntity->getPropertyName());
+                        $v->add($this->hydrateRelationshipEntity(
+                            $reMetadata, $reMap, $startNodeMetadata, $endNodeMetadata, $baseInstance, $relationshipEntity
+                        ));
                     }
                     $relationshipEntity->setValue($baseInstance, $v);
+                } else {
+                    $reMap = $record->get($recordKey);
+                    if (!empty($reMap)) {
+                        $reMap = $record->get($recordKey);
+                        $relationshipEntity->setValue($baseInstance,
+                            $this->hydrateRelationshipEntity(
+                                $reMetadata, $reMap[0], $startNodeMetadata, $endNodeMetadata, $baseInstance, $relationshipEntity
+                            ));
+                    }
                 }
             }
         }
 
         return $baseInstance;
+    }
+
+    private function hydrateRelationshipEntity(
+        RelationshipEntityMetadata $reMetadata,
+        array $reMap,
+        NodeEntityMetadata $startNodeMetadata,
+        NodeEntityMetadata $endNodeMetadata,
+        $baseInstance,
+        RelationshipMetadata $relationshipEntity)
+    {
+        $reInstance = $reMetadata->newInstance();
+        $start = $this->hydrateNode($reMap['start'], $startNodeMetadata->getClassName());
+        $end = $this->hydrateNode($reMap['end'], $endNodeMetadata->getClassName());
+        /** @var \GraphAware\Neo4j\Client\Formatter\Type\Relationship $rel */
+        $rel = $reMap['rel'];
+        $relId = $rel->identity();
+        $reMetadata->setStartNodeProperty($reInstance, $start);
+        $reMetadata->setEndNodeProperty($reInstance, $end);
+        $reMetadata->setId($reInstance, $relId);
+        foreach ($reMetadata->getPropertiesMetadata() as $field) {
+            if ($rel->hasValue($field->getPropertyName())) {
+                $reMetadata->getPropertyMetadata($field->getPropertyName())->setValue($reInstance, $rel->get($field->getPropertyName()));
+            }
+        }
+        $this->entityManager->getUnitOfWork()->addManagedRelationshipEntity($reInstance, $baseInstance, $relationshipEntity->getPropertyName());
+
+        return $reInstance;
     }
 
     private function getHydrator($target)

@@ -6,6 +6,8 @@ use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Role;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\ScoreRel;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Score;
 
 /**
  * Class RelationshipEntityITest
@@ -92,6 +94,25 @@ class RelationshipEntityITest extends IntegrationTestCase
         foreach ($actors as $actor) {
             $this->assertInstanceOf(Person::class, $actor);
         }
+    }
+
+    /**
+     * @throws \Exception
+     * @throws \GraphAware\Neo4j\Client\Exception\Neo4jException
+     *
+     * @group re-single
+     */
+    public function testSingleRelationshipEntityIsFetched()
+    {
+        $this->clearDb();
+        $this->playMovies();
+        $this->client->run("MATCH (m:Movie {title:'The Matrix'})
+        CREATE (m)-[:HAS_SCORE {finalScore: 6.74}]->(:Score {value: 7})");
+        /** @var Movie $matrix */
+        $matrix = $this->em->getRepository(Movie::class)->findOneBy('title', 'The Matrix');
+        $this->assertInstanceOf(ScoreRel::class, $matrix->getScore());
+        $this->assertInstanceOf(Score::class, $matrix->getScore()->getScore());
+        $this->assertEquals(6.74, $matrix->getScore()->getFinalScore());
     }
 
     /**

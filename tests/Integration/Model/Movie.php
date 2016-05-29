@@ -30,6 +30,11 @@ class Movie
      */
     public $actors;
 
+    /**
+     * @OGM\Relationship(relationshipEntity="ScoreRel", type="HAS_SCORE", direction="OUTGOING")
+     */
+    protected $score;
+
     public function __construct($title = null)
     {
         if (null !== $title) {
@@ -41,5 +46,13 @@ class Movie
     public function setReleased()
     {
         $this->isReleased = true;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getScore()
+    {
+        return $this->score;
     }
 }
