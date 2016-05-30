@@ -64,5 +64,10 @@ class ScoreRel
         return $this->finalScore;
     }
 
+    public function setFinalScore($score)
+    {
+        $this->finalScore = $score;
+    }
+
 
 }

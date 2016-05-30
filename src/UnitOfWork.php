@@ -335,6 +335,7 @@ class UnitOfWork
             $e = $this->entitiesById[$this->entityIds[$pov]];
             $reflClass = new \ReflectionClass(get_class($e));
             $reflP = $reflClass->getProperty($field);
+            $reflP->setAccessible(true);
             $values = $reflP->getValue($e);
             $shouldBeDeleted = true;
             foreach ($values as $v) {

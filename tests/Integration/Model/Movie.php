@@ -49,7 +49,7 @@ class Movie
     }
 
     /**
-     * @return mixed
+     * @return ScoreRel
      */
     public function getScore()
     {
