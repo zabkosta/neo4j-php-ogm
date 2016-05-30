@@ -333,10 +333,8 @@ class UnitOfWork
         $id = $this->entityManager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($entity);
         foreach ($this->managedRelationshipEntitiesMap[$oid] as $pov => $field) {
             $e = $this->entitiesById[$this->entityIds[$pov]];
-            $reflClass = new \ReflectionClass(get_class($e));
-            $reflP = $reflClass->getProperty($field);
-            $reflP->setAccessible(true);
-            $values = $reflP->getValue($e);
+            $entityMetadata = $this->entityManager->getClassMetadataFor(get_class($e));
+            $values = $entityMetadata->getRelationship($field)->getValue($e);
             $shouldBeDeleted = true;
             foreach ($values as $v) {
                 $id2 = $this->entityManager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($v);
