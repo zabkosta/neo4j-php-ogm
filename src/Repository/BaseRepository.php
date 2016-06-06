@@ -90,7 +90,8 @@ class BaseRepository
                     break;
             }
 
-            $relQueryPart = sprintf($relStr, strtolower($association->getType()), $association->getType());
+            $relationshipIdentifier = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($association->getType()));
+            $relQueryPart = sprintf($relStr, $relationshipIdentifier, $association->getType());
             $query .= PHP_EOL;
             $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$association->getPropertyName().')';
             $query .= ' WITH n, ';
@@ -98,7 +99,7 @@ class BaseRepository
             if (!empty($assocReturns)) {
                 $query .= ', ';
             }
-            $relid = 'rel_'.strtolower($association->getType());
+            $relid = $relid = 'rel_'.$relationshipIdentifier;
             if ($association->isCollection() || $association->isRelationshipEntity()) {
                 $query .= sprintf(' CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
                 $assocReturns[] = $relid;
@@ -299,7 +300,7 @@ class BaseRepository
             }
 
             foreach ($this->classMetadata->getRelationshipEntities() as $key => $relationshipEntity) {
-                $recordKey = 'rel_'.strtolower($relationshipEntity->getType());
+                $recordKey = sprintf('rel_%s_%s', strtolower($relationshipEntity->getPropertyName()), strtolower($relationshipEntity->getType()));
                 if (null === $record->get($recordKey) || empty($record->get($recordKey))) {
                     continue;
                 }
