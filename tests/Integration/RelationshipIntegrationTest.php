@@ -7,6 +7,7 @@ use GraphAware\Neo4j\OGM\Tests\Integration\Model\Company;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Tweeto;
 
 /**
  * Class RelationshipIntegrationTest
@@ -170,5 +171,30 @@ class RelationshipIntegrationTest extends IntegrationTestCase
         foreach ($u6->getLovedBy() as $lover) {
             $this->assertTrue($lover->getLoves()->contains($u6));
         }
+    }
+
+    /**
+     *
+     * @group rels-type-multiple-single
+     */
+    public function testMultipleRelTypesWithSameNameNonCollection()
+    {
+        $this->clearDb();
+        $tw1 = new Tweeto("tw1");
+        $tw2 = new Tweeto("tw2");
+        $tw3 = new Tweeto("tw3");
+        $tw2->setFollowed($tw1);
+        $tw2->setFollows($tw3);
+        $this->em->persist($tw2);
+        $this->em->flush();
+        $this->em->clear();
+        $this->assertGraphExist('(t1:Tweeto {name:"tw1"})-[:FOLLOWS]->(t2:Tweeto {name:"tw2"})-[:FOLLOWS]->(t3:Tweeto {name:"tw3"})');
+
+        $tweetoRep = $this->em->getRepository(Tweeto::class);
+        /** @var Tweeto $tweeto */
+        $tweeto = $tweetoRep->findOneBy('name', 'tw2');
+        $this->assertInstanceOf(Tweeto::class, $tweeto->getFollowed());
+        $this->assertEquals('tw1', $tweeto->getFollowed()->getName());
+        $this->assertEquals('tw3', $tweeto->getFollows()->getName());
     }
 }
