@@ -127,8 +127,6 @@ class BaseRepository
             $parameters[self::FILTER_LIMIT] = $filters[self::FILTER_LIMIT];
         }
 
-        //print_r($query);
-
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
 
         return $this->hydrateResultSet($result);
@@ -163,7 +161,8 @@ class BaseRepository
                     break;
             }
 
-            $relQueryPart = sprintf($relStr, strtolower($association->getType()), $association->getType());
+            $relationshipIdentifier = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($association->getType()));
+            $relQueryPart = sprintf($relStr, $relationshipIdentifier, $association->getType());
             $query .= PHP_EOL;
             $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$association->getPropertyName().')';
             $query .= ' WITH n, ';
@@ -171,7 +170,7 @@ class BaseRepository
             if (!empty($assocReturns)) {
                 $query .= ', ';
             }
-            $relid = 'rel_'.strtolower($association->getType());
+            $relid = 'rel_'.$relationshipIdentifier;
             if ($association->isCollection() || $association->isRelationshipEntity()) {
                 $query .= sprintf(' CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
                 $assocReturns[] = $relid;
@@ -188,9 +187,6 @@ class BaseRepository
         }
 
         $parameters = [$key => $value];
-
-        //print_r($query);
-
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
 
         return $this->hydrateResultSet($result);
@@ -281,7 +277,8 @@ class BaseRepository
         $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
         if ($andCheckAssociations) {
             foreach ($this->classMetadata->getSimpleRelationships() as $key => $association) {
-                $relKey = $association->isCollection() ? sprintf('rel_%s', strtolower($association->getType())) : $association->getPropertyName();
+                $relId = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($association->getType()));
+                $relKey = $association->isCollection() ? sprintf('rel_%s', $relId) : $association->getPropertyName();
                 if ($record->hasValue($relKey) && null !== $record->get($relKey)) {
                     if ($association->isCollection()) {
                         $association->initializeCollection($baseInstance);
@@ -421,7 +418,7 @@ class BaseRepository
             $property = $reflClass->getProperty($mappedBy);
             $property->setAccessible(true);
             $otherClassMetadata = $this->entityManager->getClassMetadataFor(get_class($otherInstance));
-            if ($otherClassMetadata->getAssociation($mappedBy)->isCollection()) {
+            if ($otherClassMetadata->getRelationship($mappedBy)->isCollection()) {
                 if (null === $property->getValue($otherInstance)) {
                     $property->setValue($otherInstance, new ArrayCollection());
                 }

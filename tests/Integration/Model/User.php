@@ -32,6 +32,16 @@ class User
     protected $friends;
 
     /**
+     * @OGM\Relationship(targetEntity="User", type="IN_LOVE_WITH", direction="OUTGOING", collection=true, mappedBy="lovedBy")
+     */
+    protected $loves;
+
+    /**
+     * @OGM\Relationship(targetEntity="User", type="IN_LOVE_WITH", direction="INCOMING", collection=true, mappedBy="loves")
+     */
+    protected $lovedBy;
+
+    /**
      * @OGM\Label(name="Active")
      * @var bool
      */
@@ -47,6 +57,8 @@ class User
         $this->login = $login;
         $this->age = $age;
         $this->friends = new ArrayCollection();
+        $this->loves = new ArrayCollection();
+        $this->lovedBy = new ArrayCollection();
     }
 
     /**
@@ -104,6 +116,36 @@ class User
     public function setActive()
     {
         $this->isActive = true;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLoves()
+    {
+        return $this->loves;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLovedBy()
+    {
+        return $this->lovedBy;
+    }
+
+    public function addLoves(User $user)
+    {
+        if (!$this->loves->contains($user)) {
+            $this->loves->add($user);
+        }
+    }
+
+    public function addLovedBy(User $user)
+    {
+        if (!$this->lovedBy->contains($user)) {
+            $this->lovedBy->add($user);
+        }
     }
 
     /**
