@@ -28,10 +28,16 @@ class BothTest
      */
     protected $others;
 
+    /**
+     * @OGM\Relationship(relationshipEntity="BothRel", direction="BOTH", collection=true, type="FRIEND")
+     */
+    protected $friends;
+
     public function __construct($name)
     {
         $this->name = $name;
         $this->others = new ArrayCollection();
+        $this->friends = new ArrayCollection();
     }
 
     /**
@@ -72,5 +78,15 @@ class BothTest
     public function getOthers()
     {
         return $this->others;
+    }
+
+    public function addFriend(BothTest $bothTest)
+    {
+        $this->friends->add(new BothRel($this, $bothTest));
+    }
+
+    public function getFriends()
+    {
+        return $this->friends;
     }
 }

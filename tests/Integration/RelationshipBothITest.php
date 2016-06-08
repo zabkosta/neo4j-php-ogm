@@ -4,6 +4,7 @@ namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\BothTest;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\BothRel;
 
 /**
  * Class RelationshipBothITest
@@ -41,6 +42,31 @@ class RelationshipBothITest extends IntegrationTestCase
         $this->em->flush();
         $this->assertGraphExist('(b:Both {name:"b"})-[:RELATES]-(a:Both {name:"a"})-[:RELATES]-(c:Both {name:"c"})');
 
+    }
+
+    public function testRelationshipEntityBoth()
+    {
+        $this->clearDb();
+        $b1 = new BothTest("a");
+        $b2 = new BothTest("b");
+        $b3 = new BothTest("c");
+        $b1->addFriend($b2);
+        $b1->addFriend($b3);
+        $this->em->persist($b1);
+        $this->em->flush();
+        $this->assertGraphExist('(b:Both {name:"b"})-[:FRIEND]-(a:Both {name:"a"})-[:FRIEND]-(c:Both {name:"c"})');
+        $this->em->clear();
+        $repository = $this->em->getRepository(BothTest::class);
+        $entities = $repository->findAll(['order' => ['name' => BaseRepository::ORDER_ASC]]);
+        $this->assertEquals('a', $entities[0]->getName());
+        $this->assertEquals('c', $entities[2]->getName());
+        $a = $entities[0];
+        $this->assertCount(2, $a->getFriends());
+        $bFound = false;
+        $cFound = false;
+        foreach ($a->getFriends() as $friend) {
+            $this->assertInstanceOf(BothRel::class, $friend);
+        }
     }
 
     private function createGraph()

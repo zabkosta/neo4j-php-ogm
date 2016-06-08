@@ -35,11 +35,6 @@ class RelationshipEntityPersister
         $endNodeId = $this->em->getClassMetadataFor(get_class($endNode))->getIdValue($endNode);
 
         $relType = $this->classMetadata->getType();
-
-        $query = 'MATCH (a), (b) WHERE id(a) = {a} AND id(b) = {b}'.PHP_EOL;
-        $query .= sprintf('MERGE (a)-[r:%s]->(b) SET r += {fields}', $relType).PHP_EOL;
-        $query .= 'RETURN id(r)';
-
         $parameters = [
             'a' => $startNodeId,
             'b' => $endNodeId,
@@ -50,6 +45,12 @@ class RelationshipEntityPersister
             $v = $propertyMetadata->getValue($entity);
             $parameters['fields'][$propertyMetadata->getPropertyName()] = $v;
         }
+        $query = 'MATCH (a), (b) WHERE id(a) = {a} AND id(b) = {b}'.PHP_EOL;
+        $query .= sprintf('MERGE (a)-[r:%s]->(b)', $relType).PHP_EOL;
+        if (!empty($parameters['fields'])) {
+            $query .= 'SET r += {fields} ';
+        }
+        $query .= 'RETURN id(r)';
 
         return Statement::create($query, $parameters);
     }
