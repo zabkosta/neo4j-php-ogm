@@ -284,6 +284,10 @@ class BaseRepository
                         $association->initializeCollection($baseInstance);
                         foreach ($record->get($relKey) as $v) {
                             $nodeToUse = $association->getDirection() === "OUTGOING" ? $v['end'] : $v['start'];
+                            if ($association->getDirection() === 'BOTH') {
+                                $baseId = $record->nodeValue($identifier)->identity();
+                                $nodeToUse = $v['end']->identity() === $baseId ? $v['start'] : $v['end'];
+                            }
                             $v2 = $this->hydrateNode($nodeToUse, $this->getTargetFullClassName($association->getTargetEntity()));
                             $association->addToCollection($baseInstance, $v2);
                             $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
