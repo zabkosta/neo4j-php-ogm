@@ -29,6 +29,20 @@ class RelationshipBothITest extends IntegrationTestCase
         }
     }
 
+    public function testBothRelationshipFlush()
+    {
+        $this->clearDb();
+        $other1 = new BothTest("a");
+        $other2 = new BothTest("b");
+        $other3 = new BothTest("c");
+        $other1->addOther($other2);
+        $other1->addOther($other3);
+        $this->em->persist($other1);
+        $this->em->flush();
+        $this->assertGraphExist('(b:Both {name:"b"})-[:RELATES]-(a:Both {name:"a"})-[:RELATES]-(c:Both {name:"c"})');
+
+    }
+
     private function createGraph()
     {
         $query = 'CREATE (a:Both {name:"a"})-[:RELATES]->(b:Both {name:"b"}), (a)<-[:RELATES]-(c:Both {name:"c"})';

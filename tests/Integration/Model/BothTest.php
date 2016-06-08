@@ -28,8 +28,9 @@ class BothTest
      */
     protected $others;
 
-    public function __construct()
+    public function __construct($name)
     {
+        $this->name = $name;
         $this->others = new ArrayCollection();
     }
 
@@ -58,6 +59,11 @@ class BothTest
         }
 
         return false;
+    }
+
+    public function addOther(BothTest $other)
+    {
+        $this->others->add($other);
     }
 
     /**
