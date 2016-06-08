@@ -6,7 +6,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Common\Result\Record;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
-use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
@@ -76,7 +75,8 @@ class BaseRepository
         $query = sprintf('MATCH (n:%s)', $label);
         /** @var RelationshipMetadata[] $associations */
         $associations = $this->classMetadata->getRelationships();
-        foreach ($associations as $association) {
+        $assocReturns = [];
+        foreach ($associations as $identifier => $association) {
             switch ($association->getDirection()) {
                 case 'INCOMING':
                     $relStr = '<-[rel_%s:%s]-';
@@ -89,33 +89,29 @@ class BaseRepository
                     break;
             }
 
-            $relQueryPart = sprintf($relStr, strtolower($association->getType()), $association->getType());
+            $relationshipIdentifier = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($association->getType()));
+            $relQueryPart = sprintf($relStr, $relationshipIdentifier, $association->getType());
             $query .= PHP_EOL;
             $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$association->getPropertyName().')';
+            $query .= ' WITH n, ';
+            $query .= implode(', ', $assocReturns);
+            if (!empty($assocReturns)) {
+                $query .= ', ';
+            }
+            $relid = $relid = 'rel_'.$relationshipIdentifier;
+            if ($association->isCollection() || $association->isRelationshipEntity()) {
+                $query .= sprintf(' CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
+                $assocReturns[] = $relid;
+            } else {
+                $query .= $association->getPropertyName();
+                $assocReturns[] = $association->getPropertyName();
+            }
         }
 
         $query .= PHP_EOL;
         $query .= 'RETURN n';
-        $assocReturns = [];
-        foreach ($this->classMetadata->getRelationships() as $association) {
-            $k = $association->getPropertyName();
-            if ($association->isCollection()) {
-                $assocReturns[] = sprintf('collect(%s) as %s', $k, $k);
-            } else {
-                $assocReturns[] = $k;
-            }
-        }
-
-        foreach ($this->classMetadata->getRelationshipEntities() as $relationshipEntity) {
-            $relid = 'rel_'.strtolower($relationshipEntity->getType());
-            if ($relationshipEntity->isCollection()) {
-                $assocReturns[] = sprintf('CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
-            }
-        }
-
-        if (count($associations) > 0) {
-            $query .= ', ';
-            $query .= implode(', ', $assocReturns);
+        if (!empty($assocReturns)) {
+            $query .= ', ' . implode(', ', $assocReturns);
         }
 
         if (isset($filters[self::FILTER_ORDER])) {
@@ -130,8 +126,6 @@ class BaseRepository
             $query .= ' LIMIT {limit}';
             $parameters[self::FILTER_LIMIT] = $filters[self::FILTER_LIMIT];
         }
-
-        //print_r($query);
 
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
 
@@ -167,7 +161,8 @@ class BaseRepository
                     break;
             }
 
-            $relQueryPart = sprintf($relStr, strtolower($association->getType()), $association->getType());
+            $relationshipIdentifier = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($association->getType()));
+            $relQueryPart = sprintf($relStr, $relationshipIdentifier, $association->getType());
             $query .= PHP_EOL;
             $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$association->getPropertyName().')';
             $query .= ' WITH n, ';
@@ -175,9 +170,14 @@ class BaseRepository
             if (!empty($assocReturns)) {
                 $query .= ', ';
             }
-            $relid = 'rel_'.strtolower($association->getType());
-            $query .= sprintf(' CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
-            $assocReturns[] = $relid;
+            $relid = 'rel_'.$relationshipIdentifier;
+            if ($association->isCollection() || $association->isRelationshipEntity()) {
+                $query .= sprintf(' CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
+                $assocReturns[] = $relid;
+            } else {
+                $query .= $association->getPropertyName();
+                $assocReturns[] = $association->getPropertyName();
+            }
         }
 
         $query .= PHP_EOL;
@@ -187,7 +187,6 @@ class BaseRepository
         }
 
         $parameters = [$key => $value];
-
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
 
         return $this->hydrateResultSet($result);
@@ -275,31 +274,36 @@ class BaseRepository
     private function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n', $className = null)
     {
         $classN = null !== $className ? $className : $this->className;
-        $metadata = $this->entityManager->getClassMetadataFor($classN);
         $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
         if ($andCheckAssociations) {
             foreach ($this->classMetadata->getSimpleRelationships() as $key => $association) {
-                if (!$association->isRelationshipEntity()) {
-                    if ($record->hasValue($association->getPropertyName()) && null !== $record->get($association->getPropertyName())) {
-                        if ($association->isCollection()) {
-                            foreach ($record->get($association->getPropertyName()) as $v) {
-                                $v2 = $this->hydrateNode($v, $this->getTargetFullClassName($association->getTargetEntity()));
-                                $association->addToCollection($baseInstance, $v2);
-                                $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
-                                $this->setInversedAssociation($baseInstance, $v2, $association->getPropertyName());
+                $relId = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($association->getType()));
+                $relKey = $association->isCollection() ? sprintf('rel_%s', $relId) : $association->getPropertyName();
+                if ($record->hasValue($relKey) && null !== $record->get($relKey)) {
+                    if ($association->isCollection()) {
+                        $association->initializeCollection($baseInstance);
+                        foreach ($record->get($relKey) as $v) {
+                            $nodeToUse = $association->getDirection() === "OUTGOING" ? $v['end'] : $v['start'];
+                            if ($association->getDirection() === 'BOTH') {
+                                $baseId = $record->nodeValue($identifier)->identity();
+                                $nodeToUse = $v['end']->identity() === $baseId ? $v['start'] : $v['end'];
                             }
-                        } else {
-                            $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
-                            $relO = $hydrator->hydrateNode($record->get($association->getPropertyName()));
-                            $association->setValue($baseInstance, $relO);
-                            $this->setInversedAssociation($baseInstance, $relO, $association->getPropertyName());
+                            $v2 = $this->hydrateNode($nodeToUse, $this->getTargetFullClassName($association->getTargetEntity()));
+                            $association->addToCollection($baseInstance, $v2);
+                            $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
+                            $this->setInversedAssociation($baseInstance, $v2, $association->getPropertyName());
                         }
+                    } else {
+                        $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
+                        $relO = $hydrator->hydrateNode($record->get($relKey));
+                        $association->setValue($baseInstance, $relO);
+                        $this->setInversedAssociation($baseInstance, $relO, $relKey);
                     }
                 }
             }
 
             foreach ($this->classMetadata->getRelationshipEntities() as $key => $relationshipEntity) {
-                $recordKey = 'rel_'.strtolower($relationshipEntity->getType());
+                $recordKey = sprintf('rel_%s_%s', strtolower($relationshipEntity->getPropertyName()), strtolower($relationshipEntity->getType()));
                 if (null === $record->get($recordKey) || empty($record->get($recordKey))) {
                     continue;
                 }
@@ -418,7 +422,7 @@ class BaseRepository
             $property = $reflClass->getProperty($mappedBy);
             $property->setAccessible(true);
             $otherClassMetadata = $this->entityManager->getClassMetadataFor(get_class($otherInstance));
-            if ($otherClassMetadata->getAssociation($mappedBy)->isCollection()) {
+            if ($otherClassMetadata->getRelationship($mappedBy)->isCollection()) {
                 if (null === $property->getValue($otherInstance)) {
                     $property->setValue($otherInstance, new ArrayCollection());
                 }

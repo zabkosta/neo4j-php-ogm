@@ -116,6 +116,49 @@ class RelationshipEntityITest extends IntegrationTestCase
     }
 
     /**
+     * @throws \GraphAware\Neo4j\Client\Exception\Neo4jException
+     *
+     * @group re-single-all
+     */
+    public function testSingleRelEntityAndFindAll()
+    {
+        $this->clearDb();
+        $this->playMovies();
+        $this->client->run("MATCH (m:Movie {title:'The Matrix'})
+        CREATE (m)-[:HAS_SCORE {finalScore: 6.74}]->(:Score {value: 7})");
+        /** @var Movie[] $movies */
+        $movies = $this->em->getRepository(Movie::class)->findAll();
+        foreach ($movies as $movie) {
+            if ($movie->title === 'The Matrix') {
+                $this->assertInstanceOf(ScoreRel::class, $movie->getScore());
+                $this->assertEquals(6.74, $movie->getScore()->getFinalScore());
+            }
+        }
+    }
+
+    /**
+     * @throws \Exception
+     *
+     * @group re-flush-manage
+     */
+    public function testSingleRelEntityIsManagedOnFlush()
+    {
+        $this->clearDb();
+        $this->playMovies();
+        $this->client->run("MATCH (m:Movie {title:'The Matrix'})
+        CREATE (m)-[:HAS_SCORE {finalScore: 6.74}]->(:Score {value: 7})");
+        /** @var Movie $matrix */
+        $matrix = $this->em->getRepository(Movie::class)->findOneBy('title', 'The Matrix');
+        $matrix->getScore()->setFinalScore(4.35);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var Movie $matrix2 */
+        $matrix2 = $this->em->getRepository(Movie::class)->findOneBy('title', 'The Matrix');
+        $this->assertEquals(4.35, $matrix->getScore()->getFinalScore());
+    }
+
+    /**
      * @param string $name
      * @return Person
      * @throws \Exception

@@ -26,7 +26,7 @@ final class Relationship
     /**
      * @var string
      *
-     * @Enum({"OUTGOING","INCOMING"})
+     * @Enum({"OUTGOING","INCOMING","BOTH"})
      */
     public $direction;
 

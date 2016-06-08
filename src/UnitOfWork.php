@@ -333,9 +333,8 @@ class UnitOfWork
         $id = $this->entityManager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($entity);
         foreach ($this->managedRelationshipEntitiesMap[$oid] as $pov => $field) {
             $e = $this->entitiesById[$this->entityIds[$pov]];
-            $reflClass = new \ReflectionClass(get_class($e));
-            $reflP = $reflClass->getProperty($field);
-            $values = $reflP->getValue($e);
+            $entityMetadata = $this->entityManager->getClassMetadataFor(get_class($e));
+            $values = $entityMetadata->getRelationship($field)->getValue($e);
             $shouldBeDeleted = true;
             foreach ($values as $v) {
                 $id2 = $this->entityManager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($v);
@@ -353,10 +352,9 @@ class UnitOfWork
     {
         foreach ($this->managedRelationshipReferences as $oid => $reference) {
             $entity = $this->entitiesById[$this->entityIds[$oid]];
-            $reflO = new \ReflectionObject($entity);
+            $reflO = $this->entityManager->getClassMetadataFor(get_class($entity));
             foreach ($reference as $field => $info) {
-                $property = $reflO->getProperty($field);
-                $property->setAccessible(true);
+                $property = $reflO->getRelationship($field);
                 $value = $property->getValue($entity);
                 if (is_array($value) || $value instanceof ArrayCollection) {
                     if (count($value) < count($info)) {
@@ -402,7 +400,7 @@ class UnitOfWork
                     $this->persistRelationshipEntity($v, get_class($entity));
                     $rem = $this->entityManager->getRelationshipEntityMetadata(get_class($v));
                     $toPersistProperty = $rem->getStartNode() === $classMetadata->getClassName() ? $rem->getEndNodeValue($v) : $rem->getStartNodeValue($v);
-                    $this->persist($toPersistProperty, $visited);
+                    $this->doPersist($toPersistProperty, $visited);
                 }
             }
         }

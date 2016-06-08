@@ -2,10 +2,12 @@
 
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
+use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Company;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Tweeto;
 
 /**
  * Class RelationshipIntegrationTest
@@ -126,5 +128,73 @@ class RelationshipIntegrationTest extends IntegrationTestCase
         foreach ($movie->actors as $actor) {
             $this->assertInstanceOf(Person::class, $actor);
         }
+    }
+
+    /**
+     * @group multiple-rels-same
+     */
+    public function testMultipleRelationshipTypesWithSameName()
+    {
+        $this->clearDb();
+        $user1 = new User('user1');
+        $user2 = new User('user2');
+        $user3 = new User('user3');
+        $user4 = new User('user4');
+        $user5 = new User('user5');
+        $user6 = new User('user6');
+
+        $user1->addLoves($user2);
+        $user1->addLoves($user3);
+
+        $user6->addLovedBy($user4);
+        $user6->addLovedBy($user5);
+
+        $this->em->persist($user1);
+        $this->em->persist($user6);
+        $this->em->flush();
+        $this->em->clear();
+        $this->assertGraphExist('(u2:User {login:"user2"})<-[:IN_LOVE_WITH]-(u1:User {login: "user1"})-[:IN_LOVE_WITH]->(u3:User {login: "user3"})');
+        $this->assertGraphExist('(u4:User {login:"user4"})-[:IN_LOVE_WITH]->(u6:User {login:"user6"})<-[:IN_LOVE_WITH]-(u5:User {login:"user5"})');
+
+        /** @var BaseRepository $repository */
+        $repository = $this->em->getRepository(User::class);
+        /** @var User $user */
+        $user = $repository->findOneBy('login', 'user1');
+        $this->assertCount(2, $user->getLoves());
+        foreach ($user->getLoves() as $loved) {
+            $this->assertCount(1, $loved->getLovedBy());
+            $this->assertEquals('user1', $loved->getLovedBy()[0]->getLogin());
+        }
+        /** @var User $u6 */
+        $u6 = $repository->findOneBy('login', 'user6');
+        $this->assertCount(2, $u6->getLovedBy());
+        foreach ($u6->getLovedBy() as $lover) {
+            $this->assertTrue($lover->getLoves()->contains($u6));
+        }
+    }
+
+    /**
+     *
+     * @group rels-type-multiple-single
+     */
+    public function testMultipleRelTypesWithSameNameNonCollection()
+    {
+        $this->clearDb();
+        $tw1 = new Tweeto("tw1");
+        $tw2 = new Tweeto("tw2");
+        $tw3 = new Tweeto("tw3");
+        $tw2->setFollowed($tw1);
+        $tw2->setFollows($tw3);
+        $this->em->persist($tw2);
+        $this->em->flush();
+        $this->em->clear();
+        $this->assertGraphExist('(t1:Tweeto {name:"tw1"})-[:FOLLOWS]->(t2:Tweeto {name:"tw2"})-[:FOLLOWS]->(t3:Tweeto {name:"tw3"})');
+
+        $tweetoRep = $this->em->getRepository(Tweeto::class);
+        /** @var Tweeto $tweeto */
+        $tweeto = $tweetoRep->findOneBy('name', 'tw2');
+        $this->assertInstanceOf(Tweeto::class, $tweeto->getFollowed());
+        $this->assertEquals('tw1', $tweeto->getFollowed()->getName());
+        $this->assertEquals('tw3', $tweeto->getFollows()->getName());
     }
 }

@@ -1,6 +1,7 @@
 1.0.0-beta3
 
 - BC : Renamed `Manager` to `EntityManager`
+- Fixed an issue with entities having multiple properties with the same relationship type
 
 1.0.0-beta2
 
