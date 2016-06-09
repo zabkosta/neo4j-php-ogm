@@ -50,7 +50,7 @@ class RelationshipEntityPersister
         if (!empty($parameters['fields'])) {
             $query .= 'SET r += {fields} ';
         }
-        $query .= 'RETURN id(r)';
+        $query .= 'RETURN id(r) as id';
 
         return Statement::create($query, $parameters);
     }

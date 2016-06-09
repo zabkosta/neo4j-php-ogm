@@ -62,10 +62,9 @@ class RelationshipBothITest extends IntegrationTestCase
         $this->assertEquals('c', $entities[2]->getName());
         $a = $entities[0];
         $this->assertCount(2, $a->getFriends());
-        $bFound = false;
-        $cFound = false;
         foreach ($a->getFriends() as $friend) {
             $this->assertInstanceOf(BothRel::class, $friend);
+            $this->assertTrue(in_array($friend->getEndNode()->getName(), ['b', 'c']));
         }
     }
 
