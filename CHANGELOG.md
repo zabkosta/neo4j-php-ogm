@@ -1,3 +1,7 @@
+1.0.0-beta4
+
+- Added the possibility to define relationship direction as BOTH
+
 1.0.0-beta3
 
 - BC : Renamed `Manager` to `EntityManager`
