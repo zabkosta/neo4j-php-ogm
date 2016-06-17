@@ -1,10 +1,12 @@
 <?php
 
 namespace GraphAware\Neo4j\OGM\Tests\Integration\NativeQuery;
+
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Integration\NativeQuery\Model\NewsFeed;
 use GraphAware\Neo4j\OGM\Tests\Integration\NativeQuery\Model\Post;
 use GraphAware\Neo4j\OGM\Tests\Integration\NativeQuery\Model\PostRepository;
+use GraphAware\Neo4j\OGM\Tests\Integration\NativeQuery\Model\User;
 
 /**
  * @group query-result-it
@@ -30,6 +32,16 @@ class QueryResultMappingITTest extends IntegrationTestCase
             $this->assertInstanceOf(NewsFeed::class, $feed);
         }
         $this->assertEquals('Graph Aided Search', $feeds[0]->getPost()->getTitle());
+    }
+
+    public function testNativeQueryResultWithAndOr()
+    {
+        $this->clearDb();
+        $user = new User("johndoe", "john@doe.com");
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->em->clear();
+
     }
 
     private function createGraph()
