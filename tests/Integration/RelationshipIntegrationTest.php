@@ -222,5 +222,35 @@ class RelationshipIntegrationTest extends IntegrationTestCase
     public function testCollectionRelationshipsUpdated()
     {
         $this->clearDb();
+        $user1 = new User('user1');
+        $user2 = new User('user2');
+        $user3 = new User('user3');
+        $this->em->persist($user3);
+
+        $company = new Company('company');
+        $company->addEmployee($user1);
+        $company->addEmployee($user2);
+        $this->em->persist($company);
+        $this->em->flush();
+
+        $companyRep = $this->em->getRepository(Company::class);
+
+        $getLogins = function(&$value, $key) {
+            $value = $value->getLogin();
+        };
+
+        $users = $companyRep->findAll()[0]->getEmployees()->toArray();
+        array_walk($users, $getLogins);
+        sort($users);
+        $this->assertEquals(['user1', 'user2'], $users);
+
+        $company->removeEmployee($user2);
+        $company->addEmployee($user3);
+        $this->em->flush();
+
+        $users = $companyRep->findAll()[0]->getEmployees()->toArray();
+        array_walk($users, $getLogins);
+        sort($users);
+        $this->assertEquals(['user1', 'user3'], $users);
     }
 }
