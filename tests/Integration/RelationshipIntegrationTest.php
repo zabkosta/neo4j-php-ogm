@@ -197,4 +197,30 @@ class RelationshipIntegrationTest extends IntegrationTestCase
         $this->assertEquals('tw1', $tweeto->getFollowed()->getName());
         $this->assertEquals('tw3', $tweeto->getFollows()->getName());
     }
+
+    public function testNonCollectionRelationshipsUpdated()
+    {
+        $this->clearDb();
+        $tw1 = new Tweeto('tw1');
+        $tw2 = new Tweeto('tw2');
+        $tw3 = new Tweeto('tw3');
+        $tw1->setFollows($tw2);
+        $this->em->persist($tw1);
+        $this->em->persist($tw3);
+        $this->em->flush();
+
+        $this->assertGraphExist('(t1:Tweeto {name:"tw1"})-[:FOLLOWS]->(t2:Tweeto {name:"tw2"})');
+
+        $tw1->setFollows($tw3);
+        $this->em->flush();
+        $this->em->clear();
+
+        $this->assertGraphExist('(t1:Tweeto {name:"tw1"})-[:FOLLOWS]->(t3:Tweeto {name:"tw3"})');
+        $this->assertGraphNotExist('(t1:Tweeto {name:"tw1"})-[:FOLLOWS]->(t2:Tweeto {name:"tw2"})');
+    }
+
+    public function testCollectionRelationshipsUpdated()
+    {
+        $this->clearDb();
+    }
 }
