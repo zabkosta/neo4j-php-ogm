@@ -297,6 +297,7 @@ class BaseRepository
                         $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
                         $relO = $hydrator->hydrateNode($record->get($relKey));
                         $association->setValue($baseInstance, $relO);
+                        $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $relO, $association->getPropertyName(), $association);
                         $this->setInversedAssociation($baseInstance, $relO, $relKey);
                     }
                 }
