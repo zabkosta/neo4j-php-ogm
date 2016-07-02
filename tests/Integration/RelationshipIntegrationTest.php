@@ -197,4 +197,85 @@ class RelationshipIntegrationTest extends IntegrationTestCase
         $this->assertEquals('tw1', $tweeto->getFollowed()->getName());
         $this->assertEquals('tw3', $tweeto->getFollows()->getName());
     }
+
+    public function testNonCollectionRelationshipsUpdated()
+    {
+        $this->clearDb();
+        $tw1 = new Tweeto('tw1');
+        $tw2 = new Tweeto('tw2');
+        $tw3 = new Tweeto('tw3');
+        $tw1->setFollows($tw2);
+        $this->em->persist($tw1);
+        $this->em->persist($tw3);
+        $this->em->flush();
+
+        $this->assertGraphExist('(t1:Tweeto {name:"tw1"})-[:FOLLOWS]->(t2:Tweeto {name:"tw2"})');
+
+        $tw1->setFollows($tw3);
+        $this->em->flush();
+        $this->em->clear();
+
+        $this->assertGraphExist('(t1:Tweeto {name:"tw1"})-[:FOLLOWS]->(t3:Tweeto {name:"tw3"})');
+        $this->assertGraphNotExist('(t1:Tweeto {name:"tw1"})-[:FOLLOWS]->(t2:Tweeto {name:"tw2"})');
+    }
+
+    public function testCollectionRelationshipsUpdated()
+    {
+        $this->clearDb();
+        $user1 = new User('user1');
+        $user2 = new User('user2');
+        $user3 = new User('user3');
+        $this->em->persist($user3);
+
+        $company = new Company('company');
+        $company->addEmployee($user1);
+        $company->addEmployee($user2);
+        $this->em->persist($company);
+        $this->em->flush();
+
+        $companyRep = $this->em->getRepository(Company::class);
+
+        $getLogins = function(&$value, $key) {
+            $value = $value->getLogin();
+        };
+
+        $users = $companyRep->findAll()[0]->getEmployees()->toArray();
+        array_walk($users, $getLogins);
+        sort($users);
+        $this->assertEquals(['user1', 'user2'], $users);
+
+        $company->removeEmployee($user2);
+        $company->addEmployee($user3);
+        $this->em->flush();
+
+        $users = $companyRep->findAll()[0]->getEmployees()->toArray();
+        array_walk($users, $getLogins);
+        sort($users);
+        $this->assertEquals(['user1', 'user3'], $users);
+    }
+
+    public function testHydratedNonCollectionRelationshipsManaged()
+    {
+        $this->clearDb();
+        $tw1 = new Tweeto("tw1");
+        $tw2 = new Tweeto("tw2");
+        $tw3 = new Tweeto("tw3");
+        $tw1->setFollows($tw2);
+        $this->em->persist($tw1);
+        $this->em->persist($tw3);
+        $this->em->flush();
+        $this->em->clear();
+        $this->assertGraphExist('(t1:Tweeto {name:"tw1"})-[:FOLLOWS]->(t2:Tweeto {name:"tw2"})');
+
+        $tweetoRep = $this->em->getRepository(Tweeto::class);
+        /** @var Tweeto $tw1 */
+        $tw1 = $tweetoRep->findOneBy('name', 'tw1');
+        /** @var Tweeto $tw3 */
+        $tw3 = $tweetoRep->findOneBy('name', 'tw3');
+        $tw1->setFollows($tw3);
+        $this->em->flush();
+        $this->em->clear();
+        $this->assertGraphNotExist('(t1:Tweeto {name:"tw1"})-[:FOLLOWS]->(t2:Tweeto {name:"tw2"})');
+        $this->assertGraphExist('(t1:Tweeto {name:"tw1"})-[:FOLLOWS]->(t3:Tweeto {name:"tw3"})');
+    }
 }

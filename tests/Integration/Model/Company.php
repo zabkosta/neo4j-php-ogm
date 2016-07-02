@@ -37,6 +37,11 @@ class Company
         $this->employees[] = $user;
     }
 
+    public function removeEmployee(User $user)
+    {
+        $this->employees->removeElement($user);
+    }
+
     /**
      * @return int
      */
