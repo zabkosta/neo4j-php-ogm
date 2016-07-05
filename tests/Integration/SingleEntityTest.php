@@ -4,6 +4,7 @@ namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\AuthUser;
 
 /**
  * Class SingleEntityTest
@@ -151,5 +152,17 @@ class SingleEntityTest extends IntegrationTestCase
         $user = $this->em->getRepository(User::class)->findOneById($id);
         $this->assertInstanceOf(User::class, $user);
         $this->assertEquals($id, $user->getId());
+    }
+
+    /**
+     * @group so-issue
+     */
+    public function testMultiplePropertiesArePersistedOnNode()
+    {
+        $user = new AuthUser('ikwattro', 'password');
+        $this->em->persist($user);
+        $this->em->flush();
+
+        $this->assertGraphExist('(u:User {username:"ikwattro", password:"password"})');
     }
 }
