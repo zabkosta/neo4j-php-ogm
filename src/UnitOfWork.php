@@ -144,7 +144,7 @@ class UnitOfWork
 
     public function flush()
     {
-        $this->checkRelationshipReferencesHaveChanged();
+        $this->detectRelationshipReferenceChanges();
         $this->detectRelationshipEntityChanges();
         $this->detectEntityChanges();
         $statements = [];
@@ -348,7 +348,7 @@ class UnitOfWork
         }
     }
 
-    private function checkRelationshipReferencesHaveChanged()
+    private function detectRelationshipReferenceChanges()
     {
         foreach ($this->managedRelationshipReferences as $oid => $reference) {
             $entity = $this->entitiesById[$this->entityIds[$oid]];
@@ -356,28 +356,57 @@ class UnitOfWork
             foreach ($reference as $field => $info) {
                 $property = $reflO->getRelationship($field);
                 $value = $property->getValue($entity);
-                if (is_array($value) || $value instanceof ArrayCollection) {
-                    if (count($value) < count($info)) {
-                        foreach ($info as $ref) {
-                            $target = $this->entitiesById[$this->entityIds[$ref['target']]];
-                            $toBeDeleted = null;
-                            if (is_array($value)) {
-                                if (!in_array($target, $value)) {
-                                    $toBeDeleted = $target;
-                                }
-                            } elseif ($value instanceof ArrayCollection) {
-                                if (!$value->contains($target)) {
-                                    $toBeDeleted = $target;
-                                }
-                            }
-                            if (null !== $toBeDeleted) {
-                                $this->scheduleRelationshipReferenceForDelete($entity, $toBeDeleted, $ref['rel']);
-                            }
+                if ($value instanceof ArrayCollection)
+                {
+                    $value = $value->toArray();
+                }
+                if (is_array($value)) {
+                    $currentValue = array_map(function ($ref) {
+                        return $this->entitiesById[$this->entityIds[$ref['target']]];
+                    }, $info);
+
+                    $compare = function ($a, $b) {
+                        if ($a === $b) {
+                            return 0;
                         }
+                        return spl_object_hash($a) < spl_object_hash($b) ? -1 : 1;
+                    };
+
+                    $added = array_udiff($value, $currentValue, $compare);
+                    $removed = array_udiff($currentValue, $value, $compare);
+                    foreach ($added as $add) {
+                        // Since this is the same property, it should be ok to re-use the first relationship
+                        $this->scheduleRelationshipReferenceForCreate($entity, $add, $info[0]['rel']);
+                    }
+                    foreach ($removed as $remove)
+                    {
+                        $this->scheduleRelationshipReferenceForDelete($entity, $remove, $info[0]['rel']);
+                    }
+                }
+                else if (is_object($value))
+                {
+                    $target = $this->entitiesById[$this->entityIds[$info[0]['target']]];
+                    if ($value !== $target)
+                    {
+                        $this->scheduleRelationshipReferenceForDelete($entity, $target, $info[0]['rel']);
+                        $this->scheduleRelationshipReferenceForCreate($entity, $value, $info[0]['rel']);
+                    }
+                }
+                else if ($value === null)
+                {
+                    foreach ($info as $ref)
+                    {
+                        $target = $this->entitiesById[$this->entityIds[$ref['target']]];
+                        $this->scheduleRelationshipReferenceForDelete($entity, $target, $ref['rel']);
                     }
                 }
             }
         }
+    }
+
+    public function scheduleRelationshipReferenceForCreate($entity, $target, RelationshipMetadata $relationship)
+    {
+        $this->relationshipsScheduledForCreated[] = [$entity, $relationship, $target, $relationship->getPropertyName()];
     }
 
     public function scheduleRelationshipReferenceForDelete($entity, $target, RelationshipMetadata $relationship)
