@@ -38,16 +38,23 @@ final class RelationshipMetadata
     private $relationshipAnnotation;
 
     /**
+     * @var bool
+     */
+    private $isLazy;
+
+    /**
      * @param string                                         $className
      * @param \ReflectionProperty                            $reflectionProperty
      * @param \GraphAware\Neo4j\OGM\Annotations\Relationship $relationshipAnnotation
+     * @param bool $isLazy
      */
-    public function __construct($className, \ReflectionProperty $reflectionProperty, Relationship $relationshipAnnotation)
+    public function __construct($className, \ReflectionProperty $reflectionProperty, Relationship $relationshipAnnotation, $isLazy = false)
     {
         $this->className = $className;
         $this->propertyName = $reflectionProperty->getName();
         $this->reflectionProperty = $reflectionProperty;
         $this->relationshipAnnotation = $relationshipAnnotation;
+        $this->isLazy = $isLazy;
     }
 
     /**
@@ -80,6 +87,14 @@ final class RelationshipMetadata
     public function isCollection()
     {
         return true === $this->relationshipAnnotation->collection;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isLazy()
+    {
+        return $this->isLazy;
     }
 
     /**

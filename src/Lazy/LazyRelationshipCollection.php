@@ -11,32 +11,33 @@
 
 namespace GraphAware\Neo4j\OGM\Lazy;
 
+use Doctrine\Common\Collections\AbstractLazyCollection;
 use GraphAware\Neo4j\OGM\Common\Collection;
+use GraphAware\Neo4j\OGM\EntityManager;
+use GraphAware\Neo4j\OGM\Finder\RelationshipsFinder;
+use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 
-class LazyRelationshipCollection
+class LazyRelationshipCollection extends AbstractLazyCollection
 {
-    private $elements;
+    private $em;
 
-    private $initialized = false;
+    private $finder;
 
-    private static $nonTriggerMethods = ['add', 'set'];
+    private $baseId;
 
-    public function __construct(array $elements = array())
+    public function __construct(EntityManager $em, $baseEntity, $targetEntityClass, RelationshipMetadata $relationshipMetadata)
     {
-        $this->elements = new Collection($elements);
+        $this->finder = new RelationshipsFinder($em, $targetEntityClass, $relationshipMetadata);
+        $this->em = $em;
+        $this->collection = new Collection();
+        $this->baseId = $this->em->getClassMetadataFor(get_class($baseEntity))->getIdValue($baseEntity);
     }
 
-    public function initialize()
+    protected function doInitialize()
     {
-        $this->initialized = true;
-    }
-
-    public function __call($name, $args)
-    {
-        if (!$this->initialized && !in_array($name, self::$nonTriggerMethods)) {
-            $this->initialize();
+        $instances = $this->finder->find($this->baseId);
+        foreach ($instances as $instance) {
+            $this->collection->add($instance);
         }
-
-        return call_user_func_array(array($this->elements, $name), $args);
     }
 }

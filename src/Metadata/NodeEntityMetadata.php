@@ -134,6 +134,36 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     }
 
     /**
+     * @return RelationshipMetadata[]
+     */
+    public function getNonLazyRelationships()
+    {
+        $rels = [];
+        foreach ($this->relationships as $relationship) {
+            if (!$relationship->isLazy()) {
+                $rels[] = $relationship;
+            }
+        }
+
+        return $rels;
+    }
+
+    /**
+     * @return RelationshipMetadata[]
+     */
+    public function getLazyRelationships()
+    {
+        $rels = [];
+        foreach ($this->relationships as $relationship) {
+            if ($relationship->isLazy()) {
+                $rels[] = $relationship;
+            }
+        }
+
+        return $rels;
+    }
+
+    /**
      * @param $key
      *
      * @return \GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata
@@ -148,11 +178,11 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     /**
      * @return RelationshipMetadata[]
      */
-    public function getSimpleRelationships()
+    public function getSimpleRelationships($andLazy = true)
     {
         $coll = [];
         foreach ($this->relationships as $relationship) {
-            if (!$relationship->isRelationshipEntity()) {
+            if (!$relationship->isRelationshipEntity() && (!$relationship->isLazy() || $relationship->isLazy() === $andLazy)) {
                 $coll[] = $relationship;
             }
         }

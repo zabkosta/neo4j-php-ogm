@@ -219,6 +219,10 @@ class RelationshipIntegrationTest extends IntegrationTestCase
         $this->assertGraphNotExist('(t1:Tweeto {name:"tw1"})-[:FOLLOWS]->(t2:Tweeto {name:"tw2"})');
     }
 
+    /**
+     * @throws \Exception
+     * @group relup
+     */
     public function testCollectionRelationshipsUpdated()
     {
         $this->clearDb();

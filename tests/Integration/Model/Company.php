@@ -22,6 +22,7 @@ class Company
 
     /**
      * @OGM\Relationship(targetEntity="User", type="WORKS_AT", direction="INCOMING", collection=true)
+     * @OGM\Lazy()
      * @return User[]
      */
     protected $employees;

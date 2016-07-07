@@ -7,6 +7,8 @@ use GraphAware\Common\Result\Record;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
 use GraphAware\Neo4j\OGM\EntityManager;
+use GraphAware\Neo4j\OGM\Finder\RelationshipsFinder;
+use GraphAware\Neo4j\OGM\Lazy\LazyRelationshipCollection;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
@@ -146,7 +148,7 @@ class BaseRepository
         $idId = $isId ? 'id(n)' : sprintf('n.%s', $key);
         $query = sprintf('MATCH (n:%s) WHERE %s = {%s}', $label, $idId, $key);
         /** @var \GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata[] $associations */
-        $associations = $this->classMetadata->getRelationships();
+        $associations = $this->classMetadata->getNonLazyRelationships();
         $assocReturns = [];
         foreach ($associations as $identifier => $association) {
             switch ($association->getDirection()) {
@@ -271,12 +273,13 @@ class BaseRepository
         return $entities;
     }
 
-    private function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n', $className = null)
+    public function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n', $className = null, $andAddLazyLoad = false)
     {
         $classN = null !== $className ? $className : $this->className;
         $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
+        $cm = $this->entityManager->getClassMetadataFor($classN);
         if ($andCheckAssociations) {
-            foreach ($this->classMetadata->getSimpleRelationships() as $key => $association) {
+            foreach ($this->classMetadata->getSimpleRelationships(false) as $key => $association) {
                 $relId = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($association->getType()));
                 $relKey = $association->isCollection() ? sprintf('rel_%s', $relId) : $association->getPropertyName();
                 if ($record->hasValue($relKey) && null !== $record->get($relKey)) {
@@ -299,6 +302,11 @@ class BaseRepository
                         $association->setValue($baseInstance, $relO);
                         $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $relO, $association->getPropertyName(), $association);
                         $this->setInversedAssociation($baseInstance, $relO, $relKey);
+                    }
+                } else {
+                    if ($andAddLazyLoad && $association->isCollection()) {
+                        $lazy = new LazyRelationshipCollection($this->entityManager, $baseInstance, $association->getTargetEntity(), $association);
+                        $association->setValue($baseInstance, $lazy);
                     }
                 }
             }
@@ -334,6 +342,11 @@ class BaseRepository
                             ));
                     }
                 }
+            }
+
+            foreach ($this->classMetadata->getLazyRelationships() as $relationship) {
+                $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getTargetEntity(), $relationship);
+                $relationship->setValue($baseInstance, $lazyCollection);
             }
         }
 
@@ -425,7 +438,10 @@ class BaseRepository
             $otherClassMetadata = $this->entityManager->getClassMetadataFor(get_class($otherInstance));
             if ($otherClassMetadata->getRelationship($mappedBy)->isCollection()) {
                 if (null === $property->getValue($otherInstance)) {
-                    $property->setValue($otherInstance, new ArrayCollection());
+                    //$property->setValue($otherInstance, new ArrayCollection());
+                    $mt = $otherClassMetadata->getRelationship($mappedBy);
+                    $lazy = new LazyRelationshipCollection($this->entityManager, $otherInstance, $mt->getTargetEntity(), $mt);
+                    $property->setValue($otherInstance, $lazy);
                 }
                 $property->getValue($otherInstance)->add($baseInstance);
             } else {

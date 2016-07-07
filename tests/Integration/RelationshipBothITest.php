@@ -30,6 +30,11 @@ class RelationshipBothITest extends IntegrationTestCase
         }
     }
 
+    /**
+     * @throws \Exception
+     *
+     * @group both-x
+     */
     public function testBothRelationshipFlush()
     {
         $this->clearDb();

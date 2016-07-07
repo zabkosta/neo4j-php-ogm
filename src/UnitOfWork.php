@@ -2,6 +2,7 @@
 
 namespace GraphAware\Neo4j\OGM;
 
+use Doctrine\Common\Collections\AbstractLazyCollection;
 use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Common\Result\Record;
 use GraphAware\Neo4j\Client\Stack;
@@ -284,6 +285,7 @@ class UnitOfWork
             'target' => $boid,
             'rel' => $relationship,
         ];
+        //print_r($this->managedRelationshipReferences);
     }
 
     private function detectRelationshipEntityChanges()
@@ -356,7 +358,7 @@ class UnitOfWork
             foreach ($reference as $field => $info) {
                 $property = $reflO->getRelationship($field);
                 $value = $property->getValue($entity);
-                if ($value instanceof ArrayCollection)
+                if ($value instanceof ArrayCollection || $value instanceof AbstractLazyCollection)
                 {
                     $value = $value->toArray();
                 }
