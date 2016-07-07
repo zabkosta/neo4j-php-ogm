@@ -737,3 +737,20 @@ And check our graph :
 ![rel-entity](_05-re.png)
 
 
+### Lazy Loading
+
+You can now mark relationship properties as lazy, in order to defer the call to the database when you actually need
+to read the property.
+
+For example :
+
+```php
+    /**
+     * @OGM\Relationship(targetEntity="User", type="WORKS_AT", direction="INCOMING", collection=true)
+     * @OGM\Lazy()
+     * @return User[]
+     */
+    protected $employees;
+```
+
+
