@@ -1,3 +1,7 @@
+1.0.0-beta6
+
+- Added lazy loading first implementation
+
 1.0.0-beta4
 
 - Added the possibility to define relationship direction as BOTH
