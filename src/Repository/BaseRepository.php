@@ -2,12 +2,10 @@
 
 namespace GraphAware\Neo4j\OGM\Repository;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Common\Result\Record;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
 use GraphAware\Neo4j\OGM\EntityManager;
-use GraphAware\Neo4j\OGM\Finder\RelationshipsFinder;
 use GraphAware\Neo4j\OGM\Lazy\LazyRelationshipCollection;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
@@ -17,6 +15,12 @@ use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
 use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
+use ProxyManager\Configuration;
+use ProxyManager\Factory\LazyLoadingGhostFactory;
+use ProxyManager\FileLocator\FileLocator;
+use ProxyManager\GeneratorStrategy\FileWriterGeneratorStrategy;
+use ProxyManager\Proxy\GhostObjectInterface;
+use SebastianBergmann\CodeCoverage\Report\PHP;
 
 class BaseRepository
 {
@@ -53,6 +57,8 @@ class BaseRepository
      */
     protected $loadedReflClasses = [];
 
+    protected $lazyLoadingFactory;
+
     /**
      * @param \GraphAware\Neo4j\OGM\Metadata\ClassMetadata $classMetadata
      * @param \GraphAware\Neo4j\OGM\EntityManager                $manager
@@ -63,6 +69,13 @@ class BaseRepository
         $this->classMetadata = $classMetadata;
         $this->entityManager = $manager;
         $this->className = $className;
+        $config = new Configuration();
+        $config->setGeneratorStrategy(new FileWriterGeneratorStrategy(new FileLocator(sys_get_temp_dir())));
+        $config->setProxiesTargetDir(sys_get_temp_dir());
+
+// then register the autoloader
+        spl_autoload_register($config->getProxyAutoloader());
+        $this->lazyLoadingFactory = new LazyLoadingGhostFactory($config);
     }
 
     /**
@@ -291,7 +304,7 @@ class BaseRepository
                                 $baseId = $record->nodeValue($identifier)->identity();
                                 $nodeToUse = $v['end']->identity() === $baseId ? $v['start'] : $v['end'];
                             }
-                            $v2 = $this->hydrateNode($nodeToUse, $this->getTargetFullClassName($association->getTargetEntity()));
+                            $v2 = $this->hydrateNode($nodeToUse, $this->getTargetFullClassName($association->getTargetEntity()), true);
                             $association->addToCollection($baseInstance, $v2);
                             $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
                             $this->setInversedAssociation($baseInstance, $v2, $association->getPropertyName());
@@ -385,13 +398,53 @@ class BaseRepository
         return $this->entityManager->getRepository($target);
     }
 
-    private function hydrateNode(Node $node, $className = null)
+    private function hydrateNode(Node $node, $className = null, $andProxy = false)
     {
         if ($entity = $this->entityManager->getUnitOfWork()->getEntityById($node->identity())) {
             return $entity;
         }
         $cl = $className !== null ? $className : $this->className;
         $cm = $className === null ? $this->classMetadata : $this->entityManager->getClassMetadataFor($cl);
+
+        if ($andProxy) {
+            $initializer = function(GhostObjectInterface $ghostObject, $method, array $parameters, & $initializer, array $properties) use ($cm, $node) {
+                $initializer = null;
+                /**
+                 * @var string $field
+                 * @var EntityPropertyMetadata $meta
+                 */
+                foreach ($cm->getPropertiesMetadata() as $field => $meta) {
+                    if ($node->hasValue($field)) {
+                        $key = null;
+                        if ($meta->getReflectionProperty()->isPrivate()) {
+                            $key = '\\0' . $cm->getClassName() . '\\0' . $meta->getPropertyName();
+                        } else if($meta->getReflectionProperty()->isProtected()) {
+                            $key = '' . "\0" . '*' . "\0" . $meta->getPropertyName();
+                        } else {
+                            //
+                        }
+
+                        if (null !== $key) {
+                            $properties[$key] = $node->value($field);
+                        }
+                    }
+                }
+
+                return true;
+            };
+
+            $proxyOptions = [
+                'skippedProperties' => [
+                    '' . "\0" . '*' . "\0" . 'id'
+                ]
+            ];
+
+            $instance = $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer, $proxyOptions);
+            $cm->setId($instance, $node->identity());
+            $this->entityManager->getUnitOfWork()->addManaged($instance);
+            return $instance;
+        }
+
         $instance = $cm->newInstance();
         foreach ($cm->getPropertiesMetadata() as $field => $meta) {
             if ($meta instanceof EntityPropertyMetadata) {

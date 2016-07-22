@@ -104,6 +104,10 @@ class GraphEntityMetadataFactory
             return $this->relationshipEntityMetadataFactory->create($className);
         }
 
+        if (null !== $reflectionClass->getParentClass()) {
+            return $this->create(get_parent_class($className));
+        }
+
         throw new MappingException(sprintf('The class "%s" is not a valid OGM entity', $className));
     }
 }

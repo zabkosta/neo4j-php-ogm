@@ -66,6 +66,14 @@ final class RelationshipMetadata
     }
 
     /**
+     * @return \ReflectionProperty
+     */
+    public function getReflectionProperty()
+    {
+        return $this->reflectionProperty;
+    }
+
+    /**
      * @return string
      */
     public function getType()
