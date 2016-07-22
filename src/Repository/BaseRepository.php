@@ -406,7 +406,7 @@ class BaseRepository
         $cm = $className === null ? $this->classMetadata : $this->entityManager->getClassMetadataFor($cl);
 
         if ($andProxy) {
-            $initializer = function(GhostObjectInterface $ghostObject, $method, array $parameters, & $initializer, array $properties) use ($cm, $node) {
+            $initializer = function($ghostObject, $method, array $parameters, & $initializer) use ($cm, $node) {
                 $initializer = null;
                 /**
                  * @var string $field
@@ -414,17 +414,23 @@ class BaseRepository
                  */
                 foreach ($cm->getPropertiesMetadata() as $field => $meta) {
                     if ($node->hasValue($field)) {
-                        $key = null;
-                        if ($meta->getReflectionProperty()->isPrivate()) {
-                            $key = '\\0' . $cm->getClassName() . '\\0' . $meta->getPropertyName();
-                        } else if($meta->getReflectionProperty()->isProtected()) {
-                            $key = '' . "\0" . '*' . "\0" . $meta->getPropertyName();
-                        } else if ($meta->getReflectionProperty()->isPublic()) {
-                            $key = $meta->getPropertyName();
-                        }
 
-                        if (null !== $key) {
-                            $properties[$key] = $node->value($field);
+                        if (PHP_VERSION_ID >= 70000) {
+                            // proxy-manager v2 code - php7 only
+                            $key = null;
+                            if ($meta->getReflectionProperty()->isPrivate()) {
+                                $key = '\\0' . $cm->getClassName() . '\\0' . $meta->getPropertyName();
+                            } else if($meta->getReflectionProperty()->isProtected()) {
+                                $key = '' . "\0" . '*' . "\0" . $meta->getPropertyName();
+                            } else if ($meta->getReflectionProperty()->isPublic()) {
+                                $key = $meta->getPropertyName();
+                            }
+
+                            if (null !== $key) {
+                                $properties[$key] = $node->value($field);
+                            }
+                        } else {
+                            $meta->setValue($ghostObject, $node->value($field));
                         }
                     }
                 }
@@ -438,10 +444,10 @@ class BaseRepository
                 ]
             ];
 
-            $instance = $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer, $proxyOptions);
+            $instance = PHP_VERSION_ID < 70000 ? $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer) : $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer, $proxyOptions);
             $cm->setId($instance, $node->identity());
             $this->entityManager->getUnitOfWork()->addManaged($instance);
-            
+
             return $instance;
         }
 
