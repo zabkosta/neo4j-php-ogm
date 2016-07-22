@@ -419,8 +419,8 @@ class BaseRepository
                             $key = '\\0' . $cm->getClassName() . '\\0' . $meta->getPropertyName();
                         } else if($meta->getReflectionProperty()->isProtected()) {
                             $key = '' . "\0" . '*' . "\0" . $meta->getPropertyName();
-                        } else {
-                            //
+                        } else if ($meta->getReflectionProperty()->isPublic()) {
+                            $key = $meta->getPropertyName();
                         }
 
                         if (null !== $key) {
@@ -441,6 +441,7 @@ class BaseRepository
             $instance = $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer, $proxyOptions);
             $cm->setId($instance, $node->identity());
             $this->entityManager->getUnitOfWork()->addManaged($instance);
+            
             return $instance;
         }
 
