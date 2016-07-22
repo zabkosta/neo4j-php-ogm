@@ -56,6 +56,16 @@ class EntityPropertyMetadata
     }
 
     /**
+     * @return \ReflectionProperty
+     */
+    public function getReflectionProperty()
+    {
+        return $this->reflectionProperty;
+    }
+
+
+
+    /**
      * @param object $object
      * @param mixed  $value
      */

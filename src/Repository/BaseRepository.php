@@ -2,7 +2,6 @@
 
 namespace GraphAware\Neo4j\OGM\Repository;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Common\Result\Record;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
@@ -17,6 +16,12 @@ use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
 use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
+use GraphAware\Neo4j\OGM\Util\ProxyUtils;
+use ProxyManager\Configuration;
+use ProxyManager\Factory\LazyLoadingGhostFactory;
+use ProxyManager\FileLocator\FileLocator;
+use ProxyManager\GeneratorStrategy\FileWriterGeneratorStrategy;
+use ProxyManager\Version;
 
 class BaseRepository
 {
@@ -53,6 +58,8 @@ class BaseRepository
      */
     protected $loadedReflClasses = [];
 
+    protected $lazyLoadingFactory;
+
     /**
      * @param \GraphAware\Neo4j\OGM\Metadata\ClassMetadata $classMetadata
      * @param \GraphAware\Neo4j\OGM\EntityManager                $manager
@@ -63,6 +70,13 @@ class BaseRepository
         $this->classMetadata = $classMetadata;
         $this->entityManager = $manager;
         $this->className = $className;
+        $config = new Configuration();
+        $dir = sys_get_temp_dir();
+        $config->setGeneratorStrategy(new FileWriterGeneratorStrategy(new FileLocator($dir)));
+        $config->setProxiesTargetDir($dir);
+        spl_autoload_register($config->getProxyAutoloader());
+
+        $this->lazyLoadingFactory = new LazyLoadingGhostFactory($config);
     }
 
     /**
@@ -291,7 +305,7 @@ class BaseRepository
                                 $baseId = $record->nodeValue($identifier)->identity();
                                 $nodeToUse = $v['end']->identity() === $baseId ? $v['start'] : $v['end'];
                             }
-                            $v2 = $this->hydrateNode($nodeToUse, $this->getTargetFullClassName($association->getTargetEntity()));
+                            $v2 = $this->hydrateNode($nodeToUse, $this->getTargetFullClassName($association->getTargetEntity()), true);
                             $association->addToCollection($baseInstance, $v2);
                             $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
                             $this->setInversedAssociation($baseInstance, $v2, $association->getPropertyName());
@@ -313,7 +327,7 @@ class BaseRepository
 
             foreach ($this->classMetadata->getRelationshipEntities() as $key => $relationshipEntity) {
                 $recordKey = sprintf('rel_%s_%s', strtolower($relationshipEntity->getPropertyName()), strtolower($relationshipEntity->getType()));
-                if (null === $record->get($recordKey) || empty($record->get($recordKey))) {
+                if (!$record->hasValue($recordKey) || null === $record->get($recordKey) || empty($record->get($recordKey))) {
                     continue;
                 }
                 $class = $this->getTargetFullClassName($relationshipEntity->getRelationshipEntityClass());
@@ -385,13 +399,99 @@ class BaseRepository
         return $this->entityManager->getRepository($target);
     }
 
-    private function hydrateNode(Node $node, $className = null)
+    private function hydrateNode(Node $node, $className = null, $andProxy = false)
     {
         if ($entity = $this->entityManager->getUnitOfWork()->getEntityById($node->identity())) {
             return $entity;
         }
         $cl = $className !== null ? $className : $this->className;
         $cm = $className === null ? $this->classMetadata : $this->entityManager->getClassMetadataFor($cl);
+        $pmVersion = !method_exists(Version::class, 'getVersion') ? 1 : (int) Version::getVersion()[0];
+
+        $em = $this->entityManager;
+        if ($andProxy) {
+            if ($pmVersion >= 2) {
+                $initializer = function($ghostObject, $method, array $parameters, & $initializer, array $properties) use ($cm, $node, $em, $pmVersion) {
+                    $initializer = null;
+                    foreach ($cm->getPropertiesMetadata() as $field => $meta) {
+                        if ($node->hasValue($field)) {
+
+                            $key = null;
+                            if ($meta->getReflectionProperty()->isPrivate()) {
+                                $key = '\\0' . $cm->getClassName() . '\\0' . $meta->getPropertyName();
+                            } else if($meta->getReflectionProperty()->isProtected()) {
+                                $key = '' . "\0" . '*' . "\0" . $meta->getPropertyName();
+                            } else if ($meta->getReflectionProperty()->isPublic()) {
+                                $key = $meta->getPropertyName();
+                            }
+
+                            if (null !== $key) {
+                                $properties[$key] = $node->value($field);
+                            }
+
+                            foreach ($cm->getLabeledProperties() as $labeledProperty) {
+                                //$v = $node->hasLabel($labeledProperty->getLabelName()) ? true : false;
+                                //$labeledProperty->setLabel($instance, $v);
+                            }
+                        }
+                    }
+
+                    foreach ($cm->getSimpleRelationships(false) as $relationship) {
+                        if (!$relationship->isCollection()) {
+                            $finder = new RelationshipsFinder($em, $relationship->getTargetEntity(), $relationship);
+                            $instances = $finder->find($node->identity());
+                            if (count($instances) > 0) {
+                                $properties[ProxyUtils::getPropertyIdentifier($relationship->getReflectionProperty(), $cm->getClassName())] = $instances[0];
+                            }
+                        }
+                    }
+
+                    return true;
+                };
+            } else {
+                $initializer = function($ghostObject, $method, array $parameters, & $initializer) use ($cm, $node, $em, $pmVersion) {
+                    $initializer = null;
+                    foreach ($cm->getPropertiesMetadata() as $field => $meta) {
+                        if ($node->hasValue($field)) {
+                            $meta->setValue($ghostObject, $node->value($field));
+                        }
+                    }
+
+                    foreach ($cm->getSimpleRelationships(false) as $relationship) {
+                        if (!$relationship->isCollection()) {
+                            $finder = new RelationshipsFinder($em, $relationship->getTargetEntity(), $relationship);
+                            $instances = $finder->find($node->identity());
+                            if (count($instances) > 0) {
+                                $relationship->setValue($ghostObject, $instances[0]);
+                            }
+                        }
+                    }
+
+                    $cm->setId($ghostObject, $node->identity());
+
+                    return true;
+                };
+            }
+
+            $proxyOptions = [
+                'skippedProperties' => [
+                    '' . "\0" . '*' . "\0" . 'id'
+                ]
+            ];
+
+
+
+            $instance = 2 === $pmVersion ? $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer, $proxyOptions) : $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer);
+            if (2 === $pmVersion) {
+                $cm->setId($instance, $node->identity());
+            }
+            $cm->setId($instance, $node->identity());
+            $this->entityManager->getUnitOfWork()->addManaged($instance);
+
+            return $instance;
+        }
+
+
         $instance = $cm->newInstance();
         foreach ($cm->getPropertiesMetadata() as $field => $meta) {
             if ($meta instanceof EntityPropertyMetadata) {

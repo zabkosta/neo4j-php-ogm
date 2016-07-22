@@ -19,11 +19,11 @@ use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 
 class LazyRelationshipCollection extends AbstractLazyCollection
 {
-    private $em;
+    protected $em;
 
-    private $finder;
+    protected $finder;
 
-    private $baseId;
+    protected $baseId;
 
     public function __construct(EntityManager $em, $baseEntity, $targetEntityClass, RelationshipMetadata $relationshipMetadata)
     {

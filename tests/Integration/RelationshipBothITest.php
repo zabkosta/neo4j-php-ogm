@@ -14,6 +14,9 @@ use GraphAware\Neo4j\OGM\Tests\Integration\Model\BothRel;
  */
 class RelationshipBothITest extends IntegrationTestCase
 {
+    /**
+     * @group rel-both-proxy
+     */
     public function testBothRelationshipsFetch()
     {
         $this->clearDb();
