@@ -34,6 +34,11 @@ class EntityPropertyMetadata
     private $isAccessible;
 
     /**
+     * @var bool
+     */
+    private $isOriginallyAccessible;
+
+    /**
      * EntityPropertyMetadata constructor.
      *
      * @param string                                                    $propertyName
@@ -45,6 +50,7 @@ class EntityPropertyMetadata
         $this->reflectionProperty = $reflectionProperty;
         $this->propertyAnnotationMetadata = $propertyAnnotationMetadata;
         $this->isAccessible = $reflectionProperty->isPublic();
+        $this->isOriginallyAccessible = $reflectionProperty->isPublic();
     }
 
     /**
@@ -75,6 +81,14 @@ class EntityPropertyMetadata
         $this->checkAccess();
 
         return $this->reflectionProperty->getValue($object);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isOriginallyAccessible()
+    {
+        return $this->isOriginallyAccessible;
     }
 
     /**
