@@ -104,7 +104,7 @@ class GraphEntityMetadataFactory
             return $this->relationshipEntityMetadataFactory->create($className);
         }
 
-        if (null !== $reflectionClass->getParentClass()) {
+        if (null !== get_parent_class($className)) {
             return $this->create(get_parent_class($className));
         }
 

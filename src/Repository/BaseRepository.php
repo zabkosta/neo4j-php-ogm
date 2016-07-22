@@ -20,7 +20,6 @@ use ProxyManager\Factory\LazyLoadingGhostFactory;
 use ProxyManager\FileLocator\FileLocator;
 use ProxyManager\GeneratorStrategy\FileWriterGeneratorStrategy;
 use ProxyManager\Proxy\GhostObjectInterface;
-use SebastianBergmann\CodeCoverage\Report\PHP;
 
 class BaseRepository
 {
