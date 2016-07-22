@@ -6,6 +6,7 @@ use GraphAware\Common\Result\Record;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
 use GraphAware\Neo4j\OGM\EntityManager;
+use GraphAware\Neo4j\OGM\Finder\RelationshipsFinder;
 use GraphAware\Neo4j\OGM\Lazy\LazyRelationshipCollection;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
@@ -15,6 +16,7 @@ use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
 use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
+use GraphAware\Neo4j\OGM\Util\ProxyUtils;
 use ProxyManager\Configuration;
 use ProxyManager\Factory\LazyLoadingGhostFactory;
 use ProxyManager\FileLocator\FileLocator;
@@ -325,7 +327,7 @@ class BaseRepository
 
             foreach ($this->classMetadata->getRelationshipEntities() as $key => $relationshipEntity) {
                 $recordKey = sprintf('rel_%s_%s', strtolower($relationshipEntity->getPropertyName()), strtolower($relationshipEntity->getType()));
-                if (null === $record->get($recordKey) || empty($record->get($recordKey))) {
+                if (!$record->hasValue($recordKey) || null === $record->get($recordKey) || empty($record->get($recordKey))) {
                     continue;
                 }
                 $class = $this->getTargetFullClassName($relationshipEntity->getRelationshipEntityClass());
@@ -406,14 +408,11 @@ class BaseRepository
         $cm = $className === null ? $this->classMetadata : $this->entityManager->getClassMetadataFor($cl);
         $pmVersion = !method_exists(Version::class, 'getVersion') ? 1 : (int) Version::getVersion()[0];
 
+        $em = $this->entityManager;
         if ($andProxy) {
             if ($pmVersion >= 2) {
-                $initializer = function($ghostObject, $method, array $parameters, & $initializer, array $properties) use ($cm, $node, $pmVersion) {
+                $initializer = function($ghostObject, $method, array $parameters, & $initializer, array $properties) use ($cm, $node, $em, $pmVersion) {
                     $initializer = null;
-                    /**
-                     * @var string $field
-                     * @var EntityPropertyMetadata $meta
-                     */
                     foreach ($cm->getPropertiesMetadata() as $field => $meta) {
                         if ($node->hasValue($field)) {
 
@@ -429,21 +428,42 @@ class BaseRepository
                             if (null !== $key) {
                                 $properties[$key] = $node->value($field);
                             }
+
+                            foreach ($cm->getLabeledProperties() as $labeledProperty) {
+                                //$v = $node->hasLabel($labeledProperty->getLabelName()) ? true : false;
+                                //$labeledProperty->setLabel($instance, $v);
+                            }
+                        }
+                    }
+
+                    foreach ($cm->getSimpleRelationships(false) as $relationship) {
+                        if (!$relationship->isCollection()) {
+                            $finder = new RelationshipsFinder($em, $relationship->getTargetEntity(), $relationship);
+                            $instances = $finder->find($node->identity());
+                            if (count($instances) > 0) {
+                                $properties[ProxyUtils::getPropertyIdentifier($relationship->getReflectionProperty(), $cm->getClassName())] = $instances[0];
+                            }
                         }
                     }
 
                     return true;
                 };
             } else {
-                $initializer = function($ghostObject, $method, array $parameters, & $initializer) use ($cm, $node, $pmVersion) {
+                $initializer = function($ghostObject, $method, array $parameters, & $initializer) use ($cm, $node, $em, $pmVersion) {
                     $initializer = null;
-                    /**
-                     * @var string $field
-                     * @var EntityPropertyMetadata $meta
-                     */
                     foreach ($cm->getPropertiesMetadata() as $field => $meta) {
                         if ($node->hasValue($field)) {
                             $meta->setValue($ghostObject, $node->value($field));
+                        }
+                    }
+
+                    foreach ($cm->getSimpleRelationships(false) as $relationship) {
+                        if (!$relationship->isCollection()) {
+                            $finder = new RelationshipsFinder($em, $relationship->getTargetEntity(), $relationship);
+                            $instances = $finder->find($node->identity());
+                            if (count($instances) > 0) {
+                                $relationship->setValue($ghostObject, $instances[0]);
+                            }
                         }
                     }
 
@@ -465,10 +485,12 @@ class BaseRepository
             if (2 === $pmVersion) {
                 $cm->setId($instance, $node->identity());
             }
+            $cm->setId($instance, $node->identity());
             $this->entityManager->getUnitOfWork()->addManaged($instance);
 
             return $instance;
         }
+
 
         $instance = $cm->newInstance();
         foreach ($cm->getPropertiesMetadata() as $field => $meta) {

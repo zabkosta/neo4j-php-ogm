@@ -26,7 +26,9 @@ class RelationshipsFinder
         $type = $this->relationshipMetadata->getType();
         $direction = $this->relationshipMetadata->getDirection();
 
-        $statement = $this->buildStatement($fromId, $direction, $type);
+        $identifier = sprintf('rel_%s_%s', $this->relationshipMetadata->getType(), $this->relationshipMetadata->getPropertyName());
+
+        $statement = $this->buildStatement($fromId, $direction, $type, $identifier);
         $result = $this->em->getDatabaseDriver()->run($statement->text(), $statement->parameters());
 
         $repo = $this->em->getRepository($this->className);
@@ -38,23 +40,23 @@ class RelationshipsFinder
         return $instances;
     }
 
-    public function buildStatement($fromId, $direction, $type)
+    public function buildStatement($fromId, $direction, $type, $identifier)
     {
         switch ($direction) {
             case 'INCOMING':
-                $pattern = '<-[rel:%s]-';
+                $pattern = '<-[%s:%s]-';
                 break;
             case 'OUTGOING':
-                $pattern = '-[rel:%s]->';
+                $pattern = '-[%s:%s]->';
                 break;
             case 'BOTH':
-                $pattern = '-[rel:%s]->';
+                $pattern = '-[%s:%s]->';
                 break;
             default:
                 throw new \LogicException(sprintf('Unsupported relationship direction "%s"', $direction));
         }
 
-        $relationshipPattern = sprintf($pattern, $type);
+        $relationshipPattern = sprintf($pattern, $identifier, $type);
 
         $query = 'MATCH (start) WHERE id(start) = {id}
         MATCH (start)'.$relationshipPattern.'(end)
