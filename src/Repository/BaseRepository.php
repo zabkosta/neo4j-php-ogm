@@ -19,7 +19,7 @@ use ProxyManager\Configuration;
 use ProxyManager\Factory\LazyLoadingGhostFactory;
 use ProxyManager\FileLocator\FileLocator;
 use ProxyManager\GeneratorStrategy\FileWriterGeneratorStrategy;
-use ProxyManager\Proxy\GhostObjectInterface;
+use ProxyManager\Version;
 
 class BaseRepository
 {
@@ -69,11 +69,11 @@ class BaseRepository
         $this->entityManager = $manager;
         $this->className = $className;
         $config = new Configuration();
-        $config->setGeneratorStrategy(new FileWriterGeneratorStrategy(new FileLocator(sys_get_temp_dir())));
-        $config->setProxiesTargetDir(sys_get_temp_dir());
-
-// then register the autoloader
+        $dir = sys_get_temp_dir();
+        $config->setGeneratorStrategy(new FileWriterGeneratorStrategy(new FileLocator($dir)));
+        $config->setProxiesTargetDir($dir);
         spl_autoload_register($config->getProxyAutoloader());
+
         $this->lazyLoadingFactory = new LazyLoadingGhostFactory($config);
     }
 
@@ -404,19 +404,19 @@ class BaseRepository
         }
         $cl = $className !== null ? $className : $this->className;
         $cm = $className === null ? $this->classMetadata : $this->entityManager->getClassMetadataFor($cl);
+        $pmVersion = !method_exists(Version::class, 'getVersion') ? 1 : (int) Version::getVersion()[0];
 
         if ($andProxy) {
-            $initializer = function($ghostObject, $method, array $parameters, & $initializer) use ($cm, $node) {
-                $initializer = null;
-                /**
-                 * @var string $field
-                 * @var EntityPropertyMetadata $meta
-                 */
-                foreach ($cm->getPropertiesMetadata() as $field => $meta) {
-                    if ($node->hasValue($field)) {
+            if ($pmVersion >= 2) {
+                $initializer = function($ghostObject, $method, array $parameters, & $initializer, array $properties) use ($cm, $node, $pmVersion) {
+                    $initializer = null;
+                    /**
+                     * @var string $field
+                     * @var EntityPropertyMetadata $meta
+                     */
+                    foreach ($cm->getPropertiesMetadata() as $field => $meta) {
+                        if ($node->hasValue($field)) {
 
-                        if (PHP_VERSION_ID >= 70000) {
-                            // proxy-manager v2 code - php7 only
                             $key = null;
                             if ($meta->getReflectionProperty()->isPrivate()) {
                                 $key = '\\0' . $cm->getClassName() . '\\0' . $meta->getPropertyName();
@@ -429,14 +429,29 @@ class BaseRepository
                             if (null !== $key) {
                                 $properties[$key] = $node->value($field);
                             }
-                        } else {
+                        }
+                    }
+
+                    return true;
+                };
+            } else {
+                $initializer = function($ghostObject, $method, array $parameters, & $initializer) use ($cm, $node, $pmVersion) {
+                    $initializer = null;
+                    /**
+                     * @var string $field
+                     * @var EntityPropertyMetadata $meta
+                     */
+                    foreach ($cm->getPropertiesMetadata() as $field => $meta) {
+                        if ($node->hasValue($field)) {
                             $meta->setValue($ghostObject, $node->value($field));
                         }
                     }
-                }
 
-                return true;
-            };
+                    $cm->setId($ghostObject, $node->identity());
+
+                    return true;
+                };
+            }
 
             $proxyOptions = [
                 'skippedProperties' => [
@@ -444,8 +459,12 @@ class BaseRepository
                 ]
             ];
 
-            $instance = PHP_VERSION_ID < 70000 ? $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer) : $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer, $proxyOptions);
-            $cm->setId($instance, $node->identity());
+
+
+            $instance = 2 === $pmVersion ? $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer, $proxyOptions) : $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer);
+            if (2 === $pmVersion) {
+                $cm->setId($instance, $node->identity());
+            }
             $this->entityManager->getUnitOfWork()->addManaged($instance);
 
             return $instance;
