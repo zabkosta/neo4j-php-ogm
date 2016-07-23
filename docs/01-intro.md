@@ -753,4 +753,54 @@ For example :
     protected $employees;
 ```
 
+### Ordering related entities
+
+For now, you can use the `OrderBy` annotation on simple relationships to order them based on an inversed entity property
+
+Example :
+
+```php
+<?php
+
+namespace GraphAware\Neo4j\OGM\Tests\Integration\Model;
+
+use Doctrine\Common\Collections\ArrayCollection;
+use GraphAware\Neo4j\OGM\Annotations as OGM;
+
+/**
+ * @OGM\Node(label="Movie")
+ */
+class Movie
+{
+    /**
+     * @OGM\GraphId()
+     */
+    public $id;
+
+    // ...
+
+    /**
+     * @OGM\Relationship(targetEntity="Person", type="PLAYED_IN", direction="INCOMING", collection=true, mappedBy="movies")
+     * @OGM\OrderBy(property="name", order="ASC")
+     */
+    public $players;
+
+    public function __construct($title)
+    {
+        // ...
+        $this->players = new ArrayCollection();
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPlayers()
+    {
+        return $this->players;
+    }
+}
+```
+
+This will order players based on their name property.
+
 
