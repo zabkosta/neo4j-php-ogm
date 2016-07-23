@@ -59,8 +59,13 @@ class RelationshipsFinder
         $relationshipPattern = sprintf($pattern, $identifier, $type);
 
         $query = 'MATCH (start) WHERE id(start) = {id}
-        MATCH (start)'.$relationshipPattern.'(end)
-        RETURN end';
+        MATCH (start)'.$relationshipPattern.'(end)';
+
+        if ($this->relationshipMetadata->hasOrderBy()) {
+            $query .= ' WITH end ORDER BY end.' . $this->relationshipMetadata->getOrderByPropery() . ' ' . $this->relationshipMetadata->getOrder();
+        }
+
+        $query .= ' RETURN end';
 
         return Statement::create($query, ['id' => $fromId]);
     }

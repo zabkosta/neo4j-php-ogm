@@ -33,6 +33,7 @@ class Movie
     /**
      * @OGM\Relationship(targetEntity="Person", type="PLAYED_IN", direction="INCOMING", collection=true, mappedBy="movies")
      * @OGM\OrderBy(property="name", order="ASC")
+     * @OGM\Lazy()
      */
     public $players;
 
