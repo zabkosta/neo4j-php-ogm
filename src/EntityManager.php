@@ -89,9 +89,12 @@ class EntityManager implements ObjectManager
         return $this->getRepository($className)->findOneBy($id);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function remove($object)
     {
-        // TODO: Implement remove() method.
+        $this->uow->scheduleDelete($object);
     }
 
     public function merge($object)

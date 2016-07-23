@@ -89,4 +89,12 @@ class EntityPersister
 
         return Statement::create($query, ['id' => $id, 'props' => $propertyValues]);
     }
+
+    public function getDeleteQuery($object)
+    {
+        $query = 'MATCH (n) WHERE id(n) = {id} DELETE n';
+        $id = $this->classMetadata->getIdValue($object);
+
+        return Statement::create($query, ['id' => $id]);
+    }
 }

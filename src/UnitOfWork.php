@@ -110,7 +110,7 @@ class UnitOfWork
                 $this->nodesScheduledForCreate[$oid] = $entity;
                 break;
             case self::STATE_DELETED:
-                $this->nodesScheduledForDelete[$oid] = $entity;
+                throw new \LogicException(sprintf('Node has been deleted'));
         }
 
         $this->cascadePersist($entity, $visited);
@@ -215,6 +215,15 @@ class UnitOfWork
         }
         $tx->pushStack($updateNodeStack);
 
+        $deleteNodeStack = Stack::create('delete_nodes');
+        $possiblyDeleted = [];
+        foreach ($this->nodesScheduledForDelete as $entity) {
+            $statement = $this->getPersister(get_class($entity))->getDeleteQuery($entity);
+            $deleteNodeStack->push($statement->text(), $statement->parameters());
+            $possiblyDeleted[] = spl_object_hash($entity);
+        }
+        $tx->pushStack($deleteNodeStack);
+
         $tx->commit();
 
         foreach ($this->relationshipsScheduledForCreated as $rel) {
@@ -226,6 +235,10 @@ class UnitOfWork
                 'target' => $boid,
                 'rel' => $rel[1],
             ];
+        }
+
+        foreach ($possiblyDeleted as $oid) {
+            $this->entityStates[$oid] = self::STATE_DELETED;
         }
 
         $this->nodesScheduledForCreate
@@ -477,6 +490,12 @@ class UnitOfWork
         $this->entityIds[$oid] = $id;
         $this->entitiesById[$id] = $entity;
         $this->manageEntityReference($oid);
+    }
+
+    public function scheduleDelete($entity)
+    {
+        $oid = spl_object_hash($entity);
+        $this->nodesScheduledForDelete[] = $entity;
     }
 
     /**

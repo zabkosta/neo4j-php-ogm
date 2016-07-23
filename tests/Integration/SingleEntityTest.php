@@ -5,6 +5,7 @@ namespace GraphAware\Neo4j\OGM\Tests\Integration;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\AuthUser;
+use LogicException;
 
 /**
  * Class SingleEntityTest
@@ -164,5 +165,37 @@ class SingleEntityTest extends IntegrationTestCase
         $this->em->flush();
 
         $this->assertGraphExist('(u:User {username:"ikwattro", password:"password"})');
+    }
+
+    /**
+     * @group remove
+     */
+    public function testEntitiesCanBeRemoved()
+    {
+        $this->clearDb();
+        $user = new User('john');
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->assertGraphExist('(u:User {login:"john"})');
+        $this->em->remove($user);
+        $this->em->flush();
+        $this->assertGraphNotExist('(u:User {login:"john"})');
+    }
+
+    /**
+     * @group remove
+     */
+    public function testDeletedEntitiesCannotBePersistedAfterwards()
+    {
+        $this->clearDb();
+        $user = new User('john');
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->assertGraphExist('(u:User {login:"john"})');
+        $this->em->remove($user);
+        $this->em->flush();
+        $this->assertGraphNotExist('(u:User {login:"john"})');
+        $this->setExpectedException(LogicException::class);
+        $this->em->persist($user);
     }
 }
