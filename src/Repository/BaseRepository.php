@@ -93,6 +93,7 @@ class BaseRepository
         $associations = $this->classMetadata->getRelationships();
         $assocReturns = [];
         foreach ($associations as $identifier => $association) {
+            $type = $association->isRelationshipEntity() ? $this->entityManager->getRelationshipEntityMetadata($association->getRelationshipEntityClass())->getType() : $association->getType();
             switch ($association->getDirection()) {
                 case 'INCOMING':
                     $relStr = '<-[rel_%s:%s]-';
@@ -105,8 +106,8 @@ class BaseRepository
                     break;
             }
 
-            $relationshipIdentifier = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($association->getType()));
-            $relQueryPart = sprintf($relStr, $relationshipIdentifier, $association->getType());
+            $relationshipIdentifier = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($type));
+            $relQueryPart = sprintf($relStr, $relationshipIdentifier, $type);
             $query .= PHP_EOL;
             $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$association->getPropertyName().')';
             $query .= ' WITH n, ';
@@ -116,7 +117,23 @@ class BaseRepository
             }
             $relid = $relid = 'rel_'.$relationshipIdentifier;
             if ($association->hasOrderBy()) {
-                $query .= $relid . ', ' . $association->getPropertyName() . ' ORDER BY ' . $association->getPropertyName() . '.' .$association->getOrderByPropery() . ' ' . $association->getOrder();
+                $orderProperty = $association->getPropertyName() . '.' . $association->getOrderByPropery();
+                if ($association->isRelationshipEntity()) {
+                    $reMetadata = $this->entityManager->getRelationshipEntityMetadata($association->getRelationshipEntityClass());
+                    $split = explode('.', $association->getOrderByPropery());
+                    if (count($split) > 1) {
+                        $reName = $split[0];
+                        $v = $split[1];
+                        if ($reMetadata->getStartNodePropertyName() === $reName || $reMetadata->getEndNodePropertyName() === $reName) {
+                            $orderProperty = $association->getPropertyName() . '.' . $v;
+                        }
+                    } else {
+                        if (null !== $reMetadata->getPropertyMetadata($association->getOrderByPropery())) {
+                            $orderProperty = $relid . '.' . $association->getOrderByPropery();
+                        }
+                    }
+                }
+                $query .= $relid . ', ' . $association->getPropertyName() . ' ORDER BY ' . $orderProperty . ' ' . $association->getOrder();
                 $query .= PHP_EOL;
                 $query .= ' WITH n, ';
                 $query .= implode(', ', $assocReturns);
@@ -206,7 +223,23 @@ class BaseRepository
             }
             $relid = 'rel_'.$relationshipIdentifier;
             if ($association->hasOrderBy()) {
-                $query .= $relid . ', ' . $association->getPropertyName() . ' ORDER BY ' . $association->getPropertyName() . '.' .$association->getOrderByPropery() . ' ' . $association->getOrder();
+                $orderProperty = $association->getPropertyName() . '.' . $association->getOrderByPropery();
+                if ($association->isRelationshipEntity()) {
+                    $reMetadata = $this->entityManager->getRelationshipEntityMetadata($association->getRelationshipEntityClass());
+                    $split = explode('.', $association->getOrderByPropery());
+                    if (count($split) > 1) {
+                        $reName = $split[0];
+                        $v = $split[1];
+                        if ($reMetadata->getStartNodePropertyName() === $reName || $reMetadata->getEndNodePropertyName() === $reName) {
+                            $orderProperty = $association->getPropertyName() . '.' . $v;
+                        }
+                    } else {
+                        if (null !== $reMetadata->getPropertyMetadata($association->getOrderByPropery())) {
+                            $orderProperty = $relid . '.' . $association->getOrderByPropery();
+                        }
+                    }
+                }
+                $query .= $relid . ', ' . $association->getPropertyName() . ' ORDER BY ' . $orderProperty . ' ' . $association->getOrder();
                 $query .= PHP_EOL;
                 $query .= ' WITH n, ';
                 $query .= implode(', ', $assocReturns);

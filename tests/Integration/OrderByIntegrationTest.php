@@ -4,6 +4,10 @@ namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Player;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Repository;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Team;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 
 /**
  * Class OrderByIntegrationTest
@@ -74,6 +78,87 @@ class OrderByIntegrationTest extends IntegrationTestCase
             $this->assertEquals('Luanne', $players[2]->getName());
             $this->assertEquals('Michal', $players[3]->getName());
             $this->assertEquals('Alessandro', $players[1]->getName());
+        }
+
+    }
+
+    /**
+     * @group order-re-end
+     */
+    public function testOrderByOnRelationshipEntitiesBoundedNodes()
+    {
+        $this->clearDb();
+        $player1 = new Player('PlayerAA');
+        $player2 = new Player('PlayerBC');
+        $player3 = new Player('PlayerAB');
+        $player4 = new Player('PlayerAD');
+        $player5 = new Player('PlayerBA');
+        $team = new Team('RedBull');
+        $player1->addToTeam($team);
+        $player2->addToTeam($team);
+        $player3->addToTeam($team);
+        $player4->addToTeam($team);
+        $player5->addToTeam($team);
+        $this->em->persist($team);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var Team $team */
+        $team = $this->em->getRepository(Team::class)->findOneBy('name', 'RedBull');
+        $this->assertCount(5, $team->getMemberships());
+        $this->assertEquals('PlayerAA', $team->getMemberships()[0]->getPlayer()->getName());
+        $this->assertEquals('PlayerAB', $team->getMemberships()[1]->getPlayer()->getName());
+        $this->assertEquals('PlayerBC', $team->getMemberships()[4]->getPlayer()->getName());
+    }
+
+    /**
+     *
+     * @group order-re-prop
+     */
+    public function testOrderByOnRelationshipEntityProperties()
+    {
+        $this->clearDb();
+        $a = new User('ikwattro');
+        $b = new User('jexp');
+        $c = new User('luanne');
+        $r = new Repository('neo4j/neo4j');
+        $a->addContributionTo($r, 10);
+        $b->addContributionTo($r, 500);
+        $c->addContributionTo($r, 30);
+        $this->em->persist($r);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var Repository $repository */
+        $repository = $this->em->getRepository(Repository::class)->findOneBy('name', 'neo4j/neo4j');
+        $this->assertCount(3, $repository->getContributions());
+        $this->assertEquals(500, $repository->getContributions()[0]->getScore());
+        $this->assertEquals(30, $repository->getContributions()[1]->getScore());
+        $this->assertEquals(10, $repository->getContributions()[2]->getScore());
+    }
+
+    /** @group order-re-prop */
+    public function testOrderyByWithFindAll()
+    {
+        $this->clearDb();
+        $a = new User('ikwattro');
+        $b = new User('jexp');
+        $c = new User('luanne');
+        $r = new Repository('neo4j/neo4j');
+        $a->addContributionTo($r, 10);
+        $b->addContributionTo($r, 500);
+        $c->addContributionTo($r, 30);
+        $this->em->persist($r);
+        $this->em->flush();
+        $this->em->clear();
+        /** @var Repository[] $repository */
+        $repositories = $this->em->getRepository(Repository::class)->findAll();
+        /** @var Repository $repository */
+        foreach ($repositories as $repository) {
+            $this->assertCount(3, $repository->getContributions());
+            $this->assertEquals(500, $repository->getContributions()[0]->getScore());
+            $this->assertEquals(30, $repository->getContributions()[1]->getScore());
+            $this->assertEquals(10, $repository->getContributions()[2]->getScore());
         }
 
     }

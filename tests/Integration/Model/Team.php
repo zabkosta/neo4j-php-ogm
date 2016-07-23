@@ -29,6 +29,7 @@ class Team
      * @var PlaysInTeam[]|Collection
      *
      * @OGM\Relationship(relationshipEntity="PlaysInTeam", direction="INCOMING", collection=true)
+     * @OGM\OrderBy(property="player.name", order="ASC")
      */
     protected $memberships;
 

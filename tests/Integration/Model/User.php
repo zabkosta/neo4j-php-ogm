@@ -4,6 +4,7 @@ namespace GraphAware\Neo4j\OGM\Tests\Integration\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
+use GraphAware\Neo4j\OGM\Common\Collection;
 
 /**
  * @OGM\Node(label="User")
@@ -55,6 +56,13 @@ class User
     protected $isActive;
 
     /**
+     * @var Contribution[]|Collection
+     *
+     * @OGM\Relationship(relationshipEntity="Contribution", direction="OUTGOING", collection=true)
+     */
+    protected $contributions;
+
+    /**
      * @OGM\Property(type="int")
      */
     protected $age;
@@ -66,6 +74,7 @@ class User
         $this->friends = new ArrayCollection();
         $this->loves = new ArrayCollection();
         $this->lovedBy = new ArrayCollection();
+        $this->contributions = new Collection();
     }
 
     /**
@@ -196,6 +205,21 @@ class User
     public function getLivesIn()
     {
         return $this->livesIn;
+    }
+
+    /**
+     * @return \GraphAware\Neo4j\OGM\Common\Collection|\GraphAware\Neo4j\OGM\Tests\Integration\Model\Contribution[]
+     */
+    public function getContributions()
+    {
+        return $this->contributions;
+    }
+
+    public function addContributionTo(Repository $repository, $score)
+    {
+        $contribution = new Contribution($this, $repository, $score);
+        $repository->getContributions()->add($contribution);
+        $this->contributions->add($contribution);
     }
 
 
