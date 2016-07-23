@@ -11,8 +11,10 @@
 
 namespace GraphAware\Neo4j\OGM\Metadata;
 
+use GraphAware\Neo4j\OGM\Annotations\OrderBy;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Common\Collection;
+use GraphAware\Neo4j\OGM\Exception\MappingException;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 final class RelationshipMetadata
@@ -43,18 +45,29 @@ final class RelationshipMetadata
     private $isLazy;
 
     /**
+     * @var OrderBy
+     */
+    private $orderBy;
+
+    /**
      * @param string                                         $className
      * @param \ReflectionProperty                            $reflectionProperty
      * @param \GraphAware\Neo4j\OGM\Annotations\Relationship $relationshipAnnotation
      * @param bool $isLazy
      */
-    public function __construct($className, \ReflectionProperty $reflectionProperty, Relationship $relationshipAnnotation, $isLazy = false)
+    public function __construct($className, \ReflectionProperty $reflectionProperty, Relationship $relationshipAnnotation, $isLazy = false, OrderBy $orderBy = null)
     {
         $this->className = $className;
         $this->propertyName = $reflectionProperty->getName();
         $this->reflectionProperty = $reflectionProperty;
         $this->relationshipAnnotation = $relationshipAnnotation;
         $this->isLazy = $isLazy;
+        $this->orderBy = $orderBy;
+        if (null !== $orderBy) {
+            if (!in_array($orderBy->order, ['ASC','DESC'])) {
+                throw new MappingException(sprintf('The order "%s" is not valid', $orderBy->order));
+            }
+        }
     }
 
     /**
@@ -143,6 +156,30 @@ final class RelationshipMetadata
     public function getMappedByProperty()
     {
         return $this->relationshipAnnotation->mappedBy;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasOrderBy()
+    {
+        return null !== $this->orderBy;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOrderByPropery()
+    {
+        return $this->orderBy->property;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOrder()
+    {
+        return $this->orderBy->order;
     }
 
     /**

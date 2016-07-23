@@ -14,6 +14,7 @@ namespace GraphAware\Neo4j\OGM\Metadata\Factory;
 use Doctrine\Common\Annotations\Reader;
 use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Annotations\Node;
+use GraphAware\Neo4j\OGM\Annotations\OrderBy;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Annotations\Lazy;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
@@ -94,7 +95,8 @@ class GraphEntityMetadataFactory
 
                     if ($annot instanceof Relationship) {
                         $isLazy = null !== $this->reader->getPropertyAnnotation($reflectionProperty, Lazy::class);
-                        $relationshipsMetadata[] = new RelationshipMetadata($className, $reflectionProperty, $annot, $isLazy);
+                        $orderBy = $this->reader->getPropertyAnnotation($reflectionProperty, OrderBy::class);
+                        $relationshipsMetadata[] = new RelationshipMetadata($className, $reflectionProperty, $annot, $isLazy, $orderBy);
                     }
                 }
             }

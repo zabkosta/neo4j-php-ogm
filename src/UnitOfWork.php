@@ -4,7 +4,6 @@ namespace GraphAware\Neo4j\OGM;
 
 use Doctrine\Common\Collections\AbstractLazyCollection;
 use Doctrine\Common\Collections\ArrayCollection;
-use GraphAware\Common\Result\Record;
 use GraphAware\Neo4j\Client\Stack;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;

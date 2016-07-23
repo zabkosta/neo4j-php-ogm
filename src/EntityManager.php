@@ -125,7 +125,7 @@ class EntityManager implements ObjectManager
      */
     public function getMetadataFactory()
     {
-        return null;
+        return $this->metadataFactory;
     }
 
     public function initializeObject($obj)

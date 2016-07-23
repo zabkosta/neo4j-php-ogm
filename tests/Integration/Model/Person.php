@@ -32,12 +32,18 @@ class Person
      */
     public $roles;
 
+    /**
+     * @OGM\Relationship(targetEntity="Movie", direction="OUTGOING", type="PLAYED_IN", collection=true, mappedBy="players")
+     */
+    public $movies;
+
     public function __construct($name = null)
     {
         if (null !== $name) {
             $this->name = $name;
         }
         $this->roles = new ArrayCollection();
+        $this->movies = new ArrayCollection();
     }
 
     /**

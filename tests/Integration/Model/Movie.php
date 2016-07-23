@@ -31,6 +31,12 @@ class Movie
     public $actors;
 
     /**
+     * @OGM\Relationship(targetEntity="Person", type="PLAYED_IN", direction="INCOMING", collection=true, mappedBy="movies")
+     * @OGM\OrderBy(property="name", order="ASC")
+     */
+    public $players;
+
+    /**
      * @OGM\Relationship(relationshipEntity="ScoreRel", type="HAS_SCORE", direction="OUTGOING")
      */
     protected $score;
@@ -41,6 +47,7 @@ class Movie
             $this->title = $title;
         }
         $this->actors = new ArrayCollection();
+        $this->players = new ArrayCollection();
     }
 
     public function setReleased()
@@ -54,5 +61,13 @@ class Movie
     public function getScore()
     {
         return $this->score;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPlayers()
+    {
+        return $this->players;
     }
 }

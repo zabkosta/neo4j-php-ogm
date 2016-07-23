@@ -6,6 +6,7 @@ require_once __DIR__.'/../Annotations/Label.php';
 require_once __DIR__.'/../Annotations/Lazy.php';
 require_once __DIR__.'/../Annotations/MappedResult.php';
 require_once __DIR__.'/../Annotations/Node.php';
+require_once __DIR__.'/../Annotations/OrderBy.php';
 require_once __DIR__.'/../Annotations/Property.php';
 require_once __DIR__.'/../Annotations/QueryResult.php';
 require_once __DIR__.'/../Annotations/Relationship.php';

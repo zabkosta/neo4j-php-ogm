@@ -143,7 +143,13 @@ class BaseRepository
             $parameters[self::FILTER_LIMIT] = $filters[self::FILTER_LIMIT];
         }
 
-        $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
+        $tag = array(
+            'class' => BaseRepository::class,
+            'method' => 'findAll',
+            'arguments' => $filters
+        );
+
+        $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters, json_encode($tag));
 
         return $this->hydrateResultSet($result);
     }
@@ -187,6 +193,15 @@ class BaseRepository
                 $query .= ', ';
             }
             $relid = 'rel_'.$relationshipIdentifier;
+            if ($association->hasOrderBy()) {
+                $query .= $relid . ', ' . $association->getPropertyName() . ' ORDER BY ' . $association->getPropertyName() . '.' .$association->getOrderByPropery() . ' ' . $association->getOrder();
+                $query .= PHP_EOL;
+                $query .= ' WITH n, ';
+                $query .= implode(', ', $assocReturns);
+                if (!empty($assocReturns)) {
+                    $query .= ', ';
+                }
+            }
             if ($association->isCollection() || $association->isRelationshipEntity()) {
                 $query .= sprintf(' CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
                 $assocReturns[] = $relid;
@@ -201,6 +216,8 @@ class BaseRepository
         if (!empty($assocReturns)) {
             $query .= ', ' . implode(', ', $assocReturns);
         }
+
+        //print_r($query);
 
         $parameters = [$key => $value];
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
