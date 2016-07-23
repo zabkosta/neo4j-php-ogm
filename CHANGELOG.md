@@ -1,3 +1,11 @@
+1.0.0-beta8
+
+- Added `OrderBy` annotations
+
+1.0.0-beta7
+
+- Added proxy implementations
+
 1.0.0-beta6
 
 - Added lazy loading first implementation
