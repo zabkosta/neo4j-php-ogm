@@ -26,6 +26,7 @@ class City
     /**
      * @OGM\Relationship(relationshipEntity="LivesIn", direction="INCOMING", collection=true)
      * @OGM\Lazy()
+     * @OGM\OrderBy(property="since", order="DESC")
      */
     protected $habitants;
 

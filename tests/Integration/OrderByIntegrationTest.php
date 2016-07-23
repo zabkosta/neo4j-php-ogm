@@ -2,6 +2,8 @@
 
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\City;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Company;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Player;
@@ -160,6 +162,31 @@ class OrderByIntegrationTest extends IntegrationTestCase
             $this->assertEquals(30, $repository->getContributions()[1]->getScore());
             $this->assertEquals(10, $repository->getContributions()[2]->getScore());
         }
+    }
+
+    /**
+     * @group order-re-prop-lazy
+     */
+    public function testOrderByRelationshipEntityPropertiesLazyLoaded()
+    {
+        $this->clearDb();
+        $a = new User('ikwattro');
+        $b = new User('jexp');
+        $c = new User('luanne');
+        $city = new City('London');
+        $a->setCity($city, 456790);
+        $b->setCity($city, 456789);
+        $c->setCity($city, 456791);
+        $this->em->persist($city);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var City $city */
+        $city = $this->em->getRepository(City::class)->findOneBy('name', 'London');
+        $this->assertCount(3, $city->getHabitants());
+        $this->assertEquals(456789, $city->getHabitants()[2]->getSince());
+        $this->assertEquals(456790, $city->getHabitants()[1]->getSince());
+        $this->assertEquals(456791, $city->getHabitants()[0]->getSince());
 
     }
 }

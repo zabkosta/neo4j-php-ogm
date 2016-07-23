@@ -62,10 +62,26 @@ class RelationshipEntityFinder extends RelationshipsFinder
         MATCH (start)'.$relationshipPattern.'(end)';
 
         if ($this->relationshipMetadata->hasOrderBy()) {
-            $query .= ' WITH end ORDER BY end.' . $this->relationshipMetadata->getOrderByPropery() . ' ' . $this->relationshipMetadata->getOrder();
+            $orderProperty = $this->relationshipMetadata->getOrderByPropery();
+            $split = explode('.', $orderProperty);
+            $reMetadata = $this->relationshipEntityMetadata;
+            if (count($split) > 1) {
+                $reName = $split[0];
+                $v = $split[1];
+                if ($reMetadata->getStartNodePropertyName() === $reName || $reMetadata->getEndNodePropertyName() === $reName) {
+                    $orderProperty = $this->relationshipMetadata->getPropertyName() . '.' . $v;
+                }
+            } else {
+                if (null !== $reMetadata->getPropertyMetadata($this->relationshipMetadata->getOrderByPropery())) {
+                    $orderProperty = $identifier . '.' . $this->relationshipMetadata->getOrderByPropery();
+                }
+            }
+            $query .= ' WITH end, ' . $identifier . ' ORDER BY ' . $orderProperty . ' ' . $this->relationshipMetadata->getOrder();
         }
 
         $query .= ' RETURN CASE count('.$identifier.') WHEN 0 THEN [] ELSE collect({start:startNode('.$identifier.'), end:endNode('.$identifier.'), rel:'.$identifier.'}) END AS ' . $identifier;
+
+        //print_r($query);
 
         return Statement::create($query, ['id' => $fromId]);
     }

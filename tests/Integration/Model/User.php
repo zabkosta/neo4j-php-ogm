@@ -185,9 +185,10 @@ class User
         return $this->livesIn->getCity();
     }
 
-    public function setCity(City $city)
+    public function setCity(City $city, $since = null)
     {
-        $rel = new LivesIn($this, $city, 123);
+        $since = null !== $since ? $since : 123;
+        $rel = new LivesIn($this, $city, $since);
         $this->setLivesIn($rel);
         $city->addHabitant($rel);
     }
