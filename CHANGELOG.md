@@ -1,3 +1,8 @@
+1.0.0-beta11
+
+- Some bug fixes with relationship entities
+- Real world usage test
+
 1.0.0-beta10
 
 - Lazy loading RelationshipEntities
