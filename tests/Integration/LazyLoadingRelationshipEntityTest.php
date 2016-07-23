@@ -59,7 +59,7 @@ class LazyLoadingRelationshipEntity extends IntegrationTestCase
 
         /** @var City $london */
         $london = $this->em->getRepository(City::class)->findOneBy('name', 'London');
-        //$this->assertInstanceOf(LazyRelationshipCollection::class, $london->getHabitants());
+        $this->assertInstanceOf(LazyRelationshipCollection::class, $london->getHabitants());
 
         $this->assertCount(2, $london->getHabitants());
         /** @var LivesIn $livesIn */
