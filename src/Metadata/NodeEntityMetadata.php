@@ -151,11 +151,14 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     /**
      * @return RelationshipMetadata[]
      */
-    public function getLazyRelationships()
+    public function getLazyRelationships($andRelEntities = false)
     {
         $rels = [];
         foreach ($this->relationships as $relationship) {
             if ($relationship->isLazy()) {
+                if ($relationship->isRelationshipEntity() && !$andRelEntities) {
+                    continue;
+                }
                 $rels[] = $relationship;
             }
         }

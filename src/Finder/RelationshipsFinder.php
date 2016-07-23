@@ -3,16 +3,17 @@
 namespace GraphAware\Neo4j\OGM\Finder;
 
 use GraphAware\Common\Cypher\Statement;
+use GraphAware\Common\Result\Result;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 
 class RelationshipsFinder
 {
-    private $em;
+    protected $em;
 
-    private $className;
+    protected $className;
 
-    private $relationshipMetadata;
+    protected $relationshipMetadata;
 
     public function __construct(EntityManager $em, $className, RelationshipMetadata $relationshipMetadata)
     {
@@ -31,8 +32,15 @@ class RelationshipsFinder
         $statement = $this->buildStatement($fromId, $direction, $type, $identifier);
         $result = $this->em->getDatabaseDriver()->run($statement->text(), $statement->parameters());
 
+        return $this->hydrateResult($result);
+
+    }
+
+    protected function hydrateResult(Result $result)
+    {
         $repo = $this->em->getRepository($this->className);
         $instances = [];
+
         foreach ($result->records() as $record) {
             $instances[] = $repo->hydrate($record, true, 'end', $this->className, true);
         }
@@ -66,6 +74,8 @@ class RelationshipsFinder
         }
 
         $query .= ' RETURN end';
+
+        //print_r($query);
 
         return Statement::create($query, ['id' => $fromId]);
     }

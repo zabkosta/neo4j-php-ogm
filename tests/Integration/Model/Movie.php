@@ -50,6 +50,11 @@ class Movie
         $this->players = new ArrayCollection();
     }
 
+    public function setScore(ScoreRel $scoreRel)
+    {
+        $this->score = $scoreRel;
+    }
+
     public function setReleased()
     {
         $this->isReleased = true;

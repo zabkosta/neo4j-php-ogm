@@ -182,6 +182,7 @@ class BaseRepository
         $associations = $this->classMetadata->getNonLazyRelationships();
         $assocReturns = [];
         foreach ($associations as $identifier => $association) {
+            $type = $association->isRelationshipEntity() ? $this->entityManager->getRelationshipEntityMetadata($association->getRelationshipEntityClass())->getType() : $association->getType();
             switch ($association->getDirection()) {
                 case 'INCOMING':
                     $relStr = '<-[rel_%s:%s]-';
@@ -194,8 +195,8 @@ class BaseRepository
                     break;
             }
 
-            $relationshipIdentifier = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($association->getType()));
-            $relQueryPart = sprintf($relStr, $relationshipIdentifier, $association->getType());
+            $relationshipIdentifier = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($type));
+            $relQueryPart = sprintf($relStr, $relationshipIdentifier, $type);
             $query .= PHP_EOL;
             $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$association->getPropertyName().')';
             $query .= ' WITH n, ';
@@ -354,13 +355,13 @@ class BaseRepository
             }
 
             foreach ($this->classMetadata->getRelationshipEntities() as $key => $relationshipEntity) {
-                $recordKey = sprintf('rel_%s_%s', strtolower($relationshipEntity->getPropertyName()), strtolower($relationshipEntity->getType()));
-                if (!$record->hasValue($recordKey) || null === $record->get($recordKey) || empty($record->get($recordKey))) {
-                    continue;
-                }
                 $class = $this->getTargetFullClassName($relationshipEntity->getRelationshipEntityClass());
                 /** @var RelationshipEntityMetadata $reMetadata */
                 $reMetadata = $this->entityManager->getRelationshipEntityMetadata($class);
+                $recordKey = sprintf('rel_%s_%s', strtolower($relationshipEntity->getPropertyName()), strtolower($reMetadata->getType()));
+                if (!$record->hasValue($recordKey) || null === $record->get($recordKey) || empty($record->get($recordKey))) {
+                    continue;
+                }
                 $startNodeMetadata = $this->entityManager->getClassMetadataFor($reMetadata->getStartNode());
                 $endNodeMetadata = $this->entityManager->getClassMetadataFor($reMetadata->getEndNode());
                 if ($relationshipEntity->isCollection()) {
@@ -369,9 +370,11 @@ class BaseRepository
                         throw new \LogicException('Expected array record value');
                     }
                     foreach ($record->get($recordKey) as $reMap) {
-                        $v->add($this->hydrateRelationshipEntity(
+                        $oo2 = $this->hydrateRelationshipEntity(
                             $reMetadata, $reMap, $startNodeMetadata, $endNodeMetadata, $baseInstance, $relationshipEntity
-                        ));
+                        );
+                        $v->add($oo2);
+
                     }
                     $relationshipEntity->setValue($baseInstance, $v);
                 } else {
@@ -386,35 +389,51 @@ class BaseRepository
                 }
             }
 
-            foreach ($this->classMetadata->getLazyRelationships() as $relationship) {
-                $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getTargetEntity(), $relationship);
-                $relationship->setValue($baseInstance, $lazyCollection);
+            foreach ($this->classMetadata->getLazyRelationships(true) as $relationship) {
+                if (!$relationship->isRelationshipEntity()) {
+                    $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getTargetEntity(), $relationship);
+                    $relationship->setValue($baseInstance, $lazyCollection);
+                    continue;
+                }
+
+                if ($relationship->isRelationshipEntity()) {
+                    $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getRelationshipEntityClass(), $relationship);
+                    $relationship->setValue($baseInstance, $lazyCollection);
+                }
             }
         }
 
         return $baseInstance;
     }
 
-    private function hydrateRelationshipEntity(
+    public function hydrateRelationshipEntity(
         RelationshipEntityMetadata $reMetadata,
         array $reMap,
         NodeEntityMetadata $startNodeMetadata,
         NodeEntityMetadata $endNodeMetadata,
         $baseInstance,
-        RelationshipMetadata $relationshipEntity)
+        RelationshipMetadata $relationshipEntity, $pov = null)
     {
         $reInstance = $reMetadata->newInstance();
-        $start = $this->hydrateNode($reMap['start'], $startNodeMetadata->getClassName());
-        $end = $this->hydrateNode($reMap['end'], $endNodeMetadata->getClassName());
+        $start = $this->hydrateNode($reMap['start'], $startNodeMetadata->getClassName(), true);
+        $end = $this->hydrateNode($reMap['end'], $endNodeMetadata->getClassName(), true);
         /** @var \GraphAware\Neo4j\Client\Formatter\Type\Relationship $rel */
         $rel = $reMap['rel'];
         $relId = $rel->identity();
         $reMetadata->setStartNodeProperty($reInstance, $start);
         $reMetadata->setEndNodeProperty($reInstance, $end);
         $reMetadata->setId($reInstance, $relId);
-        foreach ($reMetadata->getPropertiesMetadata() as $field) {
-            if ($rel->hasValue($field->getPropertyName())) {
-                $reMetadata->getPropertyMetadata($field->getPropertyName())->setValue($reInstance, $rel->get($field->getPropertyName()));
+        $otherToSet = $relationshipEntity->getDirection() === "INCOMING" ? $reMetadata->getStartNodeValue($reInstance) : $reMetadata->getEndNodeValue($reInstance);
+        $possiblyMapped = $relationshipEntity->getDirection() === "INCOMING" ? $reMetadata->getStartNodePropertyName() : $reMetadata->getEndNodePropertyName();
+        $otherMetadata = $this->entityManager->getClassMetadataFor(get_class($otherToSet));
+        foreach ($otherMetadata->getRelationships() as $relationship) {
+            if ($relationship->getDirection() !== $relationshipEntity->getDirection() && $relationship->hasMappedByProperty() && $relationship->getMappedByProperty() === $possiblyMapped) {
+                $relationship->setValue($otherToSet, $reInstance);
+            }
+        }
+        foreach ($rel->values() as $k => $value) {
+            if (null !== $prop = $reMetadata->getPropertyMetadata($k)) {
+                $prop->setValue($reInstance, $value);
             }
         }
         $this->entityManager->getUnitOfWork()->addManagedRelationshipEntity($reInstance, $baseInstance, $relationshipEntity->getPropertyName());

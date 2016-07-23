@@ -42,6 +42,13 @@ class User
     protected $lovedBy;
 
     /**
+     * @OGM\Relationship(relationshipEntity="LivesIn", type="LIVES_IN", direction="OUTGOING", mappedBy="user")
+     *
+     * @var LivesIn
+     */
+    protected $livesIn;
+
+    /**
      * @OGM\Label(name="Active")
      * @var bool
      */
@@ -155,4 +162,41 @@ class User
     {
         return $this->isActive;
     }
+
+    /**
+     * @param \GraphAware\Neo4j\OGM\Tests\Integration\Model\LivesIn $livesIn
+     */
+    public function setLivesIn(LivesIn $livesIn)
+    {
+        $this->livesIn = $livesIn;
+    }
+
+    public function getCity()
+    {
+        return $this->livesIn->getCity();
+    }
+
+    public function setCity(City $city)
+    {
+        $rel = new LivesIn($this, $city, 123);
+        $this->setLivesIn($rel);
+        $city->addHabitant($rel);
+    }
+
+    public function removeCity(City $city)
+    {
+        if ($city->getName() === $this->getCity()->getName()) {
+            $this->livesIn = null;
+        }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLivesIn()
+    {
+        return $this->livesIn;
+    }
+
+
 }
