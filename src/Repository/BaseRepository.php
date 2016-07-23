@@ -15,8 +15,6 @@ use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
 use GraphAware\Neo4j\OGM\Annotations\Label;
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\Company;
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 use GraphAware\Neo4j\OGM\Util\ProxyUtils;
 use ProxyManager\Configuration;

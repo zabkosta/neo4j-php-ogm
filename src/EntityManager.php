@@ -11,6 +11,7 @@
 
 namespace GraphAware\Neo4j\OGM;
 
+use Doctrine\Common\Persistence\ObjectManager;
 use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\OGM\Mapping\AnnotationDriver;
 use GraphAware\Neo4j\Client\Client;
@@ -19,7 +20,7 @@ use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
-class EntityManager
+class EntityManager implements ObjectManager
 {
     /**
      * @var \GraphAware\Neo4j\OGM\UnitOfWork
@@ -79,6 +80,63 @@ class EntityManager
         $this->databaseDriver = $databaseDriver;
         $this->metadataFactory = new GraphEntityMetadataFactory($this->annotationDriver->getReader());
     }
+
+    /**
+     * @inheritdoc
+     */
+    public function find($className, $id)
+    {
+        return $this->getRepository($className)->findOneBy($id);
+    }
+
+    public function remove($object)
+    {
+        // TODO: Implement remove() method.
+    }
+
+    public function merge($object)
+    {
+        // TODO: Implement merge() method.
+    }
+
+    public function detach($object)
+    {
+        // TODO: Implement detach() method.
+    }
+
+    public function refresh($object)
+    {
+        // TODO: Implement refresh() method.
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getClassMetadata($className)
+    {
+        return $this->getClassMetadataFor($className);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getMetadataFactory()
+    {
+        return null;
+    }
+
+    public function initializeObject($obj)
+    {
+        // @todo
+        return null;
+    }
+
+    public function contains($object)
+    {
+        /** @todo */
+        return true;
+    }
+
 
     /**
      * @return \GraphAware\Neo4j\OGM\Mapping\AnnotationDriver
@@ -187,10 +245,9 @@ class EntityManager
     }
 
     /**
-     * Clear the Entity EntityManager
-     * All entities that were managed by the unitOfWork become detached.
+     * @inheritdoc
      */
-    public function clear()
+    public function clear($objectName = null)
     {
         $this->uow = null;
         $this->uow = new UnitOfWork($this);
