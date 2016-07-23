@@ -1,3 +1,7 @@
+1.0.0-beta9
+
+- `OrderBy` working with Lazy and findAll()
+
 1.0.0-beta8
 
 - Added `OrderBy` annotations
