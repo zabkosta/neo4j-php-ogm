@@ -115,6 +115,15 @@ class BaseRepository
                 $query .= ', ';
             }
             $relid = $relid = 'rel_'.$relationshipIdentifier;
+            if ($association->hasOrderBy()) {
+                $query .= $relid . ', ' . $association->getPropertyName() . ' ORDER BY ' . $association->getPropertyName() . '.' .$association->getOrderByPropery() . ' ' . $association->getOrder();
+                $query .= PHP_EOL;
+                $query .= ' WITH n, ';
+                $query .= implode(', ', $assocReturns);
+                if (!empty($assocReturns)) {
+                    $query .= ', ';
+                }
+            }
             if ($association->isCollection() || $association->isRelationshipEntity()) {
                 $query .= sprintf(' CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
                 $assocReturns[] = $relid;
@@ -148,6 +157,8 @@ class BaseRepository
             'method' => 'findAll',
             'arguments' => $filters
         );
+
+        //echo $query;
 
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters, json_encode($tag));
 
