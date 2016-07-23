@@ -1,3 +1,8 @@
+1.0.0-beta12
+
+- Order By on Lazy Loaded Relationship Entities
+- Order By on Relationship Entities
+
 1.0.0-beta11
 
 - Some bug fixes with relationship entities
