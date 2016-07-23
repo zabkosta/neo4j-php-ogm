@@ -1,3 +1,7 @@
+1.0.0-beta10
+
+- Lazy loading RelationshipEntities
+
 1.0.0-beta9
 
 - `OrderBy` working with Lazy and findAll()
