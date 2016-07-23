@@ -21,7 +21,7 @@ class User
     protected $login;
 
     /**
-     * @OGM\Relationship(targetEntity="Company", type="WORKS_AT" , direction="OUTGOING")
+     * @OGM\Relationship(targetEntity="Company", type="WORKS_AT" , direction="OUTGOING", mappedBy="employees")
      */
     protected $currentCompany;
 

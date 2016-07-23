@@ -25,19 +25,24 @@ class LazyRelationshipCollection extends AbstractLazyCollection
 
     protected $baseId;
 
-    public function __construct(EntityManager $em, $baseEntity, $targetEntityClass, RelationshipMetadata $relationshipMetadata)
+    protected $initialEntity;
+
+    public function __construct(EntityManager $em, $baseEntity, $targetEntityClass, RelationshipMetadata $relationshipMetadata, $initialEntity = null)
     {
         $this->finder = new RelationshipsFinder($em, $targetEntityClass, $relationshipMetadata);
         $this->em = $em;
         $this->collection = new Collection();
         $this->baseId = $this->em->getClassMetadataFor(get_class($baseEntity))->getIdValue($baseEntity);
+        $this->initialEntity = $initialEntity;
     }
 
     protected function doInitialize()
     {
         $instances = $this->finder->find($this->baseId);
         foreach ($instances as $instance) {
-            $this->collection->add($instance);
+            if (!$this->collection->contains($instance)) {
+                $this->collection->add($instance);
+            }
         }
     }
 }

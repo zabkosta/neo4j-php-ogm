@@ -258,6 +258,31 @@ class RelationshipIntegrationTest extends IntegrationTestCase
         $this->assertEquals(['user1', 'user3'], $users);
     }
 
+    /**
+     * @group proxy
+     */
+    public function testInversedRelationshipCollectionsHydrateNonManagedRelationships()
+    {
+        $this->clearDb();
+        $user1 = new User('u1');
+        $user2 = new User('u2');
+        $user3 = new User('u3');
+        $company = new Company('Acme');
+        $company->addEmployee($user1);
+        $company->addEmployee($user2);
+        $company->addEmployee($user3);
+        $this->em->persist($company);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var User $u1 */
+        $u1 = $this->em->getRepository(User::class)->findOneBy('login', 'u1');
+        /** @var Company $comp */
+        $comp = $u1->getCurrentCompany();
+        $this->assertEquals('Acme', $comp->getName());
+        $this->assertCount(3, $comp->getEmployees());
+    }
+
     public function testHydratedNonCollectionRelationshipsManaged()
     {
         $this->clearDb();

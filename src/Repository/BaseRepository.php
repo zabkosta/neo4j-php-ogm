@@ -15,6 +15,8 @@ use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
 use GraphAware\Neo4j\OGM\Annotations\Label;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Company;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 use GraphAware\Neo4j\OGM\Util\ProxyUtils;
 use ProxyManager\Configuration;
@@ -312,7 +314,7 @@ class BaseRepository
                         }
                     } else {
                         $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
-                        $relO = $hydrator->hydrateNode($record->get($relKey));
+                        $relO = $hydrator->hydrateNode($record->get($relKey), $association->getTargetEntity(), true);
                         $association->setValue($baseInstance, $relO);
                         $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $relO, $association->getPropertyName(), $association);
                         $this->setInversedAssociation($baseInstance, $relO, $relKey);
@@ -538,12 +540,13 @@ class BaseRepository
             $otherClassMetadata = $this->entityManager->getClassMetadataFor(get_class($otherInstance));
             if ($otherClassMetadata->getRelationship($mappedBy)->isCollection()) {
                 if (null === $property->getValue($otherInstance)) {
-                    //$property->setValue($otherInstance, new ArrayCollection());
                     $mt = $otherClassMetadata->getRelationship($mappedBy);
-                    $lazy = new LazyRelationshipCollection($this->entityManager, $otherInstance, $mt->getTargetEntity(), $mt);
+                    $lazy = new LazyRelationshipCollection($this->entityManager, $otherInstance, $mt->getTargetEntity(), $mt, $baseInstance);
                     $property->setValue($otherInstance, $lazy);
+                } else {
+                    $property->getValue($otherInstance)->add($baseInstance);
                 }
-                $property->getValue($otherInstance)->add($baseInstance);
+
             } else {
                 $property->setValue($otherInstance, $baseInstance);
             }
