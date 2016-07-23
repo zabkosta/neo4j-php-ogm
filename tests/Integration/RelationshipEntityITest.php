@@ -4,10 +4,12 @@ namespace GraphAware\Neo4j\Client\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Player;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Role;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\ScoreRel;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Score;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Team;
 
 /**
  * Class RelationshipEntityITest
@@ -156,6 +158,34 @@ class RelationshipEntityITest extends IntegrationTestCase
         /** @var Movie $matrix2 */
         $matrix2 = $this->em->getRepository(Movie::class)->findOneBy('title', 'The Matrix');
         $this->assertEquals(4.35, $matrix->getScore()->getFinalScore());
+    }
+
+    /**
+     * @group joran
+     */
+    public function testTeamPlayerUseCase()
+    {
+        $this->clearDb();
+        $team = new Team('The Mavericks');
+        $player = new Player('joran');
+        $player->addToTeam($team);
+        $this->em->persist($player);
+        $this->em->flush();
+        $this->assertGraphExist('(n:Player {name:"joran"})-[:PLAYS_IN_TEAM {since:' . time() . '}]->(t:Team {name:"The Mavericks"})');
+        $this->em->clear();
+        $this->clearDb();
+        $this->client->run('CREATE (n:Player {name:"joran"}), (t:Team {name:"The Mavericks"})');
+
+        /** @var Player $p1 */
+        $p1 = $this->em->getRepository(Player::class)->findOneBy('name', 'joran');
+        $this->assertInstanceOf(Player::class, $p1);
+        /** @var Team $t1 */
+        $t1 = $this->em->getRepository(Team::class)->findOneBy('name', 'The Mavericks');
+        $this->assertInstanceOf(Team::class, $t1);
+        $p1->addToTeam($t1);
+        $this->em->persist($p1);
+        $this->em->flush();
+        $this->assertGraphExist('(n:Player {name:"joran"})-[:PLAYS_IN_TEAM]->(t:Team {name:"The Mavericks"})');
     }
 
     /**

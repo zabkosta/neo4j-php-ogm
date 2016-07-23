@@ -445,6 +445,11 @@ class UnitOfWork
                     $toPersistProperty = $rem->getStartNode() === $classMetadata->getClassName() ? $rem->getEndNodeValue($v) : $rem->getStartNodeValue($v);
                     $this->doPersist($toPersistProperty, $visited);
                 }
+            } else {
+                $this->persistRelationshipEntity($value, get_class($entity));
+                $rem = $this->entityManager->getRelationshipEntityMetadata(get_class($value));
+                $toPersistProperty = $rem->getStartNode() === $classMetadata->getClassName() ? $rem->getEndNodeValue($value) : $rem->getStartNodeValue($value);
+                $this->doPersist($toPersistProperty, $visited);
             }
         }
     }
