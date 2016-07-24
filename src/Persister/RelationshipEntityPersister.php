@@ -46,7 +46,7 @@ class RelationshipEntityPersister
             $parameters['fields'][$propertyMetadata->getPropertyName()] = $v;
         }
         $query = 'MATCH (a), (b) WHERE id(a) = {a} AND id(b) = {b}'.PHP_EOL;
-        $query .= sprintf('MERGE (a)-[r:%s]->(b)', $relType).PHP_EOL;
+        $query .= sprintf('CREATE (a)-[r:%s]->(b)', $relType).PHP_EOL;
         if (!empty($parameters['fields'])) {
             $query .= 'SET r += {fields} ';
         }
