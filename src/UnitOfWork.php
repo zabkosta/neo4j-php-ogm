@@ -479,6 +479,7 @@ class UnitOfWork
 
         if (!array_key_exists($oid, $this->relationshipEntityStates)) {
             $this->relEntitiesScheduledForCreate[$oid] = [$entity, $pov];
+            $this->relationshipEntityStates[$oid] = self::STATE_NEW;
         }
     }
 
