@@ -5,6 +5,7 @@ namespace GraphAware\Neo4j\OGM\Tests\Integration\Model;
 use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Resource as ResourceModel;
 
 /**
  * @OGM\Node(label="User")
@@ -67,6 +68,20 @@ class User
      */
     protected $age;
 
+    /**
+     * @var SecurityRole[]|ArrayCollection
+     *
+     * @OGM\Relationship(type="HAS_ROLE", direction="OUTGOING", collection=true, mappedBy="users", targetEntity="SecurityRole")
+     */
+    protected $roles;
+
+    /**
+     * @var UserResource[]|ArrayCollection
+     *
+     * @OGM\Relationship(relationshipEntity="UserResource", direction="OUTGOING", collection=true, mappedBy="user")
+     */
+    protected $userResources;
+
     public function __construct($login, $age = null)
     {
         $this->login = $login;
@@ -75,6 +90,7 @@ class User
         $this->loves = new ArrayCollection();
         $this->lovedBy = new ArrayCollection();
         $this->contributions = new Collection();
+        $this->roles = new ArrayCollection();
     }
 
     /**
@@ -223,5 +239,32 @@ class User
         $this->contributions->add($contribution);
     }
 
+    /**
+     * @return \GraphAware\Neo4j\OGM\Tests\Integration\Model\SecurityRole[]
+     */
+    public function getRoles()
+    {
+        return $this->roles;
+    }
 
+    public function addRole(SecurityRole $securityRole)
+    {
+        $this->roles->add($securityRole);
+        $securityRole->getUsers()->add($this);
+    }
+
+    /**
+     * @return \Doctrine\Common\Collections\ArrayCollection|\GraphAware\Neo4j\OGM\Tests\Integration\Model\UserResource[]
+     */
+    public function getUserResources()
+    {
+        return $this->userResources;
+    }
+
+    public function addResource(ResourceModel $resource, $amount)
+    {
+        $userResource = new UserResource($this, $resource, $amount);
+        $this->userResources->add($userResource);
+        $resource->getUserResources()->add($userResource);
+    }
 }

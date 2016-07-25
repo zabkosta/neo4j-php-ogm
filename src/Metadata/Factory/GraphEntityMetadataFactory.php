@@ -24,6 +24,7 @@ use GraphAware\Neo4j\OGM\Metadata\LabeledPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
+use SebastianBergmann\CodeCoverage\Report\PHP;
 
 class GraphEntityMetadataFactory
 {
@@ -107,6 +108,12 @@ class GraphEntityMetadataFactory
         }
 
         if (null !== get_parent_class($className)) {
+            /*
+            echo '-- ' . PHP_EOL;
+            var_dump($className);
+            var_dump(get_parent_class($className));
+            echo '--' . PHP_EOL;
+            */
             return $this->create(get_parent_class($className));
         }
 

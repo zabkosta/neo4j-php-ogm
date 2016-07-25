@@ -4,6 +4,7 @@ namespace GraphAware\Neo4j\OGM;
 
 use Doctrine\Common\Collections\AbstractLazyCollection;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use GraphAware\Neo4j\Client\Stack;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
@@ -123,7 +124,7 @@ class UnitOfWork
 
         foreach ($associations as $association) {
             $value = $association->getValue($entity);
-            if (is_array($value) || $value instanceof ArrayCollection) {
+            if (is_array($value) || $value instanceof ArrayCollection || $value instanceof Collection) {
                 foreach ($value as $assoc) {
                     $this->persistRelationship($entity, $assoc, $association, $visited);
                 }
@@ -138,6 +139,20 @@ class UnitOfWork
 
     public function persistRelationship($entityA, $entityB, RelationshipMetadata $relationship, array &$visited)
     {
+        if ($entityB instanceof Collection || $entityB instanceof ArrayCollection) {
+            foreach ($entityB as $e) {
+                $aMeta = $this->entityManager->getClassMetadataFor(get_class($entityA));
+                $bMeta = $this->entityManager->getClassMetadataFor(get_class($entityB));
+                $type = $relationship->isRelationshipEntity() ? $this->entityManager->getRelationshipEntityMetadata($relationship->getRelationshipEntityClass())->getType() : $relationship->getType();
+                $hashStr = $aMeta->getIdValue($entityA) . $bMeta->getIdValue($entityB) . $type . $relationship->getDirection();
+                $hash = md5($hashStr);
+                if (!array_key_exists($hash, $this->relationshipsScheduledForCreated)) {
+                    $this->relationshipsScheduledForCreated[] = [$entityA, $relationship, $e, $relationship->getPropertyName()];
+                }
+                $this->doPersist($e, $visited);
+            }
+            return;
+        }
         $this->doPersist($entityB, $visited);
         $this->relationshipsScheduledForCreated[] = [$entityA, $relationship, $entityB, $relationship->getPropertyName()];
     }
@@ -150,6 +165,7 @@ class UnitOfWork
         $statements = [];
 
         foreach ($this->nodesScheduledForCreate as $nodeToCreate) {
+            $this->traverseRelationshipEntities($nodeToCreate);
             $class = get_class($nodeToCreate);
             $persister = $this->getPersister($class);
             $statements[] = $persister->getCreateQuery($nodeToCreate);
@@ -209,6 +225,7 @@ class UnitOfWork
 
         $updateNodeStack = Stack::create('update_nodes');
         foreach ($this->nodesScheduledForUpdate as $entity) {
+            $this->traverseRelationshipEntities($entity);
             $statement = $this->getPersister(get_class($entity))->getUpdateQuery($entity);
             $updateNodeStack->push($statement->text(), $statement->parameters());
         }
@@ -270,6 +287,8 @@ class UnitOfWork
         foreach ($managed as $oid) {
             $id = $this->entityIds[$oid];
             $entityA = $this->entitiesById[$id];
+            $visited = array();
+            $this->doPersist($entityA, $visited);
             $entityB = $this->entityStateReferences[$id];
             $this->computeChanges($entityA, $entityB);
         }
@@ -430,7 +449,7 @@ class UnitOfWork
         $this->relationshipsScheduledForDelete[] = [$eClass->getIdValue($entity), $tClass->getIdValue($target), $relationship];
     }
 
-    public function traverseRelationshipEntities($entity, array &$visited)
+    public function traverseRelationshipEntities($entity, array &$visited = array())
     {
         $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entity));
         foreach ($classMetadata->getRelationshipEntities() as $relationshipMetadata) {
@@ -458,7 +477,9 @@ class UnitOfWork
     {
         $oid = spl_object_hash($entity);
 
-        $this->relEntitiesScheduledForCreate[$oid] = [$entity, $pov];
+        if (!array_key_exists($oid, $this->relationshipEntityStates)) {
+            $this->relEntitiesScheduledForCreate[$oid] = [$entity, $pov];
+        }
     }
 
     public function getEntityState($entity, $assumedState = null)

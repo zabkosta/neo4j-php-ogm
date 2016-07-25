@@ -35,7 +35,6 @@ class SingleEntityTest extends IntegrationTestCase
         $userNode = $record->value("n");
         $this->assertEquals("neo", $userNode->value("login"));
         $this->assertEquals(33, $userNode->value("age"));
-        $this->assertCount(2, $userNode->values());
         $this->assertCount(1, $userNode->labels());
     }
 

@@ -13,6 +13,7 @@ use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
+use GraphAware\Neo4j\OGM\Query\Pagination;
 use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
 use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
@@ -32,6 +33,9 @@ class BaseRepository
     const ORDER_ASC = 'ASC';
 
     const ORDER_DESC = 'DESC';
+
+    private static $PAGINATION_FIRST_RESULT_KEY = "first";
+    private static $PAGINATION_LIMIT_RESULTS_KEY = "max";
 
     /**
      * @var \GraphAware\Neo4j\OGM\Metadata\ClassMetadata
@@ -86,9 +90,26 @@ class BaseRepository
      */
     public function findAll(array $filters = array())
     {
+        $pagination = $this->getPagination($filters);
         $parameters = [];
         $label = $this->classMetadata->getLabel();
         $query = sprintf('MATCH (n:%s)', $label);
+
+        if (null !== $pagination) {
+            $query .= ' WITH n ORDER BY ';
+            if (null !== $pagination->getOrderBy()) {
+                $query .= 'n.' . $pagination->getOrderBy()[0] . ' ' . $pagination->getOrderBy()[1] . ' ';
+            } else {
+                $query .= 'id(n) ASC ';
+            }
+
+            $query .= ' SKIP {skip} LIMIT {limit}';
+
+            $parameters['skip'] = $pagination->getFirst();
+            $parameters['limit'] = $pagination->getMax();
+        }
+
+
         /** @var RelationshipMetadata[] $associations */
         $associations = $this->classMetadata->getRelationships();
         $assocReturns = [];
@@ -150,6 +171,24 @@ class BaseRepository
             }
         }
 
+        if (null !== $pagination) {
+            $query .= ' WITH n';
+
+            if (!empty($assocReturns)) {
+                $query .= ', ' . implode(',', $assocReturns);
+            }
+
+            $query .= ' ORDER BY ';
+            if (null !== $pagination->getOrderBy()) {
+                $query .= 'n.' . $pagination->getOrderBy()[0] . ' ' . $pagination->getOrderBy()[1] . ' ';
+            } else {
+                $query .= 'id(n) ASC ';
+            }
+
+            $parameters['skip'] = $pagination->getFirst();
+            $parameters['limit'] = $pagination->getMax();
+        }
+
         $query .= PHP_EOL;
         $query .= 'RETURN n';
         if (!empty($assocReturns)) {
@@ -174,8 +213,6 @@ class BaseRepository
             'method' => 'findAll',
             'arguments' => $filters
         );
-
-        //echo $query;
 
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters, json_encode($tag));
 
@@ -268,6 +305,16 @@ class BaseRepository
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
 
         return $this->hydrateResultSet($result);
+    }
+
+    public function paginated($first, $max, array $order = array())
+    {
+        return $this->findAll(['first' => $first, 'max' => $max, 'order' => $order]);
+    }
+
+    private function getPagination(array $filters)
+    {
+        return Pagination::create($filters);
     }
 
     /**
