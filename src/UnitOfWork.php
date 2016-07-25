@@ -300,8 +300,12 @@ class UnitOfWork
         $propertyFields = array_merge($classMetadata->getPropertiesMetadata(), $classMetadata->getLabeledProperties());
         foreach ($propertyFields as $field => $meta) {
             // force proxy to initialize (only needed with proxy manager 1.x
-            $entityA->getId();
-            $entityB->getId();
+            $reflClass = new \ReflectionClass($classMetadata->getClassName());
+            foreach ($reflClass->getMethods() as $method) {
+                if ($method->getNumberOfRequiredParameters() === 0 && $method->getName() === "getId") {
+                    $entityA->getId();
+                }
+            }
             $p1 = $meta->getValue($entityA);
             $p2 = $meta->getValue($entityB);
             if ($p1 !== $p2) {
