@@ -299,6 +299,9 @@ class UnitOfWork
         $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entityA));
         $propertyFields = array_merge($classMetadata->getPropertiesMetadata(), $classMetadata->getLabeledProperties());
         foreach ($propertyFields as $field => $meta) {
+            // force proxy to initialize (only needed with proxy manager 1.x
+            $entityA->getId();
+            $entityB->getId();
             $p1 = $meta->getValue($entityA);
             $p2 = $meta->getValue($entityB);
             if ($p1 !== $p2) {
