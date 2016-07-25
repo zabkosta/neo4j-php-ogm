@@ -108,12 +108,6 @@ class GraphEntityMetadataFactory
         }
 
         if (null !== get_parent_class($className)) {
-            /*
-            echo '-- ' . PHP_EOL;
-            var_dump($className);
-            var_dump(get_parent_class($className));
-            echo '--' . PHP_EOL;
-            */
             return $this->create(get_parent_class($className));
         }
 

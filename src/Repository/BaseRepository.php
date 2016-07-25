@@ -508,7 +508,17 @@ class BaseRepository
         $otherMetadata = $this->entityManager->getClassMetadataFor(get_class($otherToSet));
         foreach ($otherMetadata->getRelationships() as $relationship) {
             if ($relationship->getDirection() !== $relationshipEntity->getDirection() && $relationship->hasMappedByProperty() && $relationship->getMappedByProperty() === $possiblyMapped) {
-                $relationship->setValue($otherToSet, $reInstance);
+                if ($relationship->isCollection()) {
+                    if (null !== $this->entityManager->getUnitOfWork()->getEntityById($otherMetadata->getIdValue($otherToSet))) {
+                        $relationship->initializeCollection($otherToSet);
+                        $relationship->addToCollection($otherToSet, $reInstance);
+                    }
+                } else {
+                    if (null === $relationship->getValue($otherToSet)) {
+                        $relationship->setValue($otherToSet, $reInstance);
+                    }
+                }
+
             }
         }
         foreach ($rel->values() as $k => $value) {

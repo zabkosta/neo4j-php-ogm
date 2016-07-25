@@ -79,6 +79,7 @@ class User
      * @var UserResource[]|ArrayCollection
      *
      * @OGM\Relationship(relationshipEntity="UserResource", direction="OUTGOING", collection=true, mappedBy="user")
+     * @OGM\Lazy()
      */
     protected $userResources;
 
