@@ -623,10 +623,9 @@ class BaseRepository
                 $cm->setId($instance, $node->identity());
             }
             $cm->setId($instance, $node->identity());
-            $i2 = clone($instance);
-            $this->entityManager->getUnitOfWork()->addManaged($i2);
+            $this->entityManager->getUnitOfWork()->addManaged($instance);
 
-            return $i2;
+            return $instance;
         }
 
 

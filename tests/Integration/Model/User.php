@@ -268,4 +268,28 @@ class User
         $this->userResources->add($userResource);
         $resource->getUserResources()->add($userResource);
     }
+
+    /** @see \Serializable::serialize() */
+    public function serialize()
+    {
+        return serialize(array(
+            $this->id,
+            $this->login,
+            $this->age,
+            // see section on salt below
+            // $this->salt,
+        ));
+    }
+
+    /** @see \Serializable::unserialize() */
+    public function unserialize($serialized)
+    {
+        list (
+            $this->id,
+            $this->login,
+            $this->age,
+            // see section on salt below
+            // $this->salt
+            ) = unserialize($serialized);
+    }
 }

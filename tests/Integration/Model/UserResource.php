@@ -79,4 +79,14 @@ class UserResource
     {
         return $this->amount;
     }
+
+    /**
+     * @param int $amount
+     */
+    public function setAmount($amount)
+    {
+        $this->amount = $amount;
+    }
+
+
 }

@@ -18,8 +18,13 @@ class IntegrationTestCase extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->em = EntityManager::create('http://neo4j:error@localhost:7474', __DIR__.'/../../_var/cache');
+        $this->createEntityManager();
         $this->client = $this->em->getDatabaseDriver();
+    }
+
+    private function createEntityManager()
+    {
+        $this->em = EntityManager::create('http://neo4j:error@localhost:7474', __DIR__.'/../../_var/cache');
     }
 
     public function clearDb()
@@ -29,7 +34,8 @@ class IntegrationTestCase extends \PHPUnit_Framework_TestCase
 
     public function resetEm()
     {
-        $this->em->clear();
+        $this->em = null;
+        $this->createEntityManager();
     }
 
     protected function assertGraphNotExist($q)
