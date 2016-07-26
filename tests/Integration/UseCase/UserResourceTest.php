@@ -71,7 +71,7 @@ class UserResourceTest extends IntegrationTestCase
     {
         $this->init();
         /** @var User $user */
-        $user = $this->em->getRepository(User::class)->findOneBy('login', 'ikwatt');
+        $user = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
         /** @var ResourceModel $wood */
         $wood = $this->em->getRepository(ResourceModel::class)->findOneBy('name', 'wood');
         $user->addResource($wood, 10);
