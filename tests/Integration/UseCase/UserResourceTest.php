@@ -26,6 +26,8 @@ class UserResourceTest extends IntegrationTestCase
         }
         $this->em->flush();
 
+
+
         $this->assertGraphExist('(r:Resource {name:"wood"})<-[:HAS_RESOURCE {amount:20}]-(u:User {login:"ikwattro"})-[:HAS_ROLE]->(role:SecurityRole {name:"view_pages"})');
         $result = $this->client->run('MATCH (n:User {login:"ikwattro"}) RETURN size((n)-[:HAS_RESOURCE]->()) AS value');
         $resourcesCount = $result->firstRecord()->get('value');
