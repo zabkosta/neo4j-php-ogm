@@ -36,6 +36,28 @@ class UserResourceTest extends IntegrationTestCase
         $this->assertEquals(5, $resourcesCount);
     }
 
+    public function testUserResourcesAreNotResetWithOnlyOneResource()
+    {
+        $this->prepareDb();
+        /** @var User $user */
+        $user = $this->em->getRepository(User::class)->findOneBy('login', 'test');
+        /** @var ResourceModel $resource */
+        $resource = $this->em->getRepository(ResourceModel::class)->findOneBy('name', 'wood');
+        /** @var ResourceModel $resource2 */
+        $resource2 = $this->em->getRepository(ResourceModel::class)->findOneBy('name', 'stone');
+        $user->addResource($resource, 10);
+        $user->addResource($resource2, 10);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var User $user */
+        $user = $this->em->getRepository(User::class)->findOneBy('login', 'test');
+        /** @var ResourceModel $resource */
+        $resource = $this->em->getRepository(ResourceModel::class)->findOneBy('name', 'wood');
+        $resource->getUserResources();
+        $this->assertCount(2, $user->getUserResources());
+    }
+
     public function testFetchExistingUserWithRoleAndAddResourceWithCypherInit()
     {
         $this->prepareDb();

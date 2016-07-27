@@ -29,6 +29,7 @@ class User
 
     /**
      * @OGM\Relationship(targetEntity="User", type="FOLLOWS", direction="OUTGOING", collection=true)
+     * @OGM\Lazy()
      * @var User[]
      */
     protected $friends;
@@ -40,6 +41,7 @@ class User
 
     /**
      * @OGM\Relationship(targetEntity="User", type="IN_LOVE_WITH", direction="INCOMING", collection=true, mappedBy="loves")
+     * @OGM\Lazy()
      */
     protected $lovedBy;
 

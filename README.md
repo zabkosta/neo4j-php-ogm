@@ -8,7 +8,7 @@
 [![Total Downloads](https://poser.pugx.org/graphaware/neo4j-php-ogm/downloads)](https://packagist.org/packages/graphaware/neo4j-php-ogm)
 [![License](https://poser.pugx.org/graphaware/neo4j-php-ogm/license)](https://packagist.org/packages/graphaware/neo4j-php-ogm)
 
-**Current Release** : `1.0.0-beta15`
+**Current Release** : `1.0.0-beta17`
 
 ### Basic Usage :
 

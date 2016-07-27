@@ -367,6 +367,15 @@ class UnitOfWork
         $this->managedRelationshipEntitiesMap[$oid][$poid] = $field;
     }
 
+    public function getRelationshipEntityById($id)
+    {
+        if (array_key_exists($id, $this->reEntitiesById)) {
+            return $this->reEntitiesById[$id];
+        }
+
+        return null;
+    }
+
     private function checkRelationshipEntityDeletions($entity)
     {
         $oid = spl_object_hash($entity);
@@ -538,6 +547,7 @@ class UnitOfWork
      */
     public function getEntityById($id)
     {
+        //var_dump($id);
         return isset($this->entitiesById[$id]) ? $this->entitiesById[$id] : null;
     }
 

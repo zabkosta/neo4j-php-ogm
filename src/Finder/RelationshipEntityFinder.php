@@ -29,7 +29,8 @@ class RelationshipEntityFinder extends RelationshipsFinder
 
         foreach ($result->records() as $record) {
             foreach ( $record->get($identifier) as $i) {
-                $instances[] = $repo->hydrateRelationshipEntity($this->relationshipEntityMetadata, $i, $startNodeMetadata, $endNodeMetadata, $this->baseInstance, $this->relationshipMetadata, $this->baseInstance->getId());
+                $instance = $repo->hydrateRelationshipEntity($this->relationshipEntityMetadata, $i, $startNodeMetadata, $endNodeMetadata, $this->baseInstance, $this->relationshipMetadata, $this->baseInstance->getId());
+                $instances[] = $instance;
             }
         }
 

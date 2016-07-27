@@ -33,7 +33,6 @@ class RelationshipsFinder
         $result = $this->em->getDatabaseDriver()->run($statement->text(), $statement->parameters());
 
         return $this->hydrateResult($result);
-
     }
 
     protected function hydrateResult(Result $result)
@@ -42,7 +41,7 @@ class RelationshipsFinder
         $instances = [];
 
         foreach ($result->records() as $record) {
-            $instances[] = $repo->hydrate($record, true, 'end', $this->className, true);
+            $instances[] = $repo->hydrate($record, true, 'end', $this->className, true, true);
         }
 
         return $instances;

@@ -165,6 +165,7 @@ class RelationshipIntegrationTest extends IntegrationTestCase
             $this->assertCount(1, $loved->getLovedBy());
             $this->assertEquals('user1', $loved->getLovedBy()[0]->getLogin());
         }
+        //$this->em->clear();
         /** @var User $u6 */
         $u6 = $repository->findOneBy('login', 'user6');
         $this->assertCount(2, $u6->getLovedBy());

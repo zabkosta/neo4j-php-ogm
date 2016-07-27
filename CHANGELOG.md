@@ -1,4 +1,10 @@
-1.0.0-bet13,14,15
+1.0.0-beta17
+
+- fixed a bug where fetched RE entities were not marked as managed
+- fixed a bug where fetched lazy simple relationships were not marked as managed
+- lazy loaded simple relationships have their non-lazy associations marked as lazy
+
+1.0.0-bet13,14,15, 16
 
 - multiple bug fixes
 

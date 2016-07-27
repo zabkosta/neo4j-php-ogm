@@ -11,10 +11,12 @@
 
 namespace GraphAware\Neo4j\OGM\Metadata;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\OGM\Annotations\OrderBy;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Common\Collection;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
+use GraphAware\Neo4j\OGM\Lazy\LazyRelationshipCollection;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 final class RelationshipMetadata
@@ -191,7 +193,16 @@ final class RelationshipMetadata
             throw new \LogicException(sprintf('The property mapping this relationship is not of collection type in "%s"', $this->className));
         }
 
-        $this->setValue($object, new Collection());
+        if ($this->getValue($object) instanceof ArrayCollection || is_array($this->getValue($object)) || $this->getValue($object) instanceof LazyRelationshipCollection) {
+            return;
+        }
+
+        if (null === $this->getValue($object)) {
+            $this->setValue($object, new Collection());
+            return;
+        }
+
+        //throw new \RuntimeException(sprintf('Unexpected initial value in %s', $this->className));
     }
 
     /**
@@ -201,12 +212,40 @@ final class RelationshipMetadata
     public function addToCollection($object, $value)
     {
         if (!$this->isCollection()) {
-            throw new \LogicException(sprintf('The property mapping this relationship is not of collection type in "%s"', $this->className));
+            throw new \LogicException(sprintf('The property mapping of this relationship is not of collection type in "%s"', $this->className));
         }
 
         /** @var Collection $coll */
         $coll = $this->getValue($object);
-        $coll->add($value);
+        $toAdd = true;
+        $oid2 = spl_object_hash($value);
+        foreach ($coll->toArray() as $el) {
+            $oid1 = spl_object_hash($el);
+            if ($oid1 === $oid2) {
+                $toAdd = false;
+            }
+        }
+
+        if ($toAdd) {
+            $coll->add($value);
+        }
+    }
+
+    public function addToCollectionAdvanced($object, $value, NodeEntityMetadata $valueMetadata)
+    {
+        if (!$this->isCollection()) {
+            throw new \LogicException(sprintf('The property mapping of this relationship is not of collection type in "%s"', $this->className));
+        }
+
+        /** @var Collection $coll */
+        $coll = $this->getValue($object);
+        foreach ($coll->toArray() as $el) {
+            $eid = $valueMetadata->getIdValue($valueMetadata);
+            $vid = $valueMetadata->getIdValue($valueMetadata);
+            if ($eid !== $vid) {
+                $coll->add($value);
+            }
+        }
     }
 
     /**

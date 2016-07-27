@@ -28,7 +28,7 @@ class UserResource
     protected $user;
 
     /**
-     * @var Resource
+     * @var ResourceModel
      *
      * @OGM\EndNode(targetEntity="Resource")
      */
@@ -65,7 +65,7 @@ class UserResource
     }
 
     /**
-     * @return Resource
+     * @return ResourceModel
      */
     public function getResource()
     {

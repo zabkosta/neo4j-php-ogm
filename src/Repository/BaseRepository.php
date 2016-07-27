@@ -396,7 +396,7 @@ class BaseRepository
         return $entities;
     }
 
-    public function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n', $className = null, $andAddLazyLoad = false)
+    public function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n', $className = null, $andAddLazyLoad = false, $considerAllLazy = false)
     {
         $classN = null !== $className ? $className : $this->className;
         $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
@@ -427,7 +427,7 @@ class BaseRepository
                         $this->setInversedAssociation($baseInstance, $relO, $relKey);
                     }
                 } else {
-                    if ($andAddLazyLoad && $association->isCollection()) {
+                    if ($andAddLazyLoad && $association->isCollection() && $association->isLazy()) {
                         $lazy = new LazyRelationshipCollection($this->entityManager, $baseInstance, $association->getTargetEntity(), $association);
                         $association->setValue($baseInstance, $lazy);
                     }
@@ -481,6 +481,23 @@ class BaseRepository
                     $relationship->setValue($baseInstance, $lazyCollection);
                 }
             }
+
+            if ($considerAllLazy) {
+                foreach ($this->classMetadata->getSimpleRelationships() as $relationship) {
+                    if ($relationship->isCollection()) {
+                        if (!$relationship->isRelationshipEntity()) {
+                            $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getTargetEntity(), $relationship);
+                            $relationship->setValue($baseInstance, $lazyCollection);
+                            continue;
+                        }
+
+                        if ($relationship->isRelationshipEntity()) {
+                            $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getRelationshipEntityClass(), $relationship);
+                            $relationship->setValue($baseInstance, $lazyCollection);
+                        }
+                    }
+                }
+            }
         }
 
         return $baseInstance;
@@ -494,14 +511,19 @@ class BaseRepository
         $baseInstance,
         RelationshipMetadata $relationshipEntity, $pov = null)
     {
-        $reInstance = $reMetadata->newInstance();
-        $start = $this->hydrateNode($reMap['start'], $startNodeMetadata->getClassName(), true);
-        $end = $this->hydrateNode($reMap['end'], $endNodeMetadata->getClassName(), true);
         /** @var \GraphAware\Neo4j\Client\Formatter\Type\Relationship $rel */
         $rel = $reMap['rel'];
         $relId = $rel->identity();
+        if (null !== $possibleRE = $this->entityManager->getUnitOfWork()->getRelationshipEntityById($relId)) {
+            return $possibleRE;
+        }
+        $start = $this->hydrateNode($reMap['start'], $startNodeMetadata->getClassName(), true);
+        $end = $this->hydrateNode($reMap['end'], $endNodeMetadata->getClassName(), true);
+        $reInstance = $reMetadata->newInstance();
+        $reMetadata->setId($reInstance, $relId);
         $reMetadata->setStartNodeProperty($reInstance, $start);
         $reMetadata->setEndNodeProperty($reInstance, $end);
+        $this->entityManager->getUnitOfWork()->addManagedRelationshipEntity($reInstance, $baseInstance, $relationshipEntity->getPropertyName());
         $reMetadata->setId($reInstance, $relId);
         $otherToSet = $relationshipEntity->getDirection() === "INCOMING" ? $reMetadata->getStartNodeValue($reInstance) : $reMetadata->getEndNodeValue($reInstance);
         $possiblyMapped = $relationshipEntity->getDirection() === "INCOMING" ? $reMetadata->getStartNodePropertyName() : $reMetadata->getEndNodePropertyName();
@@ -526,7 +548,7 @@ class BaseRepository
                 $prop->setValue($reInstance, $value);
             }
         }
-        $this->entityManager->getUnitOfWork()->addManagedRelationshipEntity($reInstance, $baseInstance, $relationshipEntity->getPropertyName());
+        //$this->entityManager->getUnitOfWork()->addManagedRelationshipEntity($reInstance, $baseInstance, $relationshipEntity->getPropertyName());
 
         return $reInstance;
     }

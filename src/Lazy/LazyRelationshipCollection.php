@@ -28,6 +28,12 @@ class LazyRelationshipCollection extends AbstractLazyCollection
 
     protected $initialEntity;
 
+    protected $baseEntityClass;
+
+    protected $relationshipMetadata;
+
+    protected $baseInstance;
+
     public function __construct(EntityManager $em, $baseEntity, $targetEntityClass, RelationshipMetadata $relationshipMetadata, $initialEntity = null)
     {
         $this->finder = $relationshipMetadata->isRelationshipEntity() ? new RelationshipEntityFinder($em, $targetEntityClass, $relationshipMetadata, $baseEntity) : new RelationshipsFinder($em, $targetEntityClass, $relationshipMetadata);
@@ -35,6 +41,9 @@ class LazyRelationshipCollection extends AbstractLazyCollection
         $this->collection = new Collection();
         $this->baseId = $this->em->getClassMetadataFor(get_class($baseEntity))->getIdValue($baseEntity);
         $this->initialEntity = $initialEntity;
+        $this->baseEntityClass = get_class($baseEntity);
+        $this->relationshipMetadata = $relationshipMetadata;
+        $this->baseInstance = $baseEntity;
     }
 
     protected function doInitialize()
@@ -42,8 +51,13 @@ class LazyRelationshipCollection extends AbstractLazyCollection
         $instances = $this->finder->find($this->baseId);
         foreach ($instances as $instance) {
             if (!$this->collection->contains($instance)) {
+                if (!$this->relationshipMetadata->isRelationshipEntity()) {
+                    $this->em->getUnitOfWork()->addManagedRelationshipReference($this->baseInstance, $instance, $this->relationshipMetadata->getPropertyName(), $this->relationshipMetadata);
+                }
                 $this->collection->add($instance);
             }
         }
     }
+
+
 }
