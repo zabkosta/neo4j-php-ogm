@@ -109,6 +109,16 @@ class UserResourceTest extends IntegrationTestCase
         $this->em->flush();
     }
 
+    public function testRegisterAction()
+    {
+        $this->prepareDb();
+        $user = new User('ikwattro');
+        $role = $this->em->getRepository(SecurityRole::class)->findOneBy('roleType', 'ROLE_USER');
+        $user->addRole($role);
+        $this->em->persist($user);
+        $this->em->flush();
+    }
+
     private function init()
     {
         // Setup initial graph
@@ -130,7 +140,7 @@ class UserResourceTest extends IntegrationTestCase
         $em = $this->em;
         $em->getDatabaseDriver()->run("MATCH (n) DETACH DELETE n");
         $em->getDatabaseDriver()->run('CREATE (n:User {login:\'test\'})-[:HAS_ROLE]->(:Role {name:"pageViews"})');
-        $em->getDatabaseDriver()->run("CREATE (r:Role{name:\"ROLE_USER\"})
+        $em->getDatabaseDriver()->run("CREATE (r:SecurityRole{roleType:\"ROLE_USER\"})
 
 create (n:Resource{name:'wood',name_DE:'Holz',icon:'fa-tree',iconColour:'#fff',colour:'#00C851 '})
 create (n2:Resource{name:'stone',name_DE:'Stein',icon:'fa-cubes',iconColour:'#fff',colour:'#a1887f '})
@@ -138,7 +148,10 @@ create (n3:Resource{name:'food',name_DE:'Nahrung',icon:'fa-cutlery',iconColour:'
 create (n4:Resource{name:'water',name_DE:'Wasser',icon:'fa-tint',iconColour:'#fff',colour:'#33b5e5 '})
 create (n5:Resource{name:'work',name_DE:'Arbeitskraft',icon:'fa-industry',iconColour:'#fff',colour:'#2BBBAD '})
 create (n6:Resource{name:'overwatch',name_DE:'Überwachung',icon:'fa-eye',iconColour:'#fff',colour:'#aa66cc '})
-
+create (u1:User {login:'hello'})
+create (u1)-[:HAS_ROLE]->(r)
+CREATE (u2:User {login:'admin'})
+CREATE (u2)-[:HAS_ROLE]->(r)
 create (n7:Team{name:'red_giants'})
 create (n8:Team{name:'blue_dwarfs'})");
     }
