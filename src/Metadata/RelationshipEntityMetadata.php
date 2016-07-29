@@ -118,12 +118,14 @@ final class RelationshipEntityMetadata extends GraphEntityMetadata
 
     public function hasAssociation($fieldName)
     {
-        return false;
+        return $fieldName === $this->startNodeReflectionProperty->getName()
+        || $fieldName === $this->endNodeReflectionProperty->getName();
     }
 
     public function isSingleValuedAssociation($fieldName)
     {
-        return false;
+        return $fieldName === $this->startNodeReflectionProperty->getName()
+            || $fieldName === $this->endNodeReflectionProperty->getName();
     }
 
     public function isCollectionValuedAssociation($fieldName)
@@ -133,16 +135,19 @@ final class RelationshipEntityMetadata extends GraphEntityMetadata
 
     public function getAssociationNames()
     {
-        return false;
+        return [
+            $this->startNodeReflectionProperty->getName(),
+            $this->endNodeReflectionProperty->getName(),
+        ];
     }
 
     public function getAssociationTargetClass($assocName)
     {
-        if ($this->startNodeReflectionProperty === $assocName) {
+        if ($this->startNodeReflectionProperty->getName() === $assocName) {
             return $this->startNodeEntityMetadata;
         }
 
-        if ($this->endNodeReflectionProperty === $assocName) {
+        if ($this->endNodeReflectionProperty->getName() === $assocName) {
             return $this->endNodeEntityMetadata;
         }
 
