@@ -1,3 +1,9 @@
+1.0.0-beta19
+
+- ClassMetadata implements DoctrineCommon ClassMetadata
+- `getClassMetada` in EntityManager now handle node and relationship entity classes
+- `@Lazy` on a non-collection relationship doesn't have a lazy effect
+
 1.0.0-beta17
 
 - fixed a bug where fetched RE entities were not marked as managed
