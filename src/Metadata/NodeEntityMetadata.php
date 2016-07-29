@@ -219,4 +219,83 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     {
         return $this->getSimpleRelationships();
     }
+
+    public function hasAssociation($fieldName)
+    {
+        foreach ($this->relationships as $relationship) {
+            if ($relationship->getPropertyName() === $fieldName) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function isSingleValuedAssociation($fieldName)
+    {
+        foreach ($this->relationships as $relationship) {
+            if ($relationship->getPropertyName() === $fieldName && !$relationship->isCollection()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function isCollectionValuedAssociation($fieldName)
+    {
+        foreach ($this->relationships as $relationship) {
+            if ($relationship->getPropertyName() === $fieldName && $relationship->isCollection()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function getAssociationNames()
+    {
+        $names = [];
+        foreach ($this->relationships as $relationship) {
+            $names[] = $relationship->getPropertyName();
+        }
+
+        return $names;
+    }
+
+    public function getAssociationTargetClass($assocName)
+    {
+        foreach ($this->relationships as $relationship) {
+            if ($relationship->getPropertyName() === $assocName) {
+                if ($relationship->isRelationshipEntity()) {
+                    return $relationship->getRelationshipEntityClass();
+                } else {
+                    return $relationship->getTargetEntity();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function isAssociationInverseSide($assocName)
+    {
+        // is not implemented in the context of the ogm.
+        // if entities should be hydrated on the inversed entity, the only mappedBy annotation property should be used.
+
+        return false;
+    }
+
+    public function getAssociationMappedByTargetField($assocName)
+    {
+        foreach ($this->relationships as $relationship) {
+            if ($relationship->hasMappedByProperty() && $relationship->getMappedByProperty() === $assocName) {
+                return $relationship->getPropertyName();
+            }
+        }
+
+        return null;
+    }
+
+
 }

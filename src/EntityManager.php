@@ -16,6 +16,7 @@ use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\OGM\Mapping\AnnotationDriver;
 use GraphAware\Neo4j\Client\Client;
 use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactory;
+use GraphAware\Neo4j\OGM\Metadata\GraphEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
@@ -37,11 +38,15 @@ class EntityManager implements ObjectManager
      */
     protected $repositories = [];
 
+    /** @var \GraphAware\Neo4j\OGM\Mapping\AnnotationDriver  */
+    protected $annotationDriver;
+
     /**
      * @var QueryResultMapper[]
      */
     protected $resultMappers = [];
 
+    /** @var GraphEntityMetadata[] */
     protected $loadedMetadata = [];
 
     /**
@@ -86,7 +91,7 @@ class EntityManager implements ObjectManager
      */
     public function find($className, $id)
     {
-        return $this->getRepository($className)->findOneBy($id);
+        return $this->getRepository($className)->findOneById($id);
     }
 
     /**
@@ -117,7 +122,11 @@ class EntityManager implements ObjectManager
      */
     public function getClassMetadata($className)
     {
-        return $this->getClassMetadataFor($className);
+        if (array_key_exists($className, $this->loadedMetadata)) {
+            return $this->loadedMetadata[$className];
+        }
+
+        return $this->metadataFactory->create($className);
     }
 
     /**

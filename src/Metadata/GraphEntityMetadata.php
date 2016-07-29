@@ -11,7 +11,9 @@
 
 namespace GraphAware\Neo4j\OGM\Metadata;
 
-abstract class GraphEntityMetadata
+use Doctrine\Common\Persistence\Mapping\ClassMetadata;
+
+abstract class GraphEntityMetadata implements ClassMetadata
 {
     /**
      * @var \GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata
@@ -52,6 +54,60 @@ abstract class GraphEntityMetadata
             }
         }
     }
+
+    public function getName()
+    {
+        return $this->className;
+    }
+
+    public function getReflectionClass()
+    {
+        return $this->reflectionClass;
+    }
+
+    public function isIdentifier($fieldName)
+    {
+        return $this->entityIdMetadata->getPropertyName() === $fieldName;
+    }
+
+    public function hasField($fieldName)
+    {
+        foreach ($this->entityPropertiesMetadata as $entityPropertyMetadata) {
+            if ($entityPropertyMetadata->getPropertyName() === $fieldName) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function getFieldNames()
+    {
+        $fields = [];
+        $fields[] = $this->entityIdMetadata->getPropertyName();
+        foreach ( $this->entityPropertiesMetadata as $entityPropertyMetadata ) {
+            $fields[] = $entityPropertyMetadata->getPropertyName();
+        }
+
+        return $fields;
+    }
+
+    public function getIdentifierFieldNames()
+    {
+        return [$this->entityIdMetadata->getPropertyName()];
+    }
+
+    public function getTypeOfField($fieldName)
+    {
+        // TODO: Implement getTypeOfField() method.
+        return null;
+    }
+
+    public function getIdentifierValues($object)
+    {
+        return [$this->getIdValue($object)];
+    }
+
 
     /**
      * @return string
