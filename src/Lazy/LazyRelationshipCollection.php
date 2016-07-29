@@ -48,15 +48,23 @@ class LazyRelationshipCollection extends AbstractLazyCollection
 
     protected function doInitialize()
     {
+        $i = 0;
         $instances = $this->finder->find($this->baseId);
         foreach ($instances as $instance) {
+            $cm = $this->em->getClassMetadata(get_class($instance));
             if (!$this->collection->contains($instance)) {
                 if (!$this->relationshipMetadata->isRelationshipEntity()) {
                     $this->em->getUnitOfWork()->addManagedRelationshipReference($this->baseInstance, $instance, $this->relationshipMetadata->getPropertyName(), $this->relationshipMetadata);
                 }
                 $this->collection->add($instance);
+                ++$i;
             }
         }
+    }
+
+    public function addInit($element)
+    {
+        $this->collection->add($element);
     }
 
 

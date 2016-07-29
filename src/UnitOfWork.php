@@ -323,6 +323,8 @@ class UnitOfWork
             'target' => $boid,
             'rel' => $relationship,
         ];
+        $this->addManaged($entityA);
+        $this->addManaged($entityB);
         //print_r($this->managedRelationshipReferences);
     }
 

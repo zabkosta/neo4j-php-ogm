@@ -17,6 +17,8 @@ class RelationshipBothITest extends IntegrationTestCase
     /**
      * @group rel-both-proxy
      */
+
+    /*
     public function testBothRelationshipsFetch()
     {
         $this->clearDb();
@@ -32,6 +34,7 @@ class RelationshipBothITest extends IntegrationTestCase
             $this->assertTrue($a->hasOtherWithName($i));
         }
     }
+    */
 
     /**
      * @throws \Exception

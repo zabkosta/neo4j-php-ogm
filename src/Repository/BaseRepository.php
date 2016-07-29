@@ -416,6 +416,7 @@ class BaseRepository
                             }
                             $v2 = $this->hydrateNode($nodeToUse, $this->getTargetFullClassName($association->getTargetEntity()), true);
                             $association->addToCollection($baseInstance, $v2);
+                            $this->entityManager->getUnitOfWork()->addManaged($v2);
                             $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
                             $this->setInversedAssociation($baseInstance, $v2, $association->getPropertyName());
                         }
@@ -652,10 +653,25 @@ class BaseRepository
                     $propertyMetadata->setValue($instance, $node->value($field));
                 }
             }
-            if (2 === $pmVersion) {
-                $cm->setId($instance, $node->identity());
-            }
+
             $cm->setId($instance, $node->identity());
+
+            foreach ($cm->getRelationships() as $relationship) {
+                if (!$relationship->isRelationshipEntity()) {
+                    $lazyCollection = new LazyRelationshipCollection($this->entityManager, $instance, $relationship->getTargetEntity(), $relationship);
+                    $relationship->setValue($instance, $lazyCollection);
+                    continue;
+                }
+
+                if ($relationship->isRelationshipEntity()) {
+                    if ($relationship->isCollection()) {
+                        $lazyCollection = new LazyRelationshipCollection($this->entityManager, $instance, $relationship->getRelationshipEntityClass(), $relationship);
+                        $relationship->setValue($instance, $lazyCollection);
+                    } else {
+                        //
+                    }
+                }
+            }
             $i2 = clone($instance);
             $this->entityManager->getUnitOfWork()->addManaged($i2);
 
@@ -713,7 +729,7 @@ class BaseRepository
                     $lazy = new LazyRelationshipCollection($this->entityManager, $otherInstance, $mt->getTargetEntity(), $mt, $baseInstance);
                     $property->setValue($otherInstance, $lazy);
                 } else {
-                    $property->getValue($otherInstance)->add($baseInstance);
+                    $property->getValue($otherInstance)->addInit($baseInstance);
                 }
 
             } else {
