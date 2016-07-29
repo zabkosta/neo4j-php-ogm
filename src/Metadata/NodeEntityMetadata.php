@@ -134,6 +134,10 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     }
 
     /**
+     *
+     * Returns non-lazy relationships.
+     * Note that currently relationships that are not of type "collection" are considered non-lazy
+     *
      * @return RelationshipMetadata[]
      */
     public function getNonLazyRelationships()

@@ -117,6 +117,10 @@ final class RelationshipMetadata
      */
     public function isLazy()
     {
+        if (!$this->isCollection()) {
+            return false;
+        }
+
         return $this->isLazy;
     }
 

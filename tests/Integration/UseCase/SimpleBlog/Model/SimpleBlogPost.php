@@ -29,7 +29,7 @@ class SimpleBlogPost
     /**
      * @var SimpleBlogWrote
      *
-     * @OGM\Relationship(relationshipEntity="SimpleBlogWrote", direction="INCOMING", mappedBy="post")
+     * @OGM\Relationship(relationshipEntity="SimpleBlogWrote", direction="INCOMING", mappedBy="post", collection=false)
      * @OGM\Lazy()
      */
     protected $publication;

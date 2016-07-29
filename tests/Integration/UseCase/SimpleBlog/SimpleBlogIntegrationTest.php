@@ -3,6 +3,7 @@
 namespace GraphAware\Neo4j\OGM\Tests\Integration\UseCase\SimpleBlog;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
+use GraphAware\Neo4j\OGM\Tests\Integration\UseCase\SimpleBlog\Model\SimpleBlogPost;
 use GraphAware\Neo4j\OGM\Tests\Integration\UseCase\SimpleBlog\Model\SimpleBlogUser;
 
 class SimpleBlogIntegrationTest extends IntegrationTestCase
@@ -12,10 +13,18 @@ class SimpleBlogIntegrationTest extends IntegrationTestCase
         $this->init();
         /** @var SimpleBlogUser $user */
         $user = $this->em->getRepository(SimpleBlogUser::class)->findOneBy('name', 'john');
-        $publications = $user->getPosts();
-        foreach ($publications as $publication) {
-            echo $publication->getPost()->getPublication()->getUser()->getName() . PHP_EOL;
-        }
+        $name = $user->getName();
+        $this->assertEquals($name, $user->getPosts()[0]->getPost()->getPublication()->getUser()->getName());
+    }
+
+    public function testInversedSideHydrationWhileLoadedSeparately()
+    {
+        $this->init();
+        /** @var SimpleBlogUser $user */
+        $user = $this->em->getRepository(SimpleBlogUser::class)->findOneBy('name', 'john');
+        /** @var SimpleBlogPost $post */
+        $post = $this->em->getRepository(SimpleBlogPost::class)->findOneBy('title', 'New Blog Post');
+        $this->assertEquals(spl_object_hash($user), spl_object_hash($post->getPublication()->getUser()));
     }
 
     private function init()

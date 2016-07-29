@@ -477,8 +477,12 @@ class BaseRepository
                 }
 
                 if ($relationship->isRelationshipEntity()) {
-                    $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getRelationshipEntityClass(), $relationship);
-                    $relationship->setValue($baseInstance, $lazyCollection);
+                    if ($relationship->isCollection()) {
+                        $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getRelationshipEntityClass(), $relationship);
+                        $relationship->setValue($baseInstance, $lazyCollection);
+                    } else {
+                        //
+                    }
                 }
             }
 
