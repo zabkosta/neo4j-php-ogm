@@ -27,6 +27,14 @@ class SimpleBlogIntegrationTest extends IntegrationTestCase
         $this->assertEquals(spl_object_hash($user), spl_object_hash($post->getPublication()->getUser()));
     }
 
+    public function testStartingFromPost()
+    {
+        $this->init();
+        /** @var SimpleBlogPost $post */
+        $post = $this->em->getRepository(SimpleBlogPost::class)->findOneBy('title', 'New Blog Post');
+        $this->assertEquals("john", $post->getPublication()->getUser()->getName());
+    }
+
     private function init()
     {
         $this->clearDb();

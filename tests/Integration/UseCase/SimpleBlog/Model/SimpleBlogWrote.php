@@ -24,7 +24,7 @@ class SimpleBlogWrote
      *
      * @OGM\StartNode(targetEntity="SimpleBlogUser")
      */
-    protected $user;
+    private $user;
 
     /**
      * @var SimpleBlogPost

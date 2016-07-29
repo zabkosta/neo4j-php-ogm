@@ -32,7 +32,7 @@ class SimpleBlogPost
      * @OGM\Relationship(relationshipEntity="SimpleBlogWrote", direction="INCOMING", mappedBy="post", collection=false)
      * @OGM\Lazy()
      */
-    protected $publication;
+    private $publication;
 
     /**
      * @param string $title

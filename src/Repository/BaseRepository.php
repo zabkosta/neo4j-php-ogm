@@ -576,6 +576,7 @@ class BaseRepository
             if ($pmVersion >= 2) {
                 $initializer = function($ghostObject, $method, array $parameters, & $initializer, array $properties) use ($cm, $node, $em, $pmVersion) {
                     $initializer = null;
+                    /*
                     foreach ($cm->getPropertiesMetadata() as $field => $meta) {
                         if ($node->hasValue($field)) {
 
@@ -598,6 +599,7 @@ class BaseRepository
                             }
                         }
                     }
+                    */
 
                     foreach ($cm->getSimpleRelationships(false) as $relationship) {
                         if (!$relationship->isCollection()) {
@@ -645,6 +647,11 @@ class BaseRepository
 
 
             $instance = 2 === $pmVersion ? $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer, $proxyOptions) : $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer);
+            foreach ($cm->getPropertiesMetadata() as $field => $propertyMetadata) {
+                if ($node->hasValue($field)) {
+                    $propertyMetadata->setValue($instance, $node->value($field));
+                }
+            }
             if (2 === $pmVersion) {
                 $cm->setId($instance, $node->identity());
             }

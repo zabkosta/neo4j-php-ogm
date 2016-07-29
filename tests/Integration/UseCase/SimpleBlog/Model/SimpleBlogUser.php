@@ -26,7 +26,7 @@ class SimpleBlogUser
      *
      * @OGM\Property(type="string")
      */
-    protected $name;
+    private $name;
 
     /**
      * @var SimpleBlogWrote[]
