@@ -115,4 +115,52 @@ final class RelationshipEntityMetadata extends GraphEntityMetadata
 
         return $this->endNodeReflectionProperty->getValue($object);
     }
+
+    public function hasAssociation($fieldName)
+    {
+        return false;
+    }
+
+    public function isSingleValuedAssociation($fieldName)
+    {
+        return false;
+    }
+
+    public function isCollectionValuedAssociation($fieldName)
+    {
+        return false;
+    }
+
+    public function getAssociationNames()
+    {
+        return false;
+    }
+
+    public function getAssociationTargetClass($assocName)
+    {
+        if ($this->startNodeReflectionProperty === $assocName) {
+            return $this->startNodeEntityMetadata;
+        }
+
+        if ($this->endNodeReflectionProperty === $assocName) {
+            return $this->endNodeEntityMetadata;
+        }
+
+        return null;
+    }
+
+    public function isAssociationInverseSide($assocName)
+    {
+        // Not implemented
+        return false;
+    }
+
+    public function getAssociationMappedByTargetField($assocName)
+    {
+        // TODO: Implement getAssociationMappedByTargetField() method.
+
+        return null;
+    }
+
+
 }
