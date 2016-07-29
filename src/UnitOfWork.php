@@ -420,7 +420,7 @@ class UnitOfWork
                         if ($a === $b) {
                             return 0;
                         }
-                        return spl_object_hash($a) < spl_object_hash($b) ? -1 : 1;
+                        return $a < $b ? -1 : 1;
                     };
 
                     $added = array_udiff($value, $currentValue, $compare);
