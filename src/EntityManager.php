@@ -86,7 +86,7 @@ class EntityManager implements ObjectManager
      */
     public function find($className, $id)
     {
-        return $this->getRepository($className)->findOneBy($id);
+        return $this->getRepository($className)->findOneById($id);
     }
 
     /**
@@ -117,7 +117,11 @@ class EntityManager implements ObjectManager
      */
     public function getClassMetadata($className)
     {
-        return $this->getClassMetadataFor($className);
+        if (array_key_exists($className, $this->loadedMetadata)) {
+            return $this->loadedMetadata[$className];
+        }
+
+        return $this->metadataFactory->create($className);
     }
 
     /**
