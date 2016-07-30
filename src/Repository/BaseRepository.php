@@ -658,9 +658,11 @@ class BaseRepository
 
             foreach ($cm->getRelationships() as $relationship) {
                 if (!$relationship->isRelationshipEntity()) {
-                    $lazyCollection = new LazyRelationshipCollection($this->entityManager, $instance, $relationship->getTargetEntity(), $relationship);
-                    $relationship->setValue($instance, $lazyCollection);
-                    continue;
+                    if ($relationship->isCollection()) {
+                        $lazyCollection = new LazyRelationshipCollection($this->entityManager, $instance, $relationship->getTargetEntity(), $relationship);
+                        $relationship->setValue($instance, $lazyCollection);
+                        continue;
+                    }
                 }
 
                 if ($relationship->isRelationshipEntity()) {
