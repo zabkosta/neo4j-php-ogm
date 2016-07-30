@@ -7,7 +7,7 @@ php:
     - 7.0.9
 
 env:
-  - NEO_VERSION="3.0.3"
+  - NEO_VERSION="2.3.4"
 
 before_install:
     - wget dist.neo4j.org/neo4j-enterprise-$NEO_VERSION-unix.tar.gz > null
