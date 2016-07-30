@@ -470,8 +470,11 @@ class BaseRepository
                 }
             }
 
+            $lazyDone = [];
+
             foreach ($this->classMetadata->getLazyRelationships(true) as $relationship) {
                 if (!$relationship->isRelationshipEntity()) {
+                    $lazyDone[] = $relationship->getPropertyName();
                     $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getTargetEntity(), $relationship);
                     $relationship->setValue($baseInstance, $lazyCollection);
                     continue;
@@ -716,15 +719,22 @@ class BaseRepository
         return $instance;
     }
 
-    private function setInversedAssociation($baseInstance, $otherInstance, $relationshipKey)
+    public function setInversedAssociation($baseInstance, $otherInstance, $relationshipKey)
     {
+        $class = get_class($otherInstance);
+        if (false !== get_parent_class($otherInstance)) {
+            $class = get_parent_class($otherInstance);
+        }
         $assoc = $this->classMetadata->getRelationship($relationshipKey);
         if ($assoc->hasMappedByProperty()) {
             $mappedBy = $assoc->getMappedByProperty();
-            $reflClass = $this->getReflectionClass(get_class($otherInstance));
+            $reflClass = $this->getReflectionClass($class);
             $property = $reflClass->getProperty($mappedBy);
             $property->setAccessible(true);
             $otherClassMetadata = $this->entityManager->getClassMetadataFor(get_class($otherInstance));
+            if ($otherClassMetadata instanceof RelationshipMetadata || $otherClassMetadata instanceof RelationshipEntityMetadata) {
+                return;
+            }
             if ($otherClassMetadata->getRelationship($mappedBy)->isCollection()) {
                 if (null === $property->getValue($otherInstance)) {
                     $mt = $otherClassMetadata->getRelationship($mappedBy);

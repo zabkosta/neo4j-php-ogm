@@ -56,7 +56,9 @@ class LazyRelationshipCollection extends AbstractLazyCollection
                 if (!$this->relationshipMetadata->isRelationshipEntity()) {
                     $this->em->getUnitOfWork()->addManagedRelationshipReference($this->baseInstance, $instance, $this->relationshipMetadata->getPropertyName(), $this->relationshipMetadata);
                 }
-                $this->collection->add($instance);
+                $repo = $this->em->getRepository(get_class($this->baseInstance));
+                $repo->setInversedAssociation($this->baseInstance, $instance, $this->relationshipMetadata->getPropertyName());
+                $this->collection[] = $instance;
                 ++$i;
             }
         }

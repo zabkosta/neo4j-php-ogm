@@ -102,16 +102,25 @@ class EntityManager implements ObjectManager
         $this->uow->scheduleDelete($object);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function merge($object)
     {
         // TODO: Implement merge() method.
     }
 
+    /**
+     * @inheritdoc
+     */
     public function detach($object)
     {
         // TODO: Implement detach() method.
     }
 
+    /**
+     * @inheritdoc
+     */
     public function refresh($object)
     {
         // TODO: Implement refresh() method.
