@@ -300,7 +300,7 @@ class UnitOfWork
         $this->entityStateReferences[$id] = clone $entity;
     }
 
-    private function detectEntityChanges()
+    public function detectEntityChanges()
     {
         $managed = [];
         foreach ($this->entityStates as $oid => $state) {
@@ -351,7 +351,7 @@ class UnitOfWork
         //print_r($this->managedRelationshipReferences);
     }
 
-    private function detectRelationshipEntityChanges()
+    public function detectRelationshipEntityChanges()
     {
         $managed = [];
         foreach ($this->relationshipEntityStates as $oid => $state) {
@@ -422,7 +422,7 @@ class UnitOfWork
         }
     }
 
-    private function detectRelationshipReferenceChanges()
+    public function detectRelationshipReferenceChanges()
     {
         foreach ($this->managedRelationshipReferences as $oid => $reference) {
             $entity = $this->entitiesById[$this->entityIds[$oid]];
@@ -676,5 +676,21 @@ class UnitOfWork
     public function getRelEntitesScheduledForDelete()
     {
         return $this->relEntitesScheduledForDelete;
+    }
+
+    /**
+     * Get the original state of an entity when it was loaded from the database.
+     *
+     * @param int $id
+     *
+     * @return object|null
+     */
+    public function getOriginalEntityState($id)
+    {
+        if (isset($this->entityStateReferences[$id])) {
+            return $this->entityStateReferences[$id];
+        }
+
+        return null;
     }
 }
