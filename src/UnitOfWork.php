@@ -20,7 +20,15 @@ class UnitOfWork
 
     const STATE_DELETED = 'STATE_DELETED';
 
+    /**
+     * @var EntityManager
+     */
     protected $entityManager;
+
+    /**
+     * @var \Doctrine\Common\EventManager
+     */
+    protected $eventManager;
 
     protected $flushOperationProcessor;
 
@@ -79,6 +87,7 @@ class UnitOfWork
     public function __construct(EntityManager $manager)
     {
         $this->entityManager = $manager;
+        $this->eventManager = $manager->getEventManager();
         $this->relationshipPersister = new RelationshipPersister();
         $this->flushOperationProcessor = new FlushOperationProcessor($this->entityManager);
     }
@@ -159,10 +168,21 @@ class UnitOfWork
 
     public function flush()
     {
+        //preFlush
+        if ($this->eventManager->hasListeners(Events::preFlush)) {
+            $this->eventManager->dispatchEvent(Events::preFlush, new Event\PreFlushEventArgs($this->entityManager));
+        }
+        
+        //Detect changes
         $this->detectRelationshipReferenceChanges();
         $this->detectRelationshipEntityChanges();
         $this->detectEntityChanges();
         $statements = [];
+        
+        //onFlush
+        if ($this->eventManager->hasListeners(Events::onFlush)) {
+            $this->eventManager->dispatchEvent(Events::onFlush, new Event\OnFlushEventArgs($this->entityManager));
+        }
 
         foreach ($this->nodesScheduledForCreate as $nodeToCreate) {
             $this->traverseRelationshipEntities($nodeToCreate);
@@ -255,6 +275,11 @@ class UnitOfWork
 
         foreach ($possiblyDeleted as $oid) {
             $this->entityStates[$oid] = self::STATE_DELETED;
+        }
+
+        //postFlush
+        if ($this->eventManager->hasListeners(Events::postFlush)) {
+            $this->eventManager->dispatchEvent(Events::postFlush, new Event\PostFlushEventArgs($this->entityManager));
         }
 
         $this->nodesScheduledForCreate
