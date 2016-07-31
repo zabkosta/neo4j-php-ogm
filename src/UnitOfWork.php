@@ -332,7 +332,7 @@ class UnitOfWork
                 }
             }
             $p1 = $meta->getValue($entityA);
-            $p2 = $meta->getValue($entityB);
+            $p2 = $meta->getValue($entityB); 
             if ($p1 !== $p2) {
                 $this->nodesScheduledForUpdate[spl_object_hash($entityA)] = $entityA;
             }
@@ -612,5 +612,69 @@ class UnitOfWork
         $p = $refl0->getProperty('id');
         $p->setAccessible(true);
         $p->setValue($this->nodesScheduledForCreate[$oid], $gid);
+    }
+
+    /**
+     * @return array
+     */
+    public function getNodesScheduledForCreate()
+    {
+        return $this->nodesScheduledForCreate;
+    }
+
+    /**
+     * @return array
+     */
+    public function getNodesScheduledForUpdate()
+    {
+        return $this->nodesScheduledForUpdate;
+    }
+
+    /**
+     * @return array
+     */
+    public function getNodesScheduledForDelete()
+    {
+        return $this->nodesScheduledForDelete;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelationshipsScheduledForCreated()
+    {
+        return $this->relationshipsScheduledForCreated;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelationshipsScheduledForDelete()
+    {
+        return $this->relationshipsScheduledForDelete;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelEntitiesScheduledForCreate()
+    {
+        return $this->relEntitiesScheduledForCreate;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelEntitesScheduledForUpdate()
+    {
+        return $this->relEntitesScheduledForUpdate;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelEntitesScheduledForDelete()
+    {
+        return $this->relEntitesScheduledForDelete;
     }
 }
