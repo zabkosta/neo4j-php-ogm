@@ -11,6 +11,7 @@
 
 namespace GraphAware\Neo4j\OGM;
 
+use Doctrine\Common\EventManager;
 use Doctrine\Common\Persistence\ObjectManager;
 use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\OGM\Mapping\AnnotationDriver;
@@ -54,14 +55,26 @@ class EntityManager implements ObjectManager
      */
     protected $metadataFactory;
 
-    public static function create($host, $cacheDir = null)
+    /**
+     * @var EventManager
+     */
+    protected $eventManager;
+
+    /**
+     * @param string $host
+     * @param string|null $cacheDir
+     * @param EventManager|null $eventManager
+     *
+     * @return EntityManager
+     */
+    public static function create($host, $cacheDir = null, EventManager $eventManager = null)
     {
         $cache = $cacheDir ?: sys_get_temp_dir();
         $client = ClientBuilder::create()
             ->addConnection('default', $host)
             ->build();
 
-        return new self($client, $cache);
+        return new self($client, $cache, $eventManager);
     }
 
     /**
@@ -78,9 +91,10 @@ class EntityManager implements ObjectManager
         return new self($client);
     }
 
-    public function __construct(Client $databaseDriver, $cacheDirectory = null)
+    public function __construct(Client $databaseDriver, $cacheDirectory = null, EventManager $eventManager = null)
     {
         $this->annotationDriver = new AnnotationDriver($cacheDirectory);
+        $this->eventManager = $eventManager ?: new EventManager();
         $this->uow = new UnitOfWork($this);
         $this->databaseDriver = $databaseDriver;
         $this->metadataFactory = new GraphEntityMetadataFactory($this->annotationDriver->getReader());
@@ -156,6 +170,14 @@ class EntityManager implements ObjectManager
     {
         /** @todo */
         return true;
+    }
+
+    /**
+     * @return EventManager
+     */
+    public function getEventManager()
+    {
+        return $this->eventManager;
     }
 
 

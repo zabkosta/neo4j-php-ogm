@@ -20,7 +20,15 @@ class UnitOfWork
 
     const STATE_DELETED = 'STATE_DELETED';
 
+    /**
+     * @var EntityManager
+     */
     protected $entityManager;
+
+    /**
+     * @var \Doctrine\Common\EventManager
+     */
+    protected $eventManager;
 
     protected $flushOperationProcessor;
 
@@ -79,6 +87,7 @@ class UnitOfWork
     public function __construct(EntityManager $manager)
     {
         $this->entityManager = $manager;
+        $this->eventManager = $manager->getEventManager();
         $this->relationshipPersister = new RelationshipPersister();
         $this->flushOperationProcessor = new FlushOperationProcessor($this->entityManager);
     }
@@ -159,10 +168,21 @@ class UnitOfWork
 
     public function flush()
     {
+        //preFlush
+        if ($this->eventManager->hasListeners(Events::PRE_FLUSH)) {
+            $this->eventManager->dispatchEvent(Events::PRE_FLUSH, new Event\PreFlushEventArgs($this->entityManager));
+        }
+        
+        //Detect changes
         $this->detectRelationshipReferenceChanges();
         $this->detectRelationshipEntityChanges();
         $this->detectEntityChanges();
         $statements = [];
+        
+        //onFlush
+        if ($this->eventManager->hasListeners(Events::ON_FLUSH)) {
+            $this->eventManager->dispatchEvent(Events::ON_FLUSH, new Event\OnFlushEventArgs($this->entityManager));
+        }
 
         foreach ($this->nodesScheduledForCreate as $nodeToCreate) {
             $this->traverseRelationshipEntities($nodeToCreate);
@@ -257,6 +277,11 @@ class UnitOfWork
             $this->entityStates[$oid] = self::STATE_DELETED;
         }
 
+        //postFlush
+        if ($this->eventManager->hasListeners(Events::POST_FLUSH)) {
+            $this->eventManager->dispatchEvent(Events::POST_FLUSH, new Event\PostFlushEventArgs($this->entityManager));
+        }
+
         $this->nodesScheduledForCreate
             = $this->nodesScheduledForUpdate
             = $this->nodesScheduledForDelete
@@ -275,7 +300,7 @@ class UnitOfWork
         $this->entityStateReferences[$id] = clone $entity;
     }
 
-    private function detectEntityChanges()
+    public function detectEntityChanges()
     {
         $managed = [];
         foreach ($this->entityStates as $oid => $state) {
@@ -307,7 +332,7 @@ class UnitOfWork
                 }
             }
             $p1 = $meta->getValue($entityA);
-            $p2 = $meta->getValue($entityB);
+            $p2 = $meta->getValue($entityB); 
             if ($p1 !== $p2) {
                 $this->nodesScheduledForUpdate[spl_object_hash($entityA)] = $entityA;
             }
@@ -328,7 +353,7 @@ class UnitOfWork
         //print_r($this->managedRelationshipReferences);
     }
 
-    private function detectRelationshipEntityChanges()
+    public function detectRelationshipEntityChanges()
     {
         $managed = [];
         foreach ($this->relationshipEntityStates as $oid => $state) {
@@ -399,7 +424,7 @@ class UnitOfWork
         }
     }
 
-    private function detectRelationshipReferenceChanges()
+    public function detectRelationshipReferenceChanges()
     {
         foreach ($this->managedRelationshipReferences as $oid => $reference) {
             $entity = $this->entitiesById[$this->entityIds[$oid]];
@@ -589,5 +614,85 @@ class UnitOfWork
         $p = $refl0->getProperty('id');
         $p->setAccessible(true);
         $p->setValue($this->nodesScheduledForCreate[$oid], $gid);
+    }
+
+    /**
+     * @return array
+     */
+    public function getNodesScheduledForCreate()
+    {
+        return $this->nodesScheduledForCreate;
+    }
+
+    /**
+     * @return array
+     */
+    public function getNodesScheduledForUpdate()
+    {
+        return $this->nodesScheduledForUpdate;
+    }
+
+    /**
+     * @return array
+     */
+    public function getNodesScheduledForDelete()
+    {
+        return $this->nodesScheduledForDelete;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelationshipsScheduledForCreated()
+    {
+        return $this->relationshipsScheduledForCreated;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelationshipsScheduledForDelete()
+    {
+        return $this->relationshipsScheduledForDelete;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelEntitiesScheduledForCreate()
+    {
+        return $this->relEntitiesScheduledForCreate;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelEntitesScheduledForUpdate()
+    {
+        return $this->relEntitesScheduledForUpdate;
+    }
+
+    /**
+     * @return array
+     */
+    public function getRelEntitesScheduledForDelete()
+    {
+        return $this->relEntitesScheduledForDelete;
+    }
+
+    /**
+     * Get the original state of an entity when it was loaded from the database.
+     *
+     * @param int $id
+     *
+     * @return object|null
+     */
+    public function getOriginalEntityState($id)
+    {
+        if (isset($this->entityStateReferences[$id])) {
+            return $this->entityStateReferences[$id];
+        }
+
+        return null;
     }
 }
