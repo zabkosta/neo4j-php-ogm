@@ -21,7 +21,7 @@ final class Events
 	{
 	}
 
-	const preFlush = 'preFlush';
-	const onFlush = 'onFlush';
-	const postFlush = 'postFlush';
+	const PRE_FLUSH = 'preFlush';
+	const ON_FLUSH = 'onFlush';
+	const POST_FLUSH = 'postFlush';
 }

@@ -169,8 +169,8 @@ class UnitOfWork
     public function flush()
     {
         //preFlush
-        if ($this->eventManager->hasListeners(Events::preFlush)) {
-            $this->eventManager->dispatchEvent(Events::preFlush, new Event\PreFlushEventArgs($this->entityManager));
+        if ($this->eventManager->hasListeners(Events::PRE_FLUSH)) {
+            $this->eventManager->dispatchEvent(Events::PRE_FLUSH, new Event\PreFlushEventArgs($this->entityManager));
         }
         
         //Detect changes
@@ -180,8 +180,8 @@ class UnitOfWork
         $statements = [];
         
         //onFlush
-        if ($this->eventManager->hasListeners(Events::onFlush)) {
-            $this->eventManager->dispatchEvent(Events::onFlush, new Event\OnFlushEventArgs($this->entityManager));
+        if ($this->eventManager->hasListeners(Events::ON_FLUSH)) {
+            $this->eventManager->dispatchEvent(Events::ON_FLUSH, new Event\OnFlushEventArgs($this->entityManager));
         }
 
         foreach ($this->nodesScheduledForCreate as $nodeToCreate) {
@@ -278,8 +278,8 @@ class UnitOfWork
         }
 
         //postFlush
-        if ($this->eventManager->hasListeners(Events::postFlush)) {
-            $this->eventManager->dispatchEvent(Events::postFlush, new Event\PostFlushEventArgs($this->entityManager));
+        if ($this->eventManager->hasListeners(Events::POST_FLUSH)) {
+            $this->eventManager->dispatchEvent(Events::POST_FLUSH, new Event\PostFlushEventArgs($this->entityManager));
         }
 
         $this->nodesScheduledForCreate
