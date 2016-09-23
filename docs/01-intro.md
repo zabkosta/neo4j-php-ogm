@@ -64,7 +64,7 @@ class Person
     protected $name;
 
     /**
-     * @OGM\Property(type="born")
+     * @OGM\Property(type="int")
      * @var int
      */
     protected $born;
