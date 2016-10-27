@@ -1,17 +1,25 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Integration;
 
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Company;
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Tweeto;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 
 /**
- * Class RelationshipIntegrationTest
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class RelationshipIntegrationTest.
  *
  * @group rel-it
  */
@@ -175,15 +183,14 @@ class RelationshipIntegrationTest extends IntegrationTestCase
     }
 
     /**
-     *
      * @group rels-type-multiple-single
      */
     public function testMultipleRelTypesWithSameNameNonCollection()
     {
         $this->clearDb();
-        $tw1 = new Tweeto("tw1");
-        $tw2 = new Tweeto("tw2");
-        $tw3 = new Tweeto("tw3");
+        $tw1 = new Tweeto('tw1');
+        $tw2 = new Tweeto('tw2');
+        $tw3 = new Tweeto('tw3');
         $tw2->setFollowed($tw1);
         $tw2->setFollows($tw3);
         $this->em->persist($tw2);
@@ -240,7 +247,7 @@ class RelationshipIntegrationTest extends IntegrationTestCase
 
         $companyRep = $this->em->getRepository(Company::class);
 
-        $getLogins = function(&$value, $key) {
+        $getLogins = function (&$value, $key) {
             $value = $value->getLogin();
         };
 
@@ -287,9 +294,9 @@ class RelationshipIntegrationTest extends IntegrationTestCase
     public function testHydratedNonCollectionRelationshipsManaged()
     {
         $this->clearDb();
-        $tw1 = new Tweeto("tw1");
-        $tw2 = new Tweeto("tw2");
-        $tw3 = new Tweeto("tw3");
+        $tw1 = new Tweeto('tw1');
+        $tw2 = new Tweeto('tw2');
+        $tw3 = new Tweeto('tw3');
         $tw1->setFollows($tw2);
         $this->em->persist($tw1);
         $this->em->persist($tw3);

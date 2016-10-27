@@ -1,11 +1,20 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration\Model;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Integration\Model;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
- * Class Player
+ * Class Player.
  *
  * @OGM\Node(label="Player")
  */
@@ -67,7 +76,7 @@ class Player
             throw new \InvalidArgumentException('You must remove the current membership before adding a new one');
         }
 
-        $dt = new \DateTime("NOW", new \DateTimeZone("UTC"));
+        $dt = new \DateTime('NOW', new \DateTimeZone('UTC'));
         $time = $dt->getTimestamp();
 
         $membership = new PlaysInTeam($this, $team, $time);

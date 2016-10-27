@@ -1,20 +1,27 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Metadata;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Metadata;
 
 use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Annotations\FileCacheReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
+use Doctrine\Common\Annotations\FileCacheReader;
+use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactory;
 use GraphAware\Neo4j\OGM\Metadata\GraphEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
-use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
-use GraphAware\Neo4j\OGM\Common\Collection;
 
 /**
- * Class MetadataFactoryITest
- * @package GraphAware\Neo4j\OGM\Tests\Metadata
+ * Class MetadataFactoryITest.
  *
  * @group metadata-factory-it
  */
@@ -30,7 +37,7 @@ class MetadataFactoryITest extends \PHPUnit_Framework_TestCase
     public function setUp()
     {
         parent::setUp();
-        $mappingDir = getenv('basedir') . DIRECTORY_SEPARATOR . 'src/Mapping/';
+        $mappingDir = getenv('basedir').DIRECTORY_SEPARATOR.'src/Mapping/';
         AnnotationRegistry::registerFile($mappingDir.'/Neo4jOGMAnnotations.php');
         $this->annotationReader = new FileCacheReader(
             new AnnotationReader(),
@@ -65,6 +72,4 @@ class MetadataFactoryITest extends \PHPUnit_Framework_TestCase
         $entityMetadata->getPropertyMetadata('name')->setValue($o, 'John');
         $this->assertEquals('John', $o->getName());
     }
-
-
 }

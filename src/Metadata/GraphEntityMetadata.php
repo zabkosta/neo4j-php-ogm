@@ -85,7 +85,7 @@ abstract class GraphEntityMetadata implements ClassMetadata
     {
         $fields = [];
         $fields[] = $this->entityIdMetadata->getPropertyName();
-        foreach ( $this->entityPropertiesMetadata as $entityPropertyMetadata ) {
+        foreach ($this->entityPropertiesMetadata as $entityPropertyMetadata) {
             $fields[] = $entityPropertyMetadata->getPropertyName();
         }
 
@@ -107,7 +107,6 @@ abstract class GraphEntityMetadata implements ClassMetadata
     {
         return [$this->getIdValue($object)];
     }
-
 
     /**
      * @return string
@@ -176,6 +175,7 @@ abstract class GraphEntityMetadata implements ClassMetadata
 
     /**
      * @param object $object
+     *
      * @return array
      */
     public function getPropertyValuesArray($object)

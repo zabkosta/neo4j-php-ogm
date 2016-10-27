@@ -1,6 +1,15 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGm\tests\Integration;
 
 use GraphAware\Neo4j\OGM\EntityManager;
 
@@ -50,7 +59,7 @@ class IntegrationTestCase extends \PHPUnit_Framework_TestCase
 
     protected function checkGraph($q)
     {
-        return $this->client->run('MATCH ' . $q . ' RETURN *');
+        return $this->client->run('MATCH '.$q.' RETURN *');
     }
 
     protected function playMovies()

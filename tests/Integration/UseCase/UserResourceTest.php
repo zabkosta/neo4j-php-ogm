@@ -1,6 +1,15 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration\UseCase;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Integration\UseCase;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Resource as ResourceModel;
@@ -24,7 +33,7 @@ class UserResourceTest extends IntegrationTestCase
         $this->em->persist($user);
         $this->em->persist($resource);
         $this->em->flush();
-        foreach (['water','sun','coat', 'stone'] as $res) {
+        foreach (['water', 'sun', 'coat', 'stone'] as $res) {
             $res2 = $this->em->getRepository(ResourceModel::class)->findOneBy('name', $res);
             $user->addResource($res2, 15);
         }
@@ -74,14 +83,11 @@ class UserResourceTest extends IntegrationTestCase
         $this->em->persist($resource);
         $this->em->flush();
 
-        foreach (['water','food','work', 'stone'] as $res) {
+        foreach (['water', 'food', 'work', 'stone'] as $res) {
             $res2 = $this->em->getRepository(ResourceModel::class)->findOneBy('name', $res);
             $user->addResource($res2, 15);
         }
         $this->em->flush();
-
-
-
 
         $this->assertGraphExist('(r:Resource {name:"wood"})<-[:HAS_RESOURCE]-(u:User {login:"test"})-[:HAS_ROLE]->(role:Role {name:"pageViews"})');
         $result = $this->client->run('MATCH (n:User {login:"test"}) RETURN size((n)-[:HAS_RESOURCE]->()) AS value');
@@ -138,7 +144,7 @@ class UserResourceTest extends IntegrationTestCase
     private function prepareDb()
     {
         $em = $this->em;
-        $em->getDatabaseDriver()->run("MATCH (n) DETACH DELETE n");
+        $em->getDatabaseDriver()->run('MATCH (n) DETACH DELETE n');
         $em->getDatabaseDriver()->run('CREATE (n:User {login:\'test\'})-[:HAS_ROLE]->(:Role {name:"pageViews"})');
         $em->getDatabaseDriver()->run("CREATE (r:SecurityRole{roleType:\"ROLE_USER\"})
 

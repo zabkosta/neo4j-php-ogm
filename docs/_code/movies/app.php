@@ -3,9 +3,10 @@
 require_once __DIR__.'/../../../vendor/autoload.php';
 
 use GraphAware\Neo4j\OGM\EntityManager;
+use Movies\Movie;
 use Movies\Person;
 use Movies\User;
-use Movies\Movie;
+
 // Entity manager setup
 $em = EntityManager::create('http://localhost:7676');
 playMovies($em->getDatabaseDriver());
@@ -19,7 +20,6 @@ $actor = new Person('Kevin Ross', 1976);
 $em->persist($actor);
 $em->flush();
 
-
 // Managing after load
 $tomHanks->setBorn(1990);
 $em->flush();
@@ -29,13 +29,13 @@ $em->clear();
 
 // Relationships retrieval
 $tomHanks = $em->getRepository(Person::class)->findOneBy('name', 'Tom Hanks');
-echo sprintf('Tom Hanks played in %d movies', count($tomHanks->getMovies())) . PHP_EOL;
+echo sprintf('Tom Hanks played in %d movies', count($tomHanks->getMovies())).PHP_EOL;
 
 /** @var Movie $movie */
 foreach ($tomHanks->getMovies() as $movie) {
-    echo $movie->getTitle() . PHP_EOL;
+    echo $movie->getTitle().PHP_EOL;
 
-    echo count($movie->getActors()) . PHP_EOL;
+    echo count($movie->getActors()).PHP_EOL;
 }
 
 $em->clear();
@@ -45,7 +45,7 @@ $em->clear();
 // Find Tom Hanks, filter his movies to find Cast Away and rename it to Cast Away 2
 /** @var Person $tomHanks */
 $tomHanks = $em->getRepository(Person::class)->findOneBy('name', 'Tom Hanks');
-$filter = array_values(array_filter($tomHanks->getMovies()->toArray(), function(\Movies\Movie $movie) {
+$filter = array_values(array_filter($tomHanks->getMovies()->toArray(), function (\Movies\Movie $movie) {
     return 'Cast Away' === $movie->getTitle();
 }));
 
@@ -53,7 +53,6 @@ $filter = array_values(array_filter($tomHanks->getMovies()->toArray(), function(
 $castAway = $filter[0];
 $castAway->setTitle('Cast Away 2');
 $em->flush();
-
 
 // Create a User and a Rating for the movie "The Matrix"
 
@@ -64,7 +63,8 @@ $user->rateMovie($movie, '4.5');
 $em->persist($user);
 $em->flush();
 
-function playMovies(\GraphAware\Neo4j\Client\Client $client) {
+function playMovies(\GraphAware\Neo4j\Client\Client $client)
+{
     $q = 'CREATE (TheMatrix:Movie {title:\'The Matrix\', released:1999, tagline:\'Welcome to the Real World\'})
 CREATE (Keanu:Person {name:\'Keanu Reeves\', born:1964})
 CREATE (Carrie:Person {name:\'Carrie-Anne Moss\', born:1967})

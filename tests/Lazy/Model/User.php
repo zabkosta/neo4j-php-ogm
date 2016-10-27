@@ -1,13 +1,21 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Lazy\Model;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Lazy\Model;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
 
 /**
- * Class User
- * @package GraphAware\Neo4j\OGM\Tests\Lazy\Model
+ * Class User.
  *
  * @OGM\Node(label="User")
  */
@@ -15,6 +23,7 @@ class User
 {
     /**
      * @OGM\GraphId()
+     *
      * @var int
      */
     private $id;
@@ -43,8 +52,8 @@ class User
     public function getResource($name)
     {
         /** @var MetaResource $resource */
-        foreach($this->resources as $resource){
-            if($resource->getResourceType() == $name){
+        foreach ($this->resources as $resource) {
+            if ($resource->getResourceType() === $name) {
                 return $resource;
                 break;
             }

@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Finder;
 
 use GraphAware\Common\Cypher\Statement;
@@ -69,7 +78,7 @@ class RelationshipsFinder
         MATCH (start)'.$relationshipPattern.'(end)';
 
         if ($this->relationshipMetadata->hasOrderBy()) {
-            $query .= ' WITH end ORDER BY end.' . $this->relationshipMetadata->getOrderByPropery() . ' ' . $this->relationshipMetadata->getOrder();
+            $query .= ' WITH end ORDER BY end.'.$this->relationshipMetadata->getOrderByPropery().' '.$this->relationshipMetadata->getOrder();
         }
 
         $query .= ' RETURN end';
@@ -78,5 +87,4 @@ class RelationshipsFinder
 
         return Statement::create($query, ['id' => $fromId]);
     }
-
 }

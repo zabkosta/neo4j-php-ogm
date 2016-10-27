@@ -1,6 +1,15 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration\NativeQuery;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Integration\NativeQuery;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Integration\NativeQuery\Model\NewsFeed;
@@ -37,11 +46,10 @@ class QueryResultMappingITTest extends IntegrationTestCase
     public function testNativeQueryResultWithAndOr()
     {
         $this->clearDb();
-        $user = new User("johndoe", "john@doe.com");
+        $user = new User('johndoe', 'john@doe.com');
         $this->em->persist($user);
         $this->em->flush();
         $this->em->clear();
-
     }
 
     private function createGraph()

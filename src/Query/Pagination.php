@@ -1,12 +1,21 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Query;
 
 class Pagination
 {
-    const KEY_FIRST = "first";
-    const KEY_MAX = "max";
-    const KEY_ORDER_BY = "order";
+    const KEY_FIRST = 'first';
+    const KEY_MAX = 'max';
+    const KEY_ORDER_BY = 'order';
 
     protected $first;
 
@@ -48,12 +57,8 @@ class Pagination
         return $this->max;
     }
 
-    /**
-     * @return null
-     */
     public function getOrderBy()
     {
         return $this->orderBy;
     }
-
 }

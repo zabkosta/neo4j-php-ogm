@@ -9,7 +9,6 @@
  * file that was distributed with this source code.
  */
 
-
 namespace GraphAware\Neo4j\OGM\Persister;
 
 use GraphAware\Neo4j\Client\Stack;
@@ -18,7 +17,7 @@ use GraphAware\Neo4j\OGM\Metadata\LabeledPropertyMetadata;
 
 class FlushOperationProcessor
 {
-    const TAG_NODES_CREATE = "ogm_uow_nodes_create";
+    const TAG_NODES_CREATE = 'ogm_uow_nodes_create';
 
     private $em;
 
@@ -43,7 +42,6 @@ class FlushOperationProcessor
         $stack = Stack::create(self::TAG_NODES_CREATE);
         $statements = [];
         foreach ($byLabelsMap as $label => $entities) {
-
             foreach ($entities as $entity) {
                 $query = sprintf('UNWIND {nodes} as node
                 CREATE (n:`%s`) SET n += node.props', $label);
@@ -62,7 +60,7 @@ class FlushOperationProcessor
                 $statements[$lblKey]['query'] = $query;
                 $statements[$lblKey]['nodes'][] = [
                     'props' => $metadata->getPropertyValuesArray($entity),
-                    'oid' => $oid
+                    'oid' => $oid,
                 ];
             }
         }

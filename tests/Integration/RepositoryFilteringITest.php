@@ -1,17 +1,25 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Integration;
 
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 
 /**
- * Class RepositoryITest
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class RepositoryITest.
  *
  * @group filter
  */
-class RepositoryITest extends IntegrationTestCase
+class RepositoryFilteringITest extends IntegrationTestCase
 {
     public function setUp()
     {
@@ -21,7 +29,7 @@ class RepositoryITest extends IntegrationTestCase
 
     public function testLimitCanBeAddedToFindAll()
     {
-        for ($i=1; $i <= 10; ++$i) {
+        for ($i = 1; $i <= 10; ++$i) {
             $user = new User(sprintf('login%d', $i));
             $this->em->persist($user);
         }
@@ -41,7 +49,7 @@ class RepositoryITest extends IntegrationTestCase
      */
     public function testOrderFilterCanBeAddedToFindAll()
     {
-        for ($i = 1; $i<= 9; ++$i ) {
+        for ($i = 1; $i <= 9; ++$i) {
             $user = new User(sprintf('login%d', $i));
             $this->em->persist($user);
         }
@@ -50,7 +58,7 @@ class RepositoryITest extends IntegrationTestCase
 
         $users = $this->em->getRepository(User::class)->findAll(['order' => ['login' => BaseRepository::ORDER_ASC]]);
         for ($i = 1; $i <= 9; ++$i) {
-            $this->assertEquals(sprintf('login%d', $i), $users[$i-1]->getLogin());
+            $this->assertEquals(sprintf('login%d', $i), $users[$i - 1]->getLogin());
         }
     }
 }

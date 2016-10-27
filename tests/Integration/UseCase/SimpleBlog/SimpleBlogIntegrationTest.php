@@ -1,6 +1,15 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration\UseCase\SimpleBlog;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Integration\UseCase\SimpleBlog;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Integration\UseCase\SimpleBlog\Model\SimpleBlogPost;
@@ -32,7 +41,7 @@ class SimpleBlogIntegrationTest extends IntegrationTestCase
         $this->init();
         /** @var SimpleBlogPost $post */
         $post = $this->em->getRepository(SimpleBlogPost::class)->findOneBy('title', 'New Blog Post');
-        $this->assertEquals("john", $post->getPublication()->getUser()->getName());
+        $this->assertEquals('john', $post->getPublication()->getUser()->getName());
     }
 
     private function init()

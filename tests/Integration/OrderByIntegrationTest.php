@@ -1,9 +1,17 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\City;
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\Company;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Player;
@@ -12,8 +20,7 @@ use GraphAware\Neo4j\OGM\Tests\Integration\Model\Team;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 
 /**
- * Class OrderByIntegrationTest
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class OrderByIntegrationTest.
  *
  * @group order-by-rel
  */
@@ -81,7 +88,6 @@ class OrderByIntegrationTest extends IntegrationTestCase
             $this->assertEquals('Michal', $players[3]->getName());
             $this->assertEquals('Alessandro', $players[1]->getName());
         }
-
     }
 
     /**
@@ -114,7 +120,6 @@ class OrderByIntegrationTest extends IntegrationTestCase
     }
 
     /**
-     *
      * @group order-re-prop
      */
     public function testOrderByOnRelationshipEntityProperties()
@@ -187,6 +192,5 @@ class OrderByIntegrationTest extends IntegrationTestCase
         $this->assertEquals(456789, $city->getHabitants()[2]->getSince());
         $this->assertEquals(456790, $city->getHabitants()[1]->getSince());
         $this->assertEquals(456791, $city->getHabitants()[0]->getSince());
-
     }
 }

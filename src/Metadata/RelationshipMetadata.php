@@ -55,7 +55,7 @@ final class RelationshipMetadata
      * @param string                                         $className
      * @param \ReflectionProperty                            $reflectionProperty
      * @param \GraphAware\Neo4j\OGM\Annotations\Relationship $relationshipAnnotation
-     * @param bool $isLazy
+     * @param bool                                           $isLazy
      */
     public function __construct($className, \ReflectionProperty $reflectionProperty, Relationship $relationshipAnnotation, $isLazy = false, OrderBy $orderBy = null)
     {
@@ -66,7 +66,7 @@ final class RelationshipMetadata
         $this->isLazy = $isLazy;
         $this->orderBy = $orderBy;
         if (null !== $orderBy) {
-            if (!in_array($orderBy->order, ['ASC','DESC'])) {
+            if (!in_array($orderBy->order, ['ASC', 'DESC'], true)) {
                 throw new MappingException(sprintf('The order "%s" is not valid', $orderBy->order));
             }
         }
@@ -203,6 +203,7 @@ final class RelationshipMetadata
 
         if (null === $this->getValue($object)) {
             $this->setValue($object, new Collection());
+
             return;
         }
 

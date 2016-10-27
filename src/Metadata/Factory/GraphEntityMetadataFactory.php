@@ -13,17 +13,17 @@ namespace GraphAware\Neo4j\OGM\Metadata\Factory;
 
 use Doctrine\Common\Annotations\Reader;
 use GraphAware\Neo4j\OGM\Annotations\Label;
+use GraphAware\Neo4j\OGM\Annotations\Lazy;
 use GraphAware\Neo4j\OGM\Annotations\Node;
 use GraphAware\Neo4j\OGM\Annotations\OrderBy;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
-use GraphAware\Neo4j\OGM\Annotations\Lazy;
+use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
 use GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\LabeledPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
-use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
 use SebastianBergmann\CodeCoverage\Report\PHP;
 
 class GraphEntityMetadataFactory

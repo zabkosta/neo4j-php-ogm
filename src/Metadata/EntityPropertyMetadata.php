@@ -63,8 +63,6 @@ class EntityPropertyMetadata
         return $this->reflectionProperty;
     }
 
-
-
     /**
      * @param object $object
      * @param mixed  $value
@@ -87,9 +85,6 @@ class EntityPropertyMetadata
         return $this->reflectionProperty->getValue($object);
     }
 
-    /**
-     *
-     */
     private function checkAccess()
     {
         if (!$this->isAccessible) {

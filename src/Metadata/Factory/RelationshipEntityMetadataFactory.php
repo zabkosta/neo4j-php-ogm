@@ -12,11 +12,11 @@
 namespace GraphAware\Neo4j\OGM\Metadata\Factory;
 
 use Doctrine\Common\Annotations\Reader;
-use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
+use GraphAware\Neo4j\OGM\Annotations\EndNode;
 use GraphAware\Neo4j\OGM\Annotations\GraphId;
 use GraphAware\Neo4j\OGM\Annotations\Property;
+use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
 use GraphAware\Neo4j\OGM\Annotations\StartNode;
-use GraphAware\Neo4j\OGM\Annotations\EndNode;
 use GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\IdAnnotationMetadata;

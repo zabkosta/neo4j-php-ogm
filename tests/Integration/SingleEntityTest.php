@@ -1,15 +1,23 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
+namespace GraphAware\Neo4j\OGM\tests\Integration;
+
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\AuthUser;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\AuthUser;
 use LogicException;
 
 /**
- * Class SingleEntityTest
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class SingleEntityTest.
  *
  * @group single-entity
  */
@@ -32,9 +40,9 @@ class SingleEntityTest extends IntegrationTestCase
 
         $this->assertCount(1, $result->records());
         $record = $result->records()[0];
-        $userNode = $record->value("n");
-        $this->assertEquals("neo", $userNode->value("login"));
-        $this->assertEquals(33, $userNode->value("age"));
+        $userNode = $record->value('n');
+        $this->assertEquals('neo', $userNode->value('login'));
+        $this->assertEquals(33, $userNode->value('age'));
         $this->assertCount(1, $userNode->labels());
     }
 

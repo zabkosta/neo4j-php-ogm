@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Finder;
 
 use GraphAware\Common\Cypher\Statement;
@@ -24,11 +33,11 @@ class RelationshipEntityFinder extends RelationshipsFinder
         $endNodeMetadata = $this->em->getClassMetadataFor($this->relationshipEntityMetadata->getEndNode());
 
         $repo = $this->em->getRepository(get_class($this->baseInstance));
-        $identifier = 'rel_' . $this->relationshipMetadata->getPropertyName() . '_' . $this->relationshipEntityMetadata->getType();
+        $identifier = 'rel_'.$this->relationshipMetadata->getPropertyName().'_'.$this->relationshipEntityMetadata->getType();
         $instances = [];
 
         foreach ($result->records() as $record) {
-            foreach ( $record->get($identifier) as $i) {
+            foreach ($record->get($identifier) as $i) {
                 $instance = $repo->hydrateRelationshipEntity($this->relationshipEntityMetadata, $i, $startNodeMetadata, $endNodeMetadata, $this->baseInstance, $this->relationshipMetadata, $this->baseInstance->getId());
                 $instances[] = $instance;
             }
@@ -37,11 +46,10 @@ class RelationshipEntityFinder extends RelationshipsFinder
         return $instances;
     }
 
-
     public function buildStatement($fromId, $direction, $type, $identifier)
     {
         $type = $this->relationshipEntityMetadata->getType();
-        $identifier = 'rel_' . $this->relationshipMetadata->getPropertyName() . '_' . $this->relationshipEntityMetadata->getType();
+        $identifier = 'rel_'.$this->relationshipMetadata->getPropertyName().'_'.$this->relationshipEntityMetadata->getType();
 
         switch ($direction) {
             case 'INCOMING':
@@ -70,21 +78,20 @@ class RelationshipEntityFinder extends RelationshipsFinder
                 $reName = $split[0];
                 $v = $split[1];
                 if ($reMetadata->getStartNodePropertyName() === $reName || $reMetadata->getEndNodePropertyName() === $reName) {
-                    $orderProperty = $this->relationshipMetadata->getPropertyName() . '.' . $v;
+                    $orderProperty = $this->relationshipMetadata->getPropertyName().'.'.$v;
                 }
             } else {
                 if (null !== $reMetadata->getPropertyMetadata($this->relationshipMetadata->getOrderByPropery())) {
-                    $orderProperty = $identifier . '.' . $this->relationshipMetadata->getOrderByPropery();
+                    $orderProperty = $identifier.'.'.$this->relationshipMetadata->getOrderByPropery();
                 }
             }
-            $query .= ' WITH end, ' . $identifier . ' ORDER BY ' . $orderProperty . ' ' . $this->relationshipMetadata->getOrder();
+            $query .= ' WITH end, '.$identifier.' ORDER BY '.$orderProperty.' '.$this->relationshipMetadata->getOrder();
         }
 
-        $query .= ' RETURN CASE count('.$identifier.') WHEN 0 THEN [] ELSE collect({start:startNode('.$identifier.'), end:endNode('.$identifier.'), rel:'.$identifier.'}) END AS ' . $identifier;
+        $query .= ' RETURN CASE count('.$identifier.') WHEN 0 THEN [] ELSE collect({start:startNode('.$identifier.'), end:endNode('.$identifier.'), rel:'.$identifier.'}) END AS '.$identifier;
 
         //print_r($query);
 
         return Statement::create($query, ['id' => $fromId]);
     }
-
 }

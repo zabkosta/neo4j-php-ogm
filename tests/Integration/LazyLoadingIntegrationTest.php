@@ -1,14 +1,23 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
+namespace GraphAware\Neo4j\OGm\tests\Integration;
+
+use GraphAware\Neo4j\OGM\Lazy\LazyRelationshipCollection;
+use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Company;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
-use GraphAware\Neo4j\OGM\Lazy\LazyRelationshipCollection;
 
 /**
- * Class LazyLoadingIntegrationTest
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class LazyLoadingIntegrationTest.
  *
  * @group lazy-it
  */
@@ -59,7 +68,7 @@ class LazyLoadingIntegrationTest extends IntegrationTestCase
 
     private function init()
     {
-        $company = new Company("Acme");
+        $company = new Company('Acme');
         for ($i = 0; $i < 10; ++$i) {
             $u = new User('DummyUser'.$i);
             $u->setCurrentCompany($company);
@@ -75,6 +84,5 @@ class LazyLoadingIntegrationTest extends IntegrationTestCase
         }
         $this->em->persist($company);
         $this->em->flush();
-
     }
 }

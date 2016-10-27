@@ -38,7 +38,5 @@ class IdAnnotationMetadataFactory
                 return new IdAnnotationMetadata();
             }
         }
-
-        return;
     }
 }

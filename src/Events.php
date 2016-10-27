@@ -11,17 +11,16 @@
 
 namespace GraphAware\Neo4j\OGM;
 
-
 final class Events
 {
-	/**
-	 * Prevent class from being instantiated.
-	 */
-	private function __construct()
-	{
-	}
+    /**
+     * Prevent class from being instantiated.
+     */
+    private function __construct()
+    {
+    }
 
-	const PRE_FLUSH = 'preFlush';
-	const ON_FLUSH = 'onFlush';
-	const POST_FLUSH = 'postFlush';
+    const PRE_FLUSH = 'preFlush';
+    const ON_FLUSH = 'onFlush';
+    const POST_FLUSH = 'postFlush';
 }
