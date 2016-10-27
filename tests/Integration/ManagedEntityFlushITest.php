@@ -1,12 +1,20 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 
 /**
- * Class ManagedEntityFlushITest
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class ManagedEntityFlushITest.
  *
  * @group manage-flush
  */

@@ -385,7 +385,7 @@ class Person
 
 Let's explain the annotation parameters :
 
-```
+```php
     /**
      * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Movie", collection=true)
      * @var ArrayCollection|Movie[]
@@ -401,7 +401,7 @@ Let's explain the annotation parameters :
 Note : `targetEntity` takes the **fully qualified class name** as argument, you can pass only the classname if both of the
 entities lives in the same namespace.
 
-Simply with this annotation, the nodes connected by an outgoing ACTED_IN relationship to this entity will be returned, let's
+Simply with this annotation, the nodes connected by an outgoing `ACTED_IN` relationship to this entity will be returned, let's
 take Tom Hanks again and all his movies :
 
 ```php
@@ -802,5 +802,3 @@ class Movie
 ```
 
 This will order players based on their name property.
-
-

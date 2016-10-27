@@ -96,11 +96,12 @@ final class NodeEntityMetadata extends GraphEntityMetadata
 
     /**
      * @param $object
+     *
      * @return LabeledPropertyMetadata[]
      */
     public function getLabeledPropertiesToBeSet($object)
     {
-        return array_filter($this->getLabeledProperties(), function(LabeledPropertyMetadata $labeledPropertyMetadata) use ($object) {
+        return array_filter($this->getLabeledProperties(), function (LabeledPropertyMetadata $labeledPropertyMetadata) use ($object) {
             return true === $labeledPropertyMetadata->getValue($object);
         });
     }
@@ -134,9 +135,8 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     }
 
     /**
-     *
      * Returns non-lazy relationships.
-     * Note that currently relationships that are not of type "collection" are considered non-lazy
+     * Note that currently relationships that are not of type "collection" are considered non-lazy.
      *
      * @return RelationshipMetadata[]
      */
@@ -296,6 +296,4 @@ final class NodeEntityMetadata extends GraphEntityMetadata
 
         return null;
     }
-
-
 }

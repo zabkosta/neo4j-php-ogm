@@ -1,6 +1,15 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration\Model;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Integration\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
@@ -30,6 +39,7 @@ class User
     /**
      * @OGM\Relationship(targetEntity="User", type="FOLLOWS", direction="OUTGOING", collection=true)
      * @OGM\Lazy()
+     *
      * @var User[]
      */
     protected $friends;
@@ -54,6 +64,7 @@ class User
 
     /**
      * @OGM\Label(name="Active")
+     *
      * @var bool
      */
     protected $isActive;
@@ -274,19 +285,19 @@ class User
     /** @see \Serializable::serialize() */
     public function serialize()
     {
-        return serialize(array(
+        return serialize([
             $this->id,
             $this->login,
             $this->age,
             // see section on salt below
             // $this->salt,
-        ));
+        ]);
     }
 
     /** @see \Serializable::unserialize() */
     public function unserialize($serialized)
     {
-        list (
+        list(
             $this->id,
             $this->login,
             $this->age,

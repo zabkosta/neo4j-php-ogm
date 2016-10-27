@@ -1,19 +1,27 @@
 <?php
 
-namespace GraphAware\Neo4j\Client\Tests\Integration;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\Client\tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Player;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Role;
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\ScoreRel;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Score;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\ScoreRel;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Team;
 
 /**
- * Class RelationshipEntityITest
- * @package GraphAware\Neo4j\Client\Tests\Integration
+ * Class RelationshipEntityITest.
  *
  * @group rel-entity
  */
@@ -26,7 +34,6 @@ class RelationshipEntityITest extends IntegrationTestCase
     }
 
     /**
-     *
      * @group rel-entity-fetch
      */
     public function testRelationshipEntitesAreRetrieved()
@@ -45,7 +52,7 @@ class RelationshipEntityITest extends IntegrationTestCase
     {
         $tom = $this->getPerson('Tom Hanks');
         foreach ($tom->getRoles() as $role) {
-            $role->setRoles(array('Super Tom'));
+            $role->setRoles(['Super Tom']);
         }
         $this->em->flush();
         $this->em->clear();
@@ -70,7 +77,7 @@ class RelationshipEntityITest extends IntegrationTestCase
         $this->em->flush();
         $this->em->clear();
         $tom = $this->getPerson('Tom Hanks');
-        $this->assertEquals($c-1, count($tom->getRoles()));
+        $this->assertEquals($c - 1, count($tom->getRoles()));
     }
 
     /**
@@ -171,7 +178,7 @@ class RelationshipEntityITest extends IntegrationTestCase
         $player->addToTeam($team);
         $this->em->persist($player);
         $this->em->flush();
-        $this->assertGraphExist('(n:Player {name:"joran"})-[:PLAYS_IN_TEAM {since:' . time() . '}]->(t:Team {name:"The Mavericks"})');
+        $this->assertGraphExist('(n:Player {name:"joran"})-[:PLAYS_IN_TEAM {since:'.time().'}]->(t:Team {name:"The Mavericks"})');
         $this->em->clear();
         $this->clearDb();
         $this->client->run('CREATE (n:Player {name:"joran"}), (t:Team {name:"The Mavericks"})');
@@ -190,8 +197,10 @@ class RelationshipEntityITest extends IntegrationTestCase
 
     /**
      * @param string $name
-     * @return Person
+     *
      * @throws \Exception
+     *
+     * @return Person
      */
     private function getPerson($name)
     {

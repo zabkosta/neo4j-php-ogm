@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM;
 
 use Doctrine\Common\Collections\AbstractLazyCollection;
@@ -94,7 +103,7 @@ class UnitOfWork
 
     public function persist($entity)
     {
-        $visited = array();
+        $visited = [];
 
         $this->doPersist($entity, $visited);
     }
@@ -153,13 +162,14 @@ class UnitOfWork
                 $aMeta = $this->entityManager->getClassMetadataFor(get_class($entityA));
                 $bMeta = $this->entityManager->getClassMetadataFor(get_class($entityB));
                 $type = $relationship->isRelationshipEntity() ? $this->entityManager->getRelationshipEntityMetadata($relationship->getRelationshipEntityClass())->getType() : $relationship->getType();
-                $hashStr = $aMeta->getIdValue($entityA) . $bMeta->getIdValue($entityB) . $type . $relationship->getDirection();
+                $hashStr = $aMeta->getIdValue($entityA).$bMeta->getIdValue($entityB).$type.$relationship->getDirection();
                 $hash = md5($hashStr);
                 if (!array_key_exists($hash, $this->relationshipsScheduledForCreated)) {
                     $this->relationshipsScheduledForCreated[] = [$entityA, $relationship, $e, $relationship->getPropertyName()];
                 }
                 $this->doPersist($e, $visited);
             }
+
             return;
         }
         $this->doPersist($entityB, $visited);
@@ -172,13 +182,13 @@ class UnitOfWork
         if ($this->eventManager->hasListeners(Events::PRE_FLUSH)) {
             $this->eventManager->dispatchEvent(Events::PRE_FLUSH, new Event\PreFlushEventArgs($this->entityManager));
         }
-        
+
         //Detect changes
         $this->detectRelationshipReferenceChanges();
         $this->detectRelationshipEntityChanges();
         $this->detectEntityChanges();
         $statements = [];
-        
+
         //onFlush
         if ($this->eventManager->hasListeners(Events::ON_FLUSH)) {
             $this->eventManager->dispatchEvent(Events::ON_FLUSH, new Event\OnFlushEventArgs($this->entityManager));
@@ -290,7 +300,7 @@ class UnitOfWork
             = $this->relEntitesScheduledForUpdate
             = $this->relEntitiesScheduledForCreate
             = $this->relEntitesScheduledForDelete
-            = array();
+            = [];
     }
 
     private function manageEntityReference($oid)
@@ -312,7 +322,7 @@ class UnitOfWork
         foreach ($managed as $oid) {
             $id = $this->entityIds[$oid];
             $entityA = $this->entitiesById[$id];
-            $visited = array();
+            $visited = [];
             $this->doPersist($entityA, $visited);
             $entityB = $this->entityStateReferences[$id];
             $this->computeChanges($entityA, $entityB);
@@ -327,12 +337,12 @@ class UnitOfWork
             // force proxy to initialize (only needed with proxy manager 1.x
             $reflClass = new \ReflectionClass($classMetadata->getClassName());
             foreach ($reflClass->getMethods() as $method) {
-                if ($method->getNumberOfRequiredParameters() === 0 && $method->getName() === "getId") {
+                if ($method->getNumberOfRequiredParameters() === 0 && $method->getName() === 'getId') {
                     $entityA->getId();
                 }
             }
             $p1 = $meta->getValue($entityA);
-            $p2 = $meta->getValue($entityB); 
+            $p2 = $meta->getValue($entityB);
             if ($p1 !== $p2) {
                 $this->nodesScheduledForUpdate[spl_object_hash($entityA)] = $entityA;
             }
@@ -432,8 +442,7 @@ class UnitOfWork
             foreach ($reference as $field => $info) {
                 $property = $reflO->getRelationship($field);
                 $value = $property->getValue($entity);
-                if ($value instanceof ArrayCollection || $value instanceof AbstractLazyCollection)
-                {
+                if ($value instanceof ArrayCollection || $value instanceof AbstractLazyCollection) {
                     $value = $value->toArray();
                 }
                 if (is_array($value)) {
@@ -445,6 +454,7 @@ class UnitOfWork
                         if ($a === $b) {
                             return 0;
                         }
+
                         return $a < $b ? -1 : 1;
                     };
 
@@ -454,24 +464,17 @@ class UnitOfWork
                         // Since this is the same property, it should be ok to re-use the first relationship
                         $this->scheduleRelationshipReferenceForCreate($entity, $add, $info[0]['rel']);
                     }
-                    foreach ($removed as $remove)
-                    {
+                    foreach ($removed as $remove) {
                         $this->scheduleRelationshipReferenceForDelete($entity, $remove, $info[0]['rel']);
                     }
-                }
-                else if (is_object($value))
-                {
+                } elseif (is_object($value)) {
                     $target = $this->entitiesById[$this->entityIds[$info[0]['target']]];
-                    if ($value !== $target)
-                    {
+                    if ($value !== $target) {
                         $this->scheduleRelationshipReferenceForDelete($entity, $target, $info[0]['rel']);
                         $this->scheduleRelationshipReferenceForCreate($entity, $value, $info[0]['rel']);
                     }
-                }
-                else if ($value === null)
-                {
-                    foreach ($info as $ref)
-                    {
+                } elseif ($value === null) {
+                    foreach ($info as $ref) {
                         $target = $this->entitiesById[$this->entityIds[$ref['target']]];
                         $this->scheduleRelationshipReferenceForDelete($entity, $target, $ref['rel']);
                     }
@@ -492,7 +495,7 @@ class UnitOfWork
         $this->relationshipsScheduledForDelete[] = [$eClass->getIdValue($entity), $tClass->getIdValue($target), $relationship];
     }
 
-    public function traverseRelationshipEntities($entity, array &$visited = array())
+    public function traverseRelationshipEntities($entity, array &$visited = [])
     {
         $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entity));
         foreach ($classMetadata->getRelationshipEntities() as $relationshipMetadata) {

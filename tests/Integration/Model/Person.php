@@ -1,10 +1,19 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration\Model;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
+namespace GraphAware\Neo4j\OGM\tests\Integration\Model;
+
 use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 
 /**
  * @OGM\Node(label="Person")
@@ -28,6 +37,7 @@ class Person
 
     /**
      * @OGM\Relationship(relationshipEntity="Role", direction="OUTGOING", type="ACTED_IN", collection=true)
+     *
      * @var \Doctrine\Common\Collections\ArrayCollection|Role[]
      */
     public $roles;

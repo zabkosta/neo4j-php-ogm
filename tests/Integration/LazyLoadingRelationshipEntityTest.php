@@ -1,20 +1,27 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
+namespace GraphAware\Neo4j\OGM\tests\Integration;
 
+use GraphAware\Neo4j\OGM\Lazy\LazyRelationshipCollection;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\City;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\LivesIn;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
-use GraphAware\Neo4j\OGM\Lazy\LazyRelationshipCollection;
 
 /**
- * Class LazyLoadingRelationshipEntity
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class LazyLoadingRelationshipEntity.
  *
  * @group lazy-re
  */
-class LazyLoadingRelationshipEntity extends IntegrationTestCase
+class LazyLoadingRelationshipEntityTest extends IntegrationTestCase
 {
     public function testRelationshipEntitiesAreLazyLoaded()
     {

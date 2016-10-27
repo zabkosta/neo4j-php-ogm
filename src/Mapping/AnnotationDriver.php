@@ -1,22 +1,31 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Mapping;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use Doctrine\Common\Annotations\FileCacheReader;
+use GraphAware\Neo4j\OGM\Annotations\EndNode;
+use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Annotations\MappedResult;
 use GraphAware\Neo4j\OGM\Annotations\Node;
 use GraphAware\Neo4j\OGM\Annotations\Property;
+use GraphAware\Neo4j\OGM\Annotations\QueryResult;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
 use GraphAware\Neo4j\OGM\Annotations\StartNode;
-use GraphAware\Neo4j\OGM\Annotations\EndNode;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\ResultField;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
-use GraphAware\Neo4j\OGM\Annotations\QueryResult;
-use GraphAware\Neo4j\OGM\Annotations\Label;
 
 class AnnotationDriver
 {

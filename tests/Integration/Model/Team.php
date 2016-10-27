@@ -1,14 +1,21 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration\Model;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Integration\Model;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
 
-
 /**
- * Class Team
- * @package GraphAware\Neo4j\OGM\Tests\Integration\Model
+ * Class Team.
  *
  * @OGM\Node(label="Team")
  */
@@ -21,6 +28,7 @@ class Team
 
     /**
      * @OGM\Property(type="string")
+     *
      * @var string
      */
     protected $name;
@@ -69,7 +77,4 @@ class Team
             $this->memberships->add($playsInTeam);
         }
     }
-
-
-
 }

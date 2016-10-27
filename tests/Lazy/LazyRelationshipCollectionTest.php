@@ -1,14 +1,18 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Lazy;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-use GraphAware\Neo4j\OGM\Lazy\LazyRelationshipCollection;
-use Doctrine\Common\Collections\AbstractLazyCollection;
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
+namespace GraphAware\Neo4j\OGM\tests\Lazy;
 
 /**
- * Class LazyRelationshipCollectionTest
- * @package GraphAware\Neo4j\OGM\Tests\Lazy
+ * Class LazyRelationshipCollectionTest.
  *
  * @group lazy
  */
@@ -17,6 +21,4 @@ class LazyRelationshipCollectionTest extends \PHPUnit_Framework_TestCase
     public function testInit()
     {
     }
-
-
 }

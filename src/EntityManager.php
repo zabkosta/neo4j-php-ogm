@@ -13,9 +13,9 @@ namespace GraphAware\Neo4j\OGM;
 
 use Doctrine\Common\EventManager;
 use Doctrine\Common\Persistence\ObjectManager;
+use GraphAware\Neo4j\Client\Client;
 use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\OGM\Mapping\AnnotationDriver;
-use GraphAware\Neo4j\Client\Client;
 use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactory;
 use GraphAware\Neo4j\OGM\Metadata\GraphEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
@@ -39,7 +39,7 @@ class EntityManager implements ObjectManager
      */
     protected $repositories = [];
 
-    /** @var \GraphAware\Neo4j\OGM\Mapping\AnnotationDriver  */
+    /** @var \GraphAware\Neo4j\OGM\Mapping\AnnotationDriver */
     protected $annotationDriver;
 
     /**
@@ -61,8 +61,8 @@ class EntityManager implements ObjectManager
     protected $eventManager;
 
     /**
-     * @param string $host
-     * @param string|null $cacheDir
+     * @param string            $host
+     * @param string|null       $cacheDir
      * @param EventManager|null $eventManager
      *
      * @return EntityManager
@@ -101,7 +101,7 @@ class EntityManager implements ObjectManager
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function find($className, $id)
     {
@@ -109,7 +109,7 @@ class EntityManager implements ObjectManager
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function remove($object)
     {
@@ -117,7 +117,7 @@ class EntityManager implements ObjectManager
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function merge($object)
     {
@@ -125,7 +125,7 @@ class EntityManager implements ObjectManager
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function detach($object)
     {
@@ -133,7 +133,7 @@ class EntityManager implements ObjectManager
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function refresh($object)
     {
@@ -141,7 +141,7 @@ class EntityManager implements ObjectManager
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getClassMetadata($className)
     {
@@ -153,7 +153,7 @@ class EntityManager implements ObjectManager
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getMetadataFactory()
     {
@@ -168,7 +168,7 @@ class EntityManager implements ObjectManager
 
     public function contains($object)
     {
-        /** @todo */
+        /* @todo */
         return true;
     }
 
@@ -179,7 +179,6 @@ class EntityManager implements ObjectManager
     {
         return $this->eventManager;
     }
-
 
     /**
      * @return \GraphAware\Neo4j\OGM\Mapping\AnnotationDriver
@@ -258,9 +257,9 @@ class EntityManager implements ObjectManager
     /**
      * @param string $class
      *
-     * @return \GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata
-     *
      * @throws \Exception
+     *
+     * @return \GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata
      */
     public function getRelationshipEntityMetadata($class)
     {
@@ -288,7 +287,7 @@ class EntityManager implements ObjectManager
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function clear($objectName = null)
     {

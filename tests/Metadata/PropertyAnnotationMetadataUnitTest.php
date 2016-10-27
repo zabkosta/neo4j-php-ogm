@@ -1,12 +1,20 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Metadata;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Metadata;
 
 use GraphAware\Neo4j\OGM\Metadata\PropertyAnnotationMetadata;
 
 /**
- * Class PropertyMetadataUnitTest
- * @package GraphAware\Neo4j\OGM\Tests\Metadata
+ * Class PropertyMetadataUnitTest.
  *
  * @group metadata
  */

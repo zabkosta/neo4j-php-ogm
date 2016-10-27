@@ -1,14 +1,22 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Integration;
 
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\BothTest;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\BothRel;
+use GraphAware\Neo4j\OGM\Tests\Integration\Model\BothTest;
 
 /**
- * Class RelationshipBothITest
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class RelationshipBothITest.
  *
  * @group rel-both
  */
@@ -44,23 +52,22 @@ class RelationshipBothITest extends IntegrationTestCase
     public function testBothRelationshipFlush()
     {
         $this->clearDb();
-        $other1 = new BothTest("a");
-        $other2 = new BothTest("b");
-        $other3 = new BothTest("c");
+        $other1 = new BothTest('a');
+        $other2 = new BothTest('b');
+        $other3 = new BothTest('c');
         $other1->addOther($other2);
         $other1->addOther($other3);
         $this->em->persist($other1);
         $this->em->flush();
         $this->assertGraphExist('(b:Both {name:"b"})-[:RELATES]-(a:Both {name:"a"})-[:RELATES]-(c:Both {name:"c"})');
-
     }
 
     public function testRelationshipEntityBoth()
     {
         $this->clearDb();
-        $b1 = new BothTest("a");
-        $b2 = new BothTest("b");
-        $b3 = new BothTest("c");
+        $b1 = new BothTest('a');
+        $b2 = new BothTest('b');
+        $b3 = new BothTest('c');
         $b1->addFriend($b2);
         $b1->addFriend($b3);
         $this->em->persist($b1);
@@ -75,7 +82,7 @@ class RelationshipBothITest extends IntegrationTestCase
         $this->assertCount(2, $a->getFriends());
         foreach ($a->getFriends() as $friend) {
             $this->assertInstanceOf(BothRel::class, $friend);
-            $this->assertTrue(in_array($friend->getEndNode()->getName(), ['b', 'c']));
+            $this->assertTrue(in_array($friend->getEndNode()->getName(), ['b', 'c'], true));
         }
     }
 

@@ -1,6 +1,15 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Lazy;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Lazy;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Company;
@@ -9,10 +18,8 @@ use GraphAware\Neo4j\OGM\Tests\Lazy\Model\MetaResource;
 use GraphAware\Neo4j\OGM\Tests\Lazy\Model\Resources;
 use GraphAware\Neo4j\OGM\Tests\Lazy\Model\User as LazyUser;
 
-
 /**
- * Class LazyOneRelationshipTest
- * @package GraphAware\Neo4j\OGM\Tests\Lazy
+ * Class LazyOneRelationshipTest.
  *
  * @group lazy-one
  */

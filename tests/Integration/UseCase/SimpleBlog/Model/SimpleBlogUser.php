@@ -1,14 +1,21 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Integration\UseCase\SimpleBlog\Model;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Integration\UseCase\SimpleBlog\Model;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
-use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\OGM\Common\Collection;
 
 /**
- * Class SimpleBlogUser
- * @package GraphAware\Neo4j\OGM\Tests\Integration\UseCase\SimpleBlog\Model
+ * Class SimpleBlogUser.
  *
  * @OGM\Node(label="User")
  */

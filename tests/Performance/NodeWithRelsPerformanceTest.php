@@ -1,14 +1,22 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Performance;
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace GraphAware\Neo4j\OGM\tests\Performance;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Performance\Domain\Person;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 /**
- * Class NodeWithRelsPerformanceTest
- * @package GraphAware\Neo4j\OGM\Tests\Performance
+ * Class NodeWithRelsPerformanceTest.
  *
  * @group perf-test
  */
@@ -25,7 +33,6 @@ class NodeWithRelsPerformanceTest extends IntegrationTestCase
     {
         parent::setUp();
         $this->stopwatch = new Stopwatch();
-
     }
 
     /**
@@ -38,7 +45,7 @@ class NodeWithRelsPerformanceTest extends IntegrationTestCase
         $personsRepository = $this->em->getRepository(Person::class);
         $avgTime = 0;
         for ($i = 1; $i < self::$NUMBER_OF_RUNS; ++$i) {
-            $testTag = 'run' . $i;
+            $testTag = 'run'.$i;
             $this->stopwatch->start($testTag);
             $persons = $personsRepository->findAll();
             $this->assertCount(1000, $persons);
@@ -46,8 +53,7 @@ class NodeWithRelsPerformanceTest extends IntegrationTestCase
             $avgTime += $e->getDuration();
         }
 
-        $this->displayMessage(1000, 3000, $avgTime/self::$NUMBER_OF_RUNS);
-
+        $this->displayMessage(1000, 3000, $avgTime / self::$NUMBER_OF_RUNS);
     }
 
     /**
@@ -60,7 +66,7 @@ class NodeWithRelsPerformanceTest extends IntegrationTestCase
         $personsRepository = $this->em->getRepository(Person::class);
         $avgTime = 0;
         for ($i = 1; $i < self::$NUMBER_OF_RUNS; ++$i) {
-            $testTag = 'run' . $i;
+            $testTag = 'run'.$i;
             $this->stopwatch->start($testTag);
             $persons = $personsRepository->findAll();
             $this->assertCount(2000, $persons);
@@ -68,13 +74,12 @@ class NodeWithRelsPerformanceTest extends IntegrationTestCase
             $avgTime += $e->getDuration();
         }
 
-        $this->displayMessage(1000, 3000, $avgTime/self::$NUMBER_OF_RUNS);
-
+        $this->displayMessage(1000, 3000, $avgTime / self::$NUMBER_OF_RUNS);
     }
 
     private function displayMessage($numberOfEntities, $numberOfRels, $time)
     {
-        echo PHP_EOL . sprintf('%d entities with %d relationships fetched and hydrated in %f ms', $numberOfEntities, $numberOfRels, $time) . PHP_EOL;
+        echo PHP_EOL.sprintf('%d entities with %d relationships fetched and hydrated in %f ms', $numberOfEntities, $numberOfRels, $time).PHP_EOL;
     }
 
     private function load2000PersonsWith5SkillsDepth1()
@@ -104,15 +109,15 @@ class NodeWithRelsPerformanceTest extends IntegrationTestCase
     private function getQuery($numberOfPersons, $maxSkillsPerPerson)
     {
         $query = "
-        CALL generate.nodes('Person', '{firstName: firstName, lastName: lastName, email: email, accountBalance: randomNumber}', " . $numberOfPersons . ")
+        CALL generate.nodes('Person', '{firstName: firstName, lastName: lastName, email: email, accountBalance: randomNumber}', " .$numberOfPersons.")
         YIELD nodes as persons
-		CALL generate.nodes('Skill', '{name: word, averageLevel: randomNumber}', " . round($numberOfPersons/2) . ")
+		CALL generate.nodes('Skill', '{name: word, averageLevel: randomNumber}', " .round($numberOfPersons / 2).")
 		YIELD nodes as skills
-		CALL generate.nodes('Company', '{name: companyName}', " . round($numberOfPersons/2) . ")
+		CALL generate.nodes('Company', '{name: companyName}', " .round($numberOfPersons / 2).")
 		YIELD nodes as companies
-		CALL generate.relationships(persons, skills, 'HAS_SKILL', '', " . $numberOfPersons . " , " . $maxSkillsPerPerson . ")
+		CALL generate.relationships(persons, skills, 'HAS_SKILL', '', " .$numberOfPersons.' , '.$maxSkillsPerPerson.")
 		YIELD relationships as skillRels
-		CALL generate.relationships(persons, companies, 'WORKS_AT', '', " . $numberOfPersons . " , '1')
+		CALL generate.relationships(persons, companies, 'WORKS_AT', '', " .$numberOfPersons." , '1')
 		YIELD relationships as relationships RETURN * ";
 
         return $query;

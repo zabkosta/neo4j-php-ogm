@@ -166,6 +166,4 @@ final class RelationshipEntityMetadata extends GraphEntityMetadata
 
         return null;
     }
-
-
 }

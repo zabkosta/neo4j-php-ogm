@@ -1,10 +1,20 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Repository;
 
 use GraphAware\Common\Result\Record;
-use GraphAware\Common\Type\Node;
 use GraphAware\Common\Result\Result;
+use GraphAware\Common\Type\Node;
+use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Finder\RelationshipsFinder;
 use GraphAware\Neo4j\OGM\Lazy\LazyRelationshipCollection;
@@ -15,7 +25,6 @@ use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Query\Pagination;
 use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
-use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 use GraphAware\Neo4j\OGM\Util\ProxyUtils;
 use ProxyManager\Configuration;
@@ -34,8 +43,8 @@ class BaseRepository
 
     const ORDER_DESC = 'DESC';
 
-    private static $PAGINATION_FIRST_RESULT_KEY = "first";
-    private static $PAGINATION_LIMIT_RESULTS_KEY = "max";
+    private static $PAGINATION_FIRST_RESULT_KEY = 'first';
+    private static $PAGINATION_LIMIT_RESULTS_KEY = 'max';
 
     /**
      * @var \GraphAware\Neo4j\OGM\Metadata\ClassMetadata
@@ -66,7 +75,7 @@ class BaseRepository
 
     /**
      * @param \GraphAware\Neo4j\OGM\Metadata\ClassMetadata $classMetadata
-     * @param \GraphAware\Neo4j\OGM\EntityManager                $manager
+     * @param \GraphAware\Neo4j\OGM\EntityManager          $manager
      * @param string                                       $className
      */
     public function __construct(NodeEntityMetadata $classMetadata, EntityManager $manager, $className)
@@ -84,11 +93,11 @@ class BaseRepository
     }
 
     /**
-     * @return object[]
-     *
      * @throws \GraphAware\Neo4j\Client\Exception\Neo4jException
+     *
+     * @return object[]
      */
-    public function findAll(array $filters = array())
+    public function findAll(array $filters = [])
     {
         $pagination = $this->getPagination($filters);
         $parameters = [];
@@ -98,7 +107,7 @@ class BaseRepository
         if (null !== $pagination) {
             $query .= ' WITH n ORDER BY ';
             if (null !== $pagination->getOrderBy()) {
-                $query .= 'n.' . $pagination->getOrderBy()[0] . ' ' . $pagination->getOrderBy()[1] . ' ';
+                $query .= 'n.'.$pagination->getOrderBy()[0].' '.$pagination->getOrderBy()[1].' ';
             } else {
                 $query .= 'id(n) ASC ';
             }
@@ -108,7 +117,6 @@ class BaseRepository
             $parameters['skip'] = $pagination->getFirst();
             $parameters['limit'] = $pagination->getMax();
         }
-
 
         /** @var RelationshipMetadata[] $associations */
         $associations = $this->classMetadata->getRelationships();
@@ -138,7 +146,7 @@ class BaseRepository
             }
             $relid = $relid = 'rel_'.$relationshipIdentifier;
             if ($association->hasOrderBy()) {
-                $orderProperty = $association->getPropertyName() . '.' . $association->getOrderByPropery();
+                $orderProperty = $association->getPropertyName().'.'.$association->getOrderByPropery();
                 if ($association->isRelationshipEntity()) {
                     $reMetadata = $this->entityManager->getRelationshipEntityMetadata($association->getRelationshipEntityClass());
                     $split = explode('.', $association->getOrderByPropery());
@@ -146,15 +154,15 @@ class BaseRepository
                         $reName = $split[0];
                         $v = $split[1];
                         if ($reMetadata->getStartNodePropertyName() === $reName || $reMetadata->getEndNodePropertyName() === $reName) {
-                            $orderProperty = $association->getPropertyName() . '.' . $v;
+                            $orderProperty = $association->getPropertyName().'.'.$v;
                         }
                     } else {
                         if (null !== $reMetadata->getPropertyMetadata($association->getOrderByPropery())) {
-                            $orderProperty = $relid . '.' . $association->getOrderByPropery();
+                            $orderProperty = $relid.'.'.$association->getOrderByPropery();
                         }
                     }
                 }
-                $query .= $relid . ', ' . $association->getPropertyName() . ' ORDER BY ' . $orderProperty . ' ' . $association->getOrder();
+                $query .= $relid.', '.$association->getPropertyName().' ORDER BY '.$orderProperty.' '.$association->getOrder();
                 $query .= PHP_EOL;
                 $query .= ' WITH n, ';
                 $query .= implode(', ', $assocReturns);
@@ -175,12 +183,12 @@ class BaseRepository
             $query .= ' WITH n';
 
             if (!empty($assocReturns)) {
-                $query .= ', ' . implode(',', $assocReturns);
+                $query .= ', '.implode(',', $assocReturns);
             }
 
             $query .= ' ORDER BY ';
             if (null !== $pagination->getOrderBy()) {
-                $query .= 'n.' . $pagination->getOrderBy()[0] . ' ' . $pagination->getOrderBy()[1] . ' ';
+                $query .= 'n.'.$pagination->getOrderBy()[0].' '.$pagination->getOrderBy()[1].' ';
             } else {
                 $query .= 'id(n) ASC ';
             }
@@ -192,7 +200,7 @@ class BaseRepository
         $query .= PHP_EOL;
         $query .= 'RETURN n';
         if (!empty($assocReturns)) {
-            $query .= ', ' . implode(', ', $assocReturns);
+            $query .= ', '.implode(', ', $assocReturns);
         }
 
         if (isset($filters[self::FILTER_ORDER])) {
@@ -208,11 +216,11 @@ class BaseRepository
             $parameters[self::FILTER_LIMIT] = $filters[self::FILTER_LIMIT];
         }
 
-        $tag = array(
-            'class' => BaseRepository::class,
+        $tag = [
+            'class' => self::class,
             'method' => 'findAll',
-            'arguments' => $filters
-        );
+            'arguments' => $filters,
+        ];
 
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters, json_encode($tag));
 
@@ -223,9 +231,9 @@ class BaseRepository
      * @param string $key
      * @param mixed  $value
      *
-     * @return object[]
-     *
      * @throws \GraphAware\Neo4j\Client\Exception\Neo4jException
+     *
+     * @return object[]
      */
     public function findBy($key, $value, $isId = false)
     {
@@ -260,7 +268,7 @@ class BaseRepository
             }
             $relid = 'rel_'.$relationshipIdentifier;
             if ($association->hasOrderBy()) {
-                $orderProperty = $association->getPropertyName() . '.' . $association->getOrderByPropery();
+                $orderProperty = $association->getPropertyName().'.'.$association->getOrderByPropery();
                 if ($association->isRelationshipEntity()) {
                     $reMetadata = $this->entityManager->getRelationshipEntityMetadata($association->getRelationshipEntityClass());
                     $split = explode('.', $association->getOrderByPropery());
@@ -268,15 +276,15 @@ class BaseRepository
                         $reName = $split[0];
                         $v = $split[1];
                         if ($reMetadata->getStartNodePropertyName() === $reName || $reMetadata->getEndNodePropertyName() === $reName) {
-                            $orderProperty = $association->getPropertyName() . '.' . $v;
+                            $orderProperty = $association->getPropertyName().'.'.$v;
                         }
                     } else {
                         if (null !== $reMetadata->getPropertyMetadata($association->getOrderByPropery())) {
-                            $orderProperty = $relid . '.' . $association->getOrderByPropery();
+                            $orderProperty = $relid.'.'.$association->getOrderByPropery();
                         }
                     }
                 }
-                $query .= $relid . ', ' . $association->getPropertyName() . ' ORDER BY ' . $orderProperty . ' ' . $association->getOrder();
+                $query .= $relid.', '.$association->getPropertyName().' ORDER BY '.$orderProperty.' '.$association->getOrder();
                 $query .= PHP_EOL;
                 $query .= ' WITH n, ';
                 $query .= implode(', ', $assocReturns);
@@ -296,7 +304,7 @@ class BaseRepository
         $query .= PHP_EOL;
         $query .= 'RETURN n';
         if (!empty($assocReturns)) {
-            $query .= ', ' . implode(', ', $assocReturns);
+            $query .= ', '.implode(', ', $assocReturns);
         }
 
         //print_r($query);
@@ -307,7 +315,7 @@ class BaseRepository
         return $this->hydrateResultSet($result);
     }
 
-    public function paginated($first, $max, array $order = array())
+    public function paginated($first, $max, array $order = [])
     {
         return $this->findAll(['first' => $first, 'max' => $max, 'order' => $order]);
     }
@@ -321,9 +329,9 @@ class BaseRepository
      * @param string $key
      * @param mixed  $value
      *
-     * @return null|object
-     *
      * @throws \Exception
+     *
+     * @return null|object
      */
     public function findOneBy($key, $value)
     {
@@ -343,9 +351,9 @@ class BaseRepository
         return isset($hydrated[0]) ? $hydrated[0] : null;
     }
 
-    protected function nativeQuery($query, $parameters = null, QueryResultMapping $resultMapping)
+    protected function nativeQuery($query, $parameters, QueryResultMapping $resultMapping)
     {
-        $parameters = null !== $parameters ? (array) $parameters : array();
+        $parameters = null !== $parameters ? (array) $parameters : [];
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
         if ($result->size() < 1) {
             return;
@@ -409,7 +417,7 @@ class BaseRepository
                     if ($association->isCollection()) {
                         $association->initializeCollection($baseInstance);
                         foreach ($record->get($relKey) as $v) {
-                            $nodeToUse = $association->getDirection() === "OUTGOING" ? $v['end'] : $v['start'];
+                            $nodeToUse = $association->getDirection() === 'OUTGOING' ? $v['end'] : $v['start'];
                             if ($association->getDirection() === 'BOTH') {
                                 $baseId = $record->nodeValue($identifier)->identity();
                                 $nodeToUse = $v['end']->identity() === $baseId ? $v['start'] : $v['end'];
@@ -455,7 +463,6 @@ class BaseRepository
                             $reMetadata, $reMap, $startNodeMetadata, $endNodeMetadata, $baseInstance, $relationshipEntity
                         );
                         $v->add($oo2);
-
                     }
                     $relationshipEntity->setValue($baseInstance, $v);
                 } else {
@@ -485,7 +492,6 @@ class BaseRepository
                         $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getRelationshipEntityClass(), $relationship);
                         $relationship->setValue($baseInstance, $lazyCollection);
                     } else {
-                        //
                     }
                 }
             }
@@ -533,8 +539,8 @@ class BaseRepository
         $reMetadata->setEndNodeProperty($reInstance, $end);
         $this->entityManager->getUnitOfWork()->addManagedRelationshipEntity($reInstance, $baseInstance, $relationshipEntity->getPropertyName());
         $reMetadata->setId($reInstance, $relId);
-        $otherToSet = $relationshipEntity->getDirection() === "INCOMING" ? $reMetadata->getStartNodeValue($reInstance) : $reMetadata->getEndNodeValue($reInstance);
-        $possiblyMapped = $relationshipEntity->getDirection() === "INCOMING" ? $reMetadata->getStartNodePropertyName() : $reMetadata->getEndNodePropertyName();
+        $otherToSet = $relationshipEntity->getDirection() === 'INCOMING' ? $reMetadata->getStartNodeValue($reInstance) : $reMetadata->getEndNodeValue($reInstance);
+        $possiblyMapped = $relationshipEntity->getDirection() === 'INCOMING' ? $reMetadata->getStartNodePropertyName() : $reMetadata->getEndNodePropertyName();
         $otherMetadata = $this->entityManager->getClassMetadataFor(get_class($otherToSet));
         foreach ($otherMetadata->getRelationships() as $relationship) {
             if ($relationship->getDirection() !== $relationshipEntity->getDirection() && $relationship->hasMappedByProperty() && $relationship->getMappedByProperty() === $possiblyMapped) {
@@ -548,7 +554,6 @@ class BaseRepository
                         $relationship->setValue($otherToSet, $reInstance);
                     }
                 }
-
             }
         }
         foreach ($rel->values() as $k => $value) {
@@ -578,7 +583,7 @@ class BaseRepository
         $em = $this->entityManager;
         if ($andProxy) {
             if ($pmVersion >= 2) {
-                $initializer = function($ghostObject, $method, array $parameters, & $initializer, array $properties) use ($cm, $node, $em, $pmVersion) {
+                $initializer = function ($ghostObject, $method, array $parameters, &$initializer, array $properties) use ($cm, $node, $em, $pmVersion) {
                     $initializer = null;
                     /*
                     foreach ($cm->getPropertiesMetadata() as $field => $meta) {
@@ -618,7 +623,7 @@ class BaseRepository
                     return true;
                 };
             } else {
-                $initializer = function($ghostObject, $method, array $parameters, & $initializer) use ($cm, $node, $em, $pmVersion) {
+                $initializer = function ($ghostObject, $method, array $parameters, &$initializer) use ($cm, $node, $em, $pmVersion) {
                     $initializer = null;
                     foreach ($cm->getPropertiesMetadata() as $field => $meta) {
                         if ($node->hasValue($field)) {
@@ -644,11 +649,9 @@ class BaseRepository
 
             $proxyOptions = [
                 'skippedProperties' => [
-                    '' . "\0" . '*' . "\0" . 'id'
-                ]
+                    ''."\0".'*'."\0".'id',
+                ],
             ];
-
-
 
             $instance = 2 === $pmVersion ? $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer, $proxyOptions) : $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer);
             foreach ($cm->getPropertiesMetadata() as $field => $propertyMetadata) {
@@ -673,16 +676,14 @@ class BaseRepository
                         $lazyCollection = new LazyRelationshipCollection($this->entityManager, $instance, $relationship->getRelationshipEntityClass(), $relationship);
                         $relationship->setValue($instance, $lazyCollection);
                     } else {
-                        //
                     }
                 }
             }
-            $i2 = clone($instance);
+            $i2 = clone $instance;
             $this->entityManager->getUnitOfWork()->addManaged($i2);
 
             return $i2;
         }
-
 
         $instance = $cm->newInstance();
         foreach ($cm->getPropertiesMetadata() as $field => $meta) {
@@ -743,7 +744,6 @@ class BaseRepository
                 } else {
                     $property->getValue($otherInstance)->addInit($baseInstance);
                 }
-
             } else {
                 $property->setValue($otherInstance, $baseInstance);
             }
