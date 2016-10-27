@@ -116,7 +116,7 @@ As of now, the only allowed property name is `id`, in the future you'll be able 
 The `@OGM\Property` annotation defines which entity properties will be managed by the OGM. You can have properties without this
 annotation and they will not be saved / loaded to / from the database.
 
-The type argument defines the internal type (php) of the property, common types are `string`, 'int', `float`, ...
+The type argument defines the internal type (php) of the property, common types are `string`, `int`, `float`, ...
 
 Currently, the exact property name used in your domain model is used as property key on the database node. (This will evolve).
 
@@ -398,7 +398,7 @@ Let's explain the annotation parameters :
 * `targetEntity` defines the classname of the entity representing the node on the other side of the relationship.
 * `collection` defines whether or not there can be multiple relationships of the same type connected to this entity.
 
-Note : `targetEntity` takes the **fully qualified class name` as argument, you can pass only the classname if both of the
+Note : `targetEntity` takes the **fully qualified class name** as argument, you can pass only the classname if both of the
 entities lives in the same namespace.
 
 Simply with this annotation, the nodes connected by an outgoing ACTED_IN relationship to this entity will be returned, let's
@@ -413,7 +413,7 @@ foreach ($tomHanks->getMovies() as $movie) {
 }
 ```
 
-``` bash
+```text
 $ php app.php
 Tom Hanks played in 12 movies
 Charlie Wilson's War
