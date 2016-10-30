@@ -188,13 +188,6 @@ class EntityManager implements ObjectManager
         return $this->annotationDriver;
     }
 
-    public function save($entity)
-    {
-        if (!is_object($entity)) {
-            throw new \Exception('Entity is not an object');
-        }
-    }
-
     public function persist($entity)
     {
         if (!is_object($entity)) {
