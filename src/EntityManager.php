@@ -13,6 +13,7 @@ namespace GraphAware\Neo4j\OGM;
 
 use Doctrine\Common\EventManager;
 use Doctrine\Common\Persistence\ObjectManager;
+use GraphAware\Neo4j\Client\Client;
 use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\Client\ClientInterface;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
@@ -24,7 +25,7 @@ use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
-class EntityManager implements ObjectManager
+class EntityManager implements EntityManagerInterface
 {
     /**
      * @var \GraphAware\Neo4j\OGM\UnitOfWork
