@@ -15,10 +15,12 @@ use Doctrine\Common\EventManager;
 use Doctrine\Common\Persistence\ObjectManager;
 use GraphAware\Neo4j\Client\Client;
 use GraphAware\Neo4j\Client\ClientBuilder;
+use GraphAware\Neo4j\OGM\Exception\MappingException;
 use GraphAware\Neo4j\OGM\Mapping\AnnotationDriver;
 use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactory;
 use GraphAware\Neo4j\OGM\Metadata\GraphEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
+use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
@@ -47,7 +49,9 @@ class EntityManager implements ObjectManager
      */
     protected $resultMappers = [];
 
-    /** @var GraphEntityMetadata[] */
+    /**
+     * @var GraphEntityMetadata[]|RelationshipEntityMetadata[]
+     */
     protected $loadedMetadata = [];
 
     /**
@@ -259,12 +263,17 @@ class EntityManager implements ObjectManager
      *
      * @throws \Exception
      *
-     * @return \GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata
+     * @return RelationshipEntityMetadata
      */
     public function getRelationshipEntityMetadata($class)
     {
         if (!array_key_exists($class, $this->loadedMetadata)) {
-            $this->loadedMetadata[$class] = $this->metadataFactory->create($class);
+            $metadata = $this->metadataFactory->create($class);
+            if (!$metadata instanceof RelationshipEntityMetadata) {
+                // $class is not an relationship entity
+                throw new MappingException(sprintf('The class "%s" was configured to be an RelationshipEntity but no @OGM\RelationshipEntity class annotation was found', $class));
+            }
+            $this->loadedMetadata[$class] = $metadata;
         }
 
         return $this->loadedMetadata[$class];

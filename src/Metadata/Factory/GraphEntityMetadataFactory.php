@@ -23,6 +23,7 @@ use GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\LabeledPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
+use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use SebastianBergmann\CodeCoverage\Report\PHP;
 
@@ -68,7 +69,7 @@ class GraphEntityMetadataFactory
     /**
      * @param string $className
      *
-     * @return \GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata
+     * @return NodeEntityMetadata|RelationshipEntityMetadata
      */
     public function create($className)
     {
