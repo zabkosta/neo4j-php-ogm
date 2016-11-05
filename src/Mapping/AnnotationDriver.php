@@ -94,7 +94,7 @@ class AnnotationDriver
                 }
             } elseif ($annotation instanceof RelationshipEntity) {
                 $metadata['type'] = 'RelationshipEntity';
-                $metadata['relType'] = $annotation->getType();
+                $metadata['relType'] = $annotation->type;
             }
         }
 
