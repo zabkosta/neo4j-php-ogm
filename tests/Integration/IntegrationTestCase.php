@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace GraphAware\Neo4j\OGm\tests\Integration;
+namespace GraphAware\Neo4j\OGm\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\EntityManager;
 

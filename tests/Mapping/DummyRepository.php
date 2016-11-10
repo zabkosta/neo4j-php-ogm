@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace GraphAware\Neo4j\OGM\tests\Mapping;
+namespace GraphAware\Neo4j\OGM\Tests\Mapping;
 
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 

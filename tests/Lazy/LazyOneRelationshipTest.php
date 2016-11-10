@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace GraphAware\Neo4j\OGM\tests\Lazy;
+namespace GraphAware\Neo4j\OGM\Tests\Lazy;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Company;

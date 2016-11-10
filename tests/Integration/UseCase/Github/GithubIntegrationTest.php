@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace GraphAware\Neo4j\OGM\tests\Integration\UseCase\Github;
+namespace GraphAware\Neo4j\OGM\Tests\Integration\UseCase\Github;
 
 use GraphAware\Neo4j\OGM\Lazy\LazyRelationshipCollection;
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;

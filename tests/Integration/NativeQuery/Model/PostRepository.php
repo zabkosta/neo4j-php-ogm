@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace GraphAware\Neo4j\OGM\tests\Integration\NativeQuery\Model;
+namespace GraphAware\Neo4j\OGM\Tests\Integration\NativeQuery\Model;
 
 use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;

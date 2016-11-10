@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace GraphAware\Neo4j\OGM\tests\Metadata;
+namespace GraphAware\Neo4j\OGM\Tests\Metadata;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;

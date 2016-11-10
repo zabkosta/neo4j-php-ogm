@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace GraphAware\Neo4j\OGM\tests\Metadata;
+namespace GraphAware\Neo4j\OGM\Tests\Metadata;
 
 use GraphAware\Neo4j\OGM\Metadata\PropertyAnnotationMetadata;
 

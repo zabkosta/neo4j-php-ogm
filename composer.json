@@ -27,8 +27,6 @@
         "graphaware/neo4j-php-client": "^4.0",
         "ocramius/proxy-manager": "^2.0 || ^1.0"
     },
-    "require-dev": {
-    },
     "autoload": {
         "psr-4": {
             "GraphAware\\Neo4j\\OGM\\": "src/",

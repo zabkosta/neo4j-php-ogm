@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace GraphAware\Neo4j\OGM\tests\Integration\UseCase\Github\Model;
+namespace GraphAware\Neo4j\OGM\Tests\Integration\UseCase\Github\Model;
 
 class PullRequest
 {

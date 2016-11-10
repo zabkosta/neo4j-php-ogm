@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace GraphAware\Neo4j\OGM\tests\Integration\NativeQuery;
+namespace GraphAware\Neo4j\OGM\Tests\Integration\NativeQuery;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Integration\NativeQuery\Model\NewsFeed;

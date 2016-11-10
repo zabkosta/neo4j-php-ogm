@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace GraphAware\Neo4j\OGM\tests\Performance\Domain;
+namespace GraphAware\Neo4j\OGM\Tests\Performance\Domain;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 

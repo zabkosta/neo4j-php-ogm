@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace GraphAware\Neo4j\OGM\tests\Integration\UseCase\SimpleBlog\Model;
+namespace GraphAware\Neo4j\OGM\Tests\Integration\UseCase\SimpleBlog\Model;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
