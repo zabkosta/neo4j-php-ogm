@@ -13,8 +13,8 @@ namespace GraphAware\Neo4j\OGM;
 
 use Doctrine\Common\EventManager;
 use Doctrine\Common\Persistence\ObjectManager;
-use GraphAware\Neo4j\Client\Client;
 use GraphAware\Neo4j\Client\ClientBuilder;
+use GraphAware\Neo4j\Client\ClientInterface;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
 use GraphAware\Neo4j\OGM\Mapping\AnnotationDriver;
 use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactory;
@@ -32,7 +32,7 @@ class EntityManager implements ObjectManager
     protected $uow;
 
     /**
-     * @var \GraphAware\Neo4j\Client\Client
+     * @var \GraphAware\Neo4j\Client\ClientInterface
      */
     protected $databaseDriver;
 
@@ -95,7 +95,7 @@ class EntityManager implements ObjectManager
         return new self($client);
     }
 
-    public function __construct(Client $databaseDriver, $cacheDirectory = null, EventManager $eventManager = null)
+    public function __construct(ClientInterface $databaseDriver, $cacheDirectory = null, EventManager $eventManager = null)
     {
         $this->annotationDriver = new AnnotationDriver($cacheDirectory);
         $this->eventManager = $eventManager ?: new EventManager();
