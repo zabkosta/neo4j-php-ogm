@@ -33,7 +33,17 @@ class IntegrationTestCase extends \PHPUnit_Framework_TestCase
 
     private function createEntityManager()
     {
-        $this->em = EntityManager::create('http://neo4j:error@localhost:7474', __DIR__.'/../../_var/cache');
+        $this->em = EntityManager::create(
+            sprintf(
+                '%s://%s:%s@%s:%s',
+                getenv('NEO4J_SCHEMA'),
+                getenv('NEO4J_USER'),
+                getenv('NEO4J_PASSWORD'),
+                getenv('NEO4J_HOST'),
+                getenv('NEO4J_PORT')
+            ),
+            __DIR__.'/../../_var/cache'
+        );
     }
 
     public function clearDb()
