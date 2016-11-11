@@ -12,8 +12,6 @@
 namespace GraphAware\Neo4j\OGM;
 
 use Doctrine\Common\EventManager;
-use Doctrine\Common\Persistence\ObjectManager;
-use GraphAware\Neo4j\Client\Client;
 use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\Client\ClientInterface;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
@@ -216,7 +214,7 @@ class EntityManager implements EntityManagerInterface
     }
 
     /**
-     * @return \GraphAware\Neo4j\Client\Client
+     * @return \GraphAware\Neo4j\Client\ClientInterface
      */
     public function getDatabaseDriver()
     {
