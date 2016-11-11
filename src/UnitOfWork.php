@@ -501,7 +501,7 @@ class UnitOfWork
         foreach ($classMetadata->getRelationshipEntities() as $relationshipMetadata) {
             $value = $relationshipMetadata->getValue($entity);
             if (null === $value || ($relationshipMetadata->isCollection() && count($value) === 0)) {
-                return;
+                continue;
             }
             if ($relationshipMetadata->isCollection()) {
                 foreach ($value as $v) {
