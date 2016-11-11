@@ -175,10 +175,11 @@ class RelationshipEntityITest extends IntegrationTestCase
         $this->clearDb();
         $team = new Team('The Mavericks');
         $player = new Player('joran');
-        $player->addToTeam($team);
+        $time = time();
+        $player->addToTeam($team, $time);
         $this->em->persist($player);
         $this->em->flush();
-        $this->assertGraphExist('(n:Player {name:"joran"})-[:PLAYS_IN_TEAM {since:'.time().'}]->(t:Team {name:"The Mavericks"})');
+        $this->assertGraphExist('(n:Player {name:"joran"})-[:PLAYS_IN_TEAM {since:'.$time.'}]->(t:Team {name:"The Mavericks"})');
         $this->em->clear();
         $this->clearDb();
         $this->client->run('CREATE (n:Player {name:"joran"}), (t:Team {name:"The Mavericks"})');

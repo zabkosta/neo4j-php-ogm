@@ -70,14 +70,14 @@ class Player
         return $this->playsIn;
     }
 
-    public function addToTeam(Team $team)
+    public function addToTeam(Team $team, $timestamp = null)
     {
         if (null !== $this->playsIn) {
             throw new \InvalidArgumentException('You must remove the current membership before adding a new one');
         }
 
         $dt = new \DateTime('NOW', new \DateTimeZone('UTC'));
-        $time = $dt->getTimestamp();
+        $time = null !== $timestamp ? $timestamp : $dt->getTimestamp();
 
         $membership = new PlaysInTeam($this, $team, $time);
         $this->playsIn = $membership;
