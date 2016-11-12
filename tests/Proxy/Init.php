@@ -13,11 +13,18 @@ use GraphAware\Neo4j\OGM\Annotations as OGM;
 class Init
 {
     /**
-     * @var
+     * @var int
      *
      * @OGM\GraphId()
      */
     protected $id;
+
+    /**
+     * @var string
+     *
+     * @OGM\Property(type="string")
+     */
+    protected $name;
 
     /**
      * @OGM\Relationship(type="RELATES", direction="OUTGOING", targetEntity="Related")
@@ -27,12 +34,25 @@ class Init
      */
     protected $relation;
 
+    public function __construct($name = null)
+    {
+        $this->name = $name;
+    }
+
     /**
      * @return mixed
      */
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
     }
 
     /**

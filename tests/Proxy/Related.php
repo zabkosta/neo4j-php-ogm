@@ -22,10 +22,30 @@ class Related
     protected $id;
 
     /**
+     * @var string
+     *
+     * @OGM\Property(type="string")
+     */
+    protected $name;
+
+    public function __construct($name = null)
+    {
+        $this->name = $name;
+    }
+
+    /**
      * @return int
      */
-    public function getId(): int
+    public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
     }
 }

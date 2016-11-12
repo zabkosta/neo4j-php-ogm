@@ -31,11 +31,13 @@ class ProxyFactoryTest extends IntegrationTestCase
         $this->assertInstanceOf(Init::class, $init);
         $this->assertInstanceOf(EntityProxy::class, $init);
         $this->assertNotNull($init->getId());
+        $this->assertEquals('Ale', $init->getName());
         $this->assertInstanceOf(Related::class, $init->getRelation());
+        $this->assertEquals('Chris', $init->getRelation()->getName());
     }
 
     private function createSmallGraph()
     {
-        return $this->client->run('CREATE (n:Init)-[:RELATES]->(n2:Related) RETURN id(n) AS id')->firstRecord()->get('id');
+        return $this->client->run('CREATE (n:Init {name:"Ale"})-[:RELATES]->(n2:Related {name:"Chris"}) RETURN id(n) AS id')->firstRecord()->get('id');
     }
 }
