@@ -750,13 +750,13 @@ class BaseRepository
         $instance = $object;
         $cm = null !== $metadata ? $metadata : $this->classMetadata;
         foreach ($cm->getPropertiesMetadata() as $field => $meta) {
-            if ($meta instanceof EntityPropertyMetadata) {
-                if ($node->hasValue($field)) {
-                    $meta->setValue($instance, $node->value($field));
-                }
-            } elseif ($meta instanceof Label) {
-                // @todo
+            if ($node->hasValue($field)) {
+                $meta->setValue($instance, $node->value($field));
             }
+        }
+        foreach ($cm->getLabeledProperties() as $labeledProperty) {
+            $v = $node->hasLabel($labeledProperty->getLabelName());
+            $labeledProperty->setLabel($instance, $v);
         }
 
         $cm->setId($instance, $node->identity());
