@@ -13,9 +13,17 @@ class ProxyTest extends IntegrationTestCase
     {
         $cm = $this->em->getClassMetadata(Init::class);
         $factory = new ProxyFactory($this->em, $cm);
-        $o = $factory->fromNode(new NodeProxy(1));
+        $id = $this->createSmallGraph();
+        $o = $factory->fromNode(new NodeProxy($id));
 
         $this->assertInstanceOf(Init::class, $o);
         $this->assertInstanceOf(EntityProxy::class, $o);
+        $this->assertInstanceOf(Related::class, $o->getRelation());
+        $this->assertNotNull($o->getRelation()->getId());
+    }
+
+    private function createSmallGraph()
+    {
+        return $this->client->run('CREATE (n:Init)-[:RELATES]->(n2:Related) RETURN id(n) AS id')->firstRecord()->get('id');
     }
 }

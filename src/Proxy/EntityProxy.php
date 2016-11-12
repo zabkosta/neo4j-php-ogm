@@ -2,4 +2,7 @@
 
 namespace GraphAware\Neo4j\OGM\Proxy;
 
-interface EntityProxy{}
+interface EntityProxy
+{
+    public function __initializeProperty($propertyName);
+}

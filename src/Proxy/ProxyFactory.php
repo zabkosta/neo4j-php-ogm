@@ -24,6 +24,13 @@ class ProxyFactory
     public function fromNode(Node $node)
     {
         $object = $this->createProxy();
+        $object->__setNode($node);
+        $initializers = [];
+        foreach ($this->classMetadata->getSimpleRelationships() as $relationship) {
+            $initializer = new SingleNodeInitializer($this->em, $relationship, $this->em->getClassMetadata($relationship->getTargetEntity()));
+            $initializers[$relationship->getPropertyName()] = $initializer;
+        }
+        $object->__setInitializers($initializers);
 
         return $object;
     }
@@ -33,6 +40,7 @@ class ProxyFactory
         $class = $this->classMetadata->getClassName();
         $proxyClass = $this->getProxyClass();
         $proxyFile = $this->proxyDir.'/'.$proxyClass.'.php';
+        $methodProxies = $this->getMethodProxies();
 
         $content = <<<PROXY
 <?php
@@ -41,7 +49,28 @@ use GraphAware\\Neo4j\\OGM\\Proxy\\EntityProxy;
 
 class $proxyClass extends $class implements EntityProxy
 {
+    private \$em;
+    private \$initialized = [];
+    private \$intializers = [];
+    private \$node;
     
+    public function __setNode(\$node)
+    {
+        \$this->node = \$node;
+    }
+    
+    public function __setInitializers(array \$initializers)
+    {
+        \$this->initializers = \$initializers;
+    }
+    
+    public function __initializeProperty(\$propertyName)
+    {
+        \$value = \$this->initializers[\$propertyName]->initialize(\$this->node);
+        \$this->\$propertyName = \$value;
+    }
+    
+    $methodProxies
 }
 
 PROXY;
@@ -53,6 +82,26 @@ PROXY;
 
         return $this->newProxyInstance($proxyClass);
 
+    }
+
+    protected function getMethodProxies()
+    {
+        $proxies = '';
+        foreach ($this->classMetadata->getRelationships() as $relationship) {
+            $getter = 'get'.ucfirst($relationship->getPropertyName()).'()';
+            $propertyName = $relationship->getPropertyName();
+            $proxies .= <<<METHOD
+public function $getter
+{
+    self::__initializeProperty('$propertyName');
+    return parent::$getter;
+}
+
+METHOD;
+
+        }
+
+        return $proxies;
     }
 
     protected function getProxyClass()

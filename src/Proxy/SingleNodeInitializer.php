@@ -23,7 +23,7 @@ class SingleNodeInitializer
         $this->metadata = $nodeEntityMetadata;
     }
 
-    public final function fromNode(Node $node)
+    public final function initialize(Node $node)
     {
         $startId = $node->identity();
         $relationshipType = $this->relationshipMetadata->getType();
@@ -51,6 +51,10 @@ class SingleNodeInitializer
 
     public final function handleResult(Result $result)
     {
+        if ($result->size() === 0) {
+            return null;
+        }
+
         if ($result->size() > 1) {
             throw new \RuntimeException(sprintf('Expected only 1 result, got %d', $result->size()));
         }
