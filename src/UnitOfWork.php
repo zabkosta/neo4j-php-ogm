@@ -29,6 +29,8 @@ class UnitOfWork
 
     const STATE_DELETED = 'STATE_DELETED';
 
+    const STATE_DETACHED = 'STATE_DETACHED';
+
     /**
      * @var EntityManager
      */
@@ -574,6 +576,19 @@ class UnitOfWork
         return isset($this->entityIds[spl_object_hash($entity)]);
     }
 
+    private function removeManaged($entity)
+    {
+        $oid = spl_object_hash($entity);
+        $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entity));
+        $id = $classMetadata->getIdValue($entity);
+        if (null === $id) {
+            throw new \LogicException('Entity marked for managed but couldnt find identity');
+        }
+
+        unset($this->entityIds[$oid]);
+        unset($this->entitiesById[$id]);
+    }
+
     public function scheduleDelete($entity)
     {
         $oid = spl_object_hash($entity);
@@ -652,8 +667,86 @@ class UnitOfWork
      */
     public function detach($entity)
     {
-        // TODO write me
-        trigger_error("Function not implemented.", E_USER_ERROR);
+        $visited = array();
+
+        $this->doDetach($entity, $visited);
+    }
+
+    /**
+     * Executes a detach operation on the given entity.
+     *
+     * @param object  $entity
+     * @param array   $visited
+     * @param boolean $noCascade if true, don't cascade detach operation.
+     *
+     * @return void
+     */
+    private function doDetach($entity, array &$visited, $noCascade = false)
+    {
+        $oid = spl_object_hash($entity);
+
+        if (isset($visited[$oid])) {
+            return; // Prevent infinite recursion
+        }
+
+        $visited[$oid] = $entity; // mark visited
+
+        switch ($this->getEntityState($entity, self::STATE_DETACHED)) {
+            case self::STATE_MANAGED:
+                if ($this->isManaged($entity)) {
+                    $this->removeManaged($entity);
+                }
+
+                unset(
+                    $this->nodesScheduledForCreate[$oid],
+                    $this->nodesScheduledForUpdate[$oid],
+                    $this->nodesScheduledForDelete[$oid],
+                    $this->entityStates[$oid]
+                );
+                break;
+            case self::STATE_NEW:
+            case self::STATE_DETACHED:
+                return;
+        }
+
+        $this->entityStates[$oid] = self::STATE_DETACHED;
+
+        if ( ! $noCascade) {
+            $this->cascadeDetach($entity, $visited);
+        }
+    }
+
+    /**
+     * Cascades a detach operation to associated entities.
+     *
+     * @param object $entity
+     * @param array  $visited
+     *
+     * @return void
+     */
+    private function cascadeDetach($entity, array &$visited)
+    {
+        $class = $this->entityManager->getClassMetadata(get_class($entity));
+
+        foreach ($class->getRelationships() as $relationship) {
+            $value = $relationship->getValue($entity);
+
+            switch (true) {
+                case ($value instanceof Collection):
+                case (is_array($value)):
+                    foreach ($value as $relatedEntity) {
+                        $this->doDetach($relatedEntity, $visited);
+                    }
+                    break;
+
+                case ($value !== null):
+                    $this->doDetach($value, $visited);
+                    break;
+
+                default:
+                    // Do nothing
+            }
+        }
     }
 
     /**
