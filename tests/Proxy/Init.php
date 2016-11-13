@@ -28,7 +28,6 @@ class Init
 
     /**
      * @OGM\Relationship(type="RELATES", direction="OUTGOING", targetEntity="Related", mappedBy="init")
-     * @OGM\Lazy()
      *
      * @var Related
      */
