@@ -556,7 +556,7 @@ class UnitOfWork
         $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entity));
         $id = $classMetadata->getIdValue($entity);
         if (null === $id) {
-            throw new \LogicException('Entity marked for managed but couldnt find identity');
+            throw new \LogicException('Entity marked for managed but could not find identity');
         }
         $this->entityStates[$oid] = self::STATE_MANAGED;
         $this->entityIds[$oid] = $id;
