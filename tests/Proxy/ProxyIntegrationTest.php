@@ -2,8 +2,9 @@
 
 namespace GraphAware\Neo4j\OGM\Tests\Proxy;
 
+use GraphAware\Neo4j\OGM\Proxy\EntityProxy;
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
+use GraphAware\Neo4j\OGM\Tests\Proxy\Model\User;
 
 class ProxyIntegrationTest extends IntegrationTestCase
 {
@@ -16,7 +17,12 @@ class ProxyIntegrationTest extends IntegrationTestCase
 
     public function testProxyIsCreated()
     {
-
+        /** @var User $user */
+        $user = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
+        $this->assertInstanceOf(EntityProxy::class, $user);
+        $profile = $user->getProfile();
+        $userRef = $profile->getUser();
+        $this->assertEquals(spl_object_hash($user), spl_object_hash($userRef));
     }
 
     private function createGraph()

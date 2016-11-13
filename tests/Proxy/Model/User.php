@@ -1,6 +1,6 @@
 <?php
 
-namespace GraphAware\Neo4j\OGM\Tests\Proxy;
+namespace GraphAware\Neo4j\OGM\Tests\Proxy\Model;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 

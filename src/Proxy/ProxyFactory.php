@@ -28,12 +28,16 @@ class ProxyFactory
         $object->__setNode($node);
         $initializers = [];
         foreach ($this->classMetadata->getSimpleRelationships() as $relationship) {
+            //var_dump($relationship->getPropertyName() . ' - ' . $mappedByProperty);
             if (!$relationship->isFetch() && !$relationship->getPropertyName() !== $mappedByProperty) {
                 $initializer = $this->getInitializerFor($relationship);
                 $initializers[$relationship->getPropertyName()] = $initializer;
             }
         }
         $object->__setInitializers($initializers);
+        if (null !== $mappedByProperty) {
+            $object->__setInitialized($mappedByProperty);
+        }
 
         return $object;
     }
@@ -75,6 +79,11 @@ class $proxyClass extends $class implements EntityProxy
     public function __setInitializers(array \$initializers)
     {
         \$this->initializers = \$initializers;
+    }
+    
+    public function __setInitialized(\$property)
+    {
+        \$this->initialized[\$property] = null;
     }
     
     public function __initializeProperty(\$propertyName)
