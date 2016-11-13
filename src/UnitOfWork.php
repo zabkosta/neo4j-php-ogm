@@ -564,6 +564,16 @@ class UnitOfWork
         $this->manageEntityReference($oid);
     }
 
+    /**
+     * @param object $entity
+     *
+     * @return bool
+     */
+    public function isManaged($entity)
+    {
+        return isset($this->entityIds[spl_object_hash($entity)]);
+    }
+
     public function scheduleDelete($entity)
     {
         $oid = spl_object_hash($entity);
@@ -620,11 +630,75 @@ class UnitOfWork
     }
 
     /**
+     * Merges the state of the given detached entity into this UnitOfWork.
+     *
+     * @param object $entity
+     *
+     * @return object The managed copy of the entity.
+     */
+    public function merge($entity)
+    {
+        // TODO write me
+        trigger_error("Function not implemented.", E_USER_ERROR);
+    }
+
+    /**
+     * Detaches an entity from the persistence management. It's persistence will
+     * no longer be managed by Doctrine.
+     *
+     * @param object $entity The entity to detach.
+     *
+     * @return void
+     */
+    public function detach($entity)
+    {
+        // TODO write me
+        trigger_error("Function not implemented.", E_USER_ERROR);
+    }
+
+    /**
+     * Refreshes the state of the given entity from the database, overwriting
+     * any local, unpersisted changes.
+     *
+     * @param object $entity The entity to refresh.
+     *
+     * @return void
+     */
+    public function refresh($entity)
+    {
+        // TODO write me
+        trigger_error("Function not implemented.", E_USER_ERROR);
+    }
+
+    /**
+     * Helper method to initialize a lazy loading proxy or persistent collection.
+     *
+     * @param object $obj
+     *
+     * @return void
+     */
+    public function initializeObject($obj)
+    {
+        // TODO write me
+        trigger_error("Function not implemented.", E_USER_ERROR);
+    }
+
+    /**
      * @return array
      */
     public function getNodesScheduledForCreate()
     {
         return $this->nodesScheduledForCreate;
+    }
+
+    /**
+     * @param object $entity
+     *
+     * @return bool
+     */
+    public function isScheduledForCreate($entity)
+    {
+        return isset($this->nodesScheduledForCreate[spl_object_hash($entity)]);
     }
 
     /**
@@ -641,6 +715,16 @@ class UnitOfWork
     public function getNodesScheduledForDelete()
     {
         return $this->nodesScheduledForDelete;
+    }
+
+    /**
+     * @param object $entity
+     *
+     * @return bool
+     */
+    public function isScheduledForDelete($entity)
+    {
+        return isset($this->nodesScheduledForDelete[spl_object_hash($entity)]);
     }
 
     /**
