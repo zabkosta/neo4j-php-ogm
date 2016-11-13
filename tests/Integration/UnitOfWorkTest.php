@@ -2,6 +2,7 @@
 
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
+use GraphAware\Neo4j\OGM\Exception\OGMInvalidArgumentException;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\AuthUser;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
@@ -18,6 +19,28 @@ class UnitOfWorkTest extends IntegrationTestCase
 
         $this->em->flush();
         $this->assertTrue($this->em->contains($user));
+    }
+
+
+    public function testRefresh()
+    {
+        $user = new User('neo', 33);
+        $this->em->persist($user);
+        $this->em->flush();
+
+        $user->setAge(55);
+        $this->em->refresh($user);
+
+        $this->assertEquals(33, $user->getAge(), 'Could not refresh entity.');
+    }
+
+    /**
+     * @expectedException \GraphAware\Neo4j\OGM\Exception\OGMInvalidArgumentException
+     */
+    public function testRefreshNotManaged()
+    {
+        $user = new User('neo', 33);
+        $this->em->refresh($user);
     }
 
     public function testDetach()

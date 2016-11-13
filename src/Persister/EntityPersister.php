@@ -12,6 +12,7 @@
 namespace GraphAware\Neo4j\OGM\Persister;
 
 use GraphAware\Common\Cypher\Statement;
+use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 
 class EntityPersister
@@ -26,10 +27,16 @@ class EntityPersister
      */
     protected $className;
 
-    public function __construct($className, NodeEntityMetadata $classMetadata)
+    /**
+     * @var EntityManager
+     */
+    protected $entityManager;
+
+    public function __construct(EntityManager $entityManager, $className, NodeEntityMetadata $classMetadata)
     {
         $this->className = $className;
         $this->classMetadata = $classMetadata;
+        $this->entityManager = $entityManager;
     }
 
     public function getCreateQuery($object)
@@ -97,6 +104,23 @@ class EntityPersister
         }
 
         return Statement::create($query, ['id' => $id, 'props' => $propertyValues]);
+    }
+
+    /**
+     * Refreshes a managed entity.
+     *
+     * @param int  $id
+     * @param object $entity The entity to refresh.
+     *
+     * @return void
+     */
+    public function refresh($id, $entity)
+    {
+        $label = $this->classMetadata->getLabel();
+        $query = sprintf('MATCH (n:%s) WHERE id(n) = {%s} RETURN n', $label, 'id');
+        $result = $this->entityManager->getDatabaseDriver()->run($query, ['id'=>$id]);
+
+        $this->entityManager->getRepository(get_class($entity))->hydrate($result->getRecord());
     }
 
     public function getDeleteQuery($object)
