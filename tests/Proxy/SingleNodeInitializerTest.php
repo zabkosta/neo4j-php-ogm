@@ -8,20 +8,6 @@ use GraphAware\Neo4j\OGM\Tests\Util\NodeProxy;
 
 class SingleNodeInitializerTest extends IntegrationTestCase
 {
-    public function testSingleNodeInitializer()
-    {
-        $this->clearDb();
-        $startId = $this->createSmallGraph();
-        $node = new NodeProxy($startId);
-        $metadata = $this->em->getClassMetadata(Init::class);
-        $relMeta = $metadata->getRelationships()['relation'];
-        $this->assertTrue($relMeta->isLazy());
-
-        $initializer = new SingleNodeInitializer($this->em, $relMeta, $metadata);
-//        $related = $initializer->initialize($node);
-//        $this->assertInstanceOf(Related::class, $related);
-//        $this->assertNotNull($related->getId());
-    }
 
     public function testProxyIsReturnedWhenCalledFromRepository()
     {
