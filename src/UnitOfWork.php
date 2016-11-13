@@ -541,7 +541,7 @@ class UnitOfWork
             return $assumedState;
         }
 
-        $id = $this->entityManager->getClassMetadataFor(get_class($entity))->getIdentityValue($entity);
+        $id = $this->entityManager->getClassMetadataFor(get_class($entity))->getIdValue($entity);
 
         if (!$id) {
             return self::STATE_NEW;
