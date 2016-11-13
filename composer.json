@@ -30,13 +30,13 @@
     },
     "autoload": {
         "psr-4": {
-            "GraphAware\\Neo4j\\OGM\\": "src/",
-            "Movies\\": "docs/_code/movies"
+            "GraphAware\\Neo4j\\OGM\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "GraphAware\\Neo4j\\OGM\\Tests\\": "tests/"
+            "GraphAware\\Neo4j\\OGM\\Tests\\": "tests/",
+            "Movies\\": "docs/_code/movies"
         }
     },
     "require-dev": {
