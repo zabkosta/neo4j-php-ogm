@@ -17,7 +17,7 @@ class OGMInvalidArgumentException extends \InvalidArgumentException
      */
     static public function entityNotManaged($entity)
     {
-        return new self("Entity " . self::objToStr($entity) . " is not managed. An entity is managed if its fetched " .
+        return new self("Entity " . self::objectToString($entity) . " is not managed. An entity is managed if its fetched " .
             "from the database or registered as new through EntityManager#persist");
     }
 
@@ -28,7 +28,7 @@ class OGMInvalidArgumentException extends \InvalidArgumentException
      *
      * @return string
      */
-    private static function objToStr($obj)
+    private static function objectToString($obj)
     {
         return method_exists($obj, '__toString') ? (string)$obj : get_class($obj).'@'.spl_object_hash($obj);
     }
