@@ -21,6 +21,10 @@ use GraphAware\Neo4j\OGM\Persister\FlushOperationProcessor;
 use GraphAware\Neo4j\OGM\Persister\RelationshipEntityPersister;
 use GraphAware\Neo4j\OGM\Persister\RelationshipPersister;
 
+/**
+ * @author Christophe Willemsen <christophe@graphaware.com>
+ * @author Tobias Nyholm <tobias.nyholm@gmail.com>
+ */
 class UnitOfWork
 {
     const STATE_NEW = 'STATE_NEW';
@@ -549,7 +553,7 @@ class UnitOfWork
             return self::STATE_NEW;
         }
 
-        throw new \LogicException('entity state cannot be assumed');
+        return self::STATE_DETACHED;
     }
 
     public function addManaged($entity)
@@ -579,10 +583,12 @@ class UnitOfWork
     private function removeManaged($entity)
     {
         $oid = spl_object_hash($entity);
+        unset($this->entityIds[$oid]);
+
         $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entity));
         $id = $classMetadata->getIdValue($entity);
         if (null === $id) {
-            throw new \LogicException('Entity marked for managed but couldnt find identity');
+            throw new \LogicException('Entity marked as not managed but could not find identity');
         }
 
         unset($this->entityIds[$oid]);
