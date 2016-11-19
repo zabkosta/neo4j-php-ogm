@@ -36,8 +36,19 @@ use ProxyManager\GeneratorStrategy\FileWriterGeneratorStrategy;
 use ProxyManager\Version;
 
 
+/**
+ * A hydrator is a class that provides some form
+ * of transformation of an SQL result set into another structure.
+ *
+ * @author Christophe Willemsen <christophe@graphaware.com>
+ * @author Tobias Nyholm <tobias.nyholm@gmail.com>
+ */
 class ObjectHydration
 {
+    const OPTION_ADD_LAZY_LOAD = 'lazy_load';
+    const OPTION_CONSIDER_ALL_LACY = 'all_lazy';
+    const OPTION_REFRESH = 'refresh';
+
 
     /**
      * @var EntityManager
@@ -54,121 +65,125 @@ class ObjectHydration
     }
 
 
-    public function hydrate(Record $record, $andCheckAssociations = true, $identifier = 'n', $className = null, $andAddLazyLoad = false, $considerAllLazy = false)
+    public function hydrate(Record $record, $options)
     {
+        $andAddLazyLoad = isset($options[self::OPTION_ADD_LAZY_LOAD]) ? $options[self::OPTION_ADD_LAZY_LOAD] : false;
+        $considerAllLazy = isset($options[self::OPTION_CONSIDER_ALL_LACY]) ? $options[self::OPTION_CONSIDER_ALL_LACY] : false;
+        $refresh = isset($options[self::OPTION_REFRESH]) ? $options[self::OPTION_REFRESH] : false;
+
+        // getNodeBaseInstance
         $classMeta = $this->entityManager->getClassMetadataFor($record);
         $classN = null !== $className ? $className : $this->className;
         $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
         $cm = $this->entityManager->getClassMetadataFor($classN);
-        if ($andCheckAssociations) {
-            foreach ($this->classMetadata->getSimpleRelationships(false) as $key => $association) {
-                $relId = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($association->getType()));
-                $relKey = $association->isCollection() ? sprintf('rel_%s', $relId) : $association->getPropertyName();
-                if ($record->hasValue($relKey) && null !== $record->get($relKey)) {
-                    if ($association->isCollection()) {
-                        $association->initializeCollection($baseInstance);
-                        foreach ($record->get($relKey) as $v) {
-                            $nodeToUse = $association->getDirection() === 'OUTGOING' ? $v['end'] : $v['start'];
-                            if ($association->getDirection() === 'BOTH') {
-                                $baseId = $record->nodeValue($identifier)->identity();
-                                $nodeToUse = $v['end']->identity() === $baseId ? $v['start'] : $v['end'];
-                            }
-                            $v2 = $this->hydrateNode($nodeToUse, $this->getTargetFullClassName($association->getTargetEntity()), true);
-                            $association->addToCollection($baseInstance, $v2);
-                            $this->entityManager->getUnitOfWork()->addManaged($v2);
-                            $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
-                            $this->setInversedAssociation($baseInstance, $v2, $association->getPropertyName());
+        foreach ($this->classMetadata->getSimpleRelationships(false) as $key => $association) {
+            $relId = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($association->getType()));
+            $relKey = $association->isCollection() ? sprintf('rel_%s', $relId) : $association->getPropertyName();
+            if ($record->hasValue($relKey) && null !== $record->get($relKey)) {
+                if ($association->isCollection()) {
+                    $association->initializeCollection($baseInstance);
+                    foreach ($record->get($relKey) as $v) {
+                        $nodeToUse = $association->getDirection() === 'OUTGOING' ? $v['end'] : $v['start'];
+                        if ($association->getDirection() === 'BOTH') {
+                            $baseId = $record->nodeValue($identifier)->identity();
+                            $nodeToUse = $v['end']->identity() === $baseId ? $v['start'] : $v['end'];
                         }
-                    } else {
-                        $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
-                        $relO = $hydrator->hydrateNode($record->get($relKey), $association->getTargetEntity(), true);
-                        $association->setValue($baseInstance, $relO);
-                        $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $relO, $association->getPropertyName(), $association);
-                        $this->setInversedAssociation($baseInstance, $relO, $relKey);
+                        $v2 = $this->hydrateNode($nodeToUse, $this->getTargetFullClassName($association->getTargetEntity()), true);
+                        $association->addToCollection($baseInstance, $v2);
+                        $this->entityManager->getUnitOfWork()->addManaged($v2);
+                        $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
+                        $this->setInversedAssociation($baseInstance, $v2, $association->getPropertyName());
                     }
                 } else {
-                    if ($andAddLazyLoad && $association->isCollection() && $association->isLazy()) {
-                        $lazy = new LazyRelationshipCollection($this->entityManager, $baseInstance, $association->getTargetEntity(), $association);
-                        $association->setValue($baseInstance, $lazy);
-                    }
+                    $hydrator = $this->getHydrator($this->getTargetFullClassName($association->getTargetEntity()));
+                    $relO = $hydrator->hydrateNode($record->get($relKey), $association->getTargetEntity(), true);
+                    $association->setValue($baseInstance, $relO);
+                    $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $relO, $association->getPropertyName(), $association);
+                    $this->setInversedAssociation($baseInstance, $relO, $relKey);
+                }
+            } else {
+                if ($andAddLazyLoad && $association->isCollection() && $association->isLazy()) {
+                    $lazy = new LazyRelationshipCollection($this->entityManager, $baseInstance, $association->getTargetEntity(), $association);
+                    $association->setValue($baseInstance, $lazy);
                 }
             }
+        }
 
-            foreach ($this->classMetadata->getRelationshipEntities() as $key => $relationshipEntity) {
-                $class = $this->getTargetFullClassName($relationshipEntity->getRelationshipEntityClass());
-                /** @var RelationshipEntityMetadata $reMetadata */
-                $reMetadata = $this->entityManager->getRelationshipEntityMetadata($class);
-                $recordKey = sprintf('rel_%s_%s', strtolower($relationshipEntity->getPropertyName()), strtolower($reMetadata->getType()));
-                if (!$record->hasValue($recordKey) || null === $record->get($recordKey) || empty($record->get($recordKey))) {
-                    continue;
+        foreach ($this->classMetadata->getRelationshipEntities() as $key => $relationshipEntity) {
+            $class = $this->getTargetFullClassName($relationshipEntity->getRelationshipEntityClass());
+            /** @var RelationshipEntityMetadata $reMetadata */
+            $reMetadata = $this->entityManager->getRelationshipEntityMetadata($class);
+            $recordKey = sprintf('rel_%s_%s', strtolower($relationshipEntity->getPropertyName()), strtolower($reMetadata->getType()));
+            if (!$record->hasValue($recordKey) || null === $record->get($recordKey) || empty($record->get($recordKey))) {
+                continue;
+            }
+            $startNodeMetadata = $this->entityManager->getClassMetadataFor($reMetadata->getStartNode());
+            $endNodeMetadata = $this->entityManager->getClassMetadataFor($reMetadata->getEndNode());
+            if ($relationshipEntity->isCollection()) {
+                $v = new \GraphAware\Neo4j\OGM\Common\Collection();
+                if (!is_array($record->get($recordKey))) {
+                    throw new \LogicException('Expected array record value');
                 }
-                $startNodeMetadata = $this->entityManager->getClassMetadataFor($reMetadata->getStartNode());
-                $endNodeMetadata = $this->entityManager->getClassMetadataFor($reMetadata->getEndNode());
-                if ($relationshipEntity->isCollection()) {
-                    $v = new \GraphAware\Neo4j\OGM\Common\Collection();
-                    if (!is_array($record->get($recordKey))) {
-                        throw new \LogicException('Expected array record value');
-                    }
-                    foreach ($record->get($recordKey) as $reMap) {
-                        $oo2 = $this->hydrateRelationshipEntity(
-                            $reMetadata, $reMap, $startNodeMetadata, $endNodeMetadata, $baseInstance, $relationshipEntity
-                        );
-                        $v->add($oo2);
-                    }
-                    $relationshipEntity->setValue($baseInstance, $v);
-                } else {
+                foreach ($record->get($recordKey) as $reMap) {
+                    $oo2 = $this->hydrateRelationshipEntity(
+                        $reMetadata, $reMap, $startNodeMetadata, $endNodeMetadata, $baseInstance, $relationshipEntity
+                    );
+                    $v->add($oo2);
+                }
+                $relationshipEntity->setValue($baseInstance, $v);
+            } else {
+                $reMap = $record->get($recordKey);
+                if (!empty($reMap)) {
                     $reMap = $record->get($recordKey);
-                    if (!empty($reMap)) {
-                        $reMap = $record->get($recordKey);
-                        $relationshipEntity->setValue($baseInstance,
-                            $this->hydrateRelationshipEntity(
-                                $reMetadata, $reMap[0], $startNodeMetadata, $endNodeMetadata, $baseInstance, $relationshipEntity
-                            ));
-                    }
+                    $relationshipEntity->setValue($baseInstance,
+                        $this->hydrateRelationshipEntity(
+                            $reMetadata, $reMap[0], $startNodeMetadata, $endNodeMetadata, $baseInstance, $relationshipEntity
+                        ));
                 }
             }
+        }
 
-            $lazyDone = [];
+        $lazyDone = [];
 
-            foreach ($this->classMetadata->getLazyRelationships(true) as $relationship) {
-                if (!$relationship->isRelationshipEntity()) {
-                    $lazyDone[] = $relationship->getPropertyName();
-                    $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getTargetEntity(), $relationship);
+        foreach ($this->classMetadata->getLazyRelationships(true) as $relationship) {
+            if (!$relationship->isRelationshipEntity()) {
+                $lazyDone[] = $relationship->getPropertyName();
+                $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getTargetEntity(), $relationship);
+                $relationship->setValue($baseInstance, $lazyCollection);
+                continue;
+            }
+
+            if ($relationship->isRelationshipEntity()) {
+                if ($relationship->isCollection()) {
+                    $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getRelationshipEntityClass(), $relationship);
                     $relationship->setValue($baseInstance, $lazyCollection);
-                    continue;
+                } else {
                 }
+            }
+        }
 
-                if ($relationship->isRelationshipEntity()) {
-                    if ($relationship->isCollection()) {
+        if ($considerAllLazy) {
+            foreach ($this->classMetadata->getSimpleRelationships() as $relationship) {
+                if ($relationship->isCollection()) {
+                    if (!$relationship->isRelationshipEntity()) {
+                        $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getTargetEntity(), $relationship);
+                        $relationship->setValue($baseInstance, $lazyCollection);
+                        continue;
+                    }
+
+                    if ($relationship->isRelationshipEntity()) {
                         $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getRelationshipEntityClass(), $relationship);
                         $relationship->setValue($baseInstance, $lazyCollection);
-                    } else {
-                    }
-                }
-            }
-
-            if ($considerAllLazy) {
-                foreach ($this->classMetadata->getSimpleRelationships() as $relationship) {
-                    if ($relationship->isCollection()) {
-                        if (!$relationship->isRelationshipEntity()) {
-                            $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getTargetEntity(), $relationship);
-                            $relationship->setValue($baseInstance, $lazyCollection);
-                            continue;
-                        }
-
-                        if ($relationship->isRelationshipEntity()) {
-                            $lazyCollection = new LazyRelationshipCollection($this->entityManager, $baseInstance, $relationship->getRelationshipEntityClass(), $relationship);
-                            $relationship->setValue($baseInstance, $lazyCollection);
-                        }
                     }
                 }
             }
         }
 
+
         return $baseInstance;
     }
 
-    public function hydrateRelationshipEntity(
+    private function hydrateRelationshipEntity(
         RelationshipEntityMetadata $reMetadata,
         array $reMap,
         NodeEntityMetadata $startNodeMetadata,
@@ -222,9 +237,11 @@ class ObjectHydration
         return $this->entityManager->getRepository($target);
     }
 
-    private function hydrateNode(Node $node, $className = null, $andProxy = false)
+    private function hydrateNode(Node $node, $className = null, $andProxy = false, $refresh = false)
     {
-        if ($entity = $this->entityManager->getUnitOfWork()->getEntityById($node->identity())) {
+        $entity = $this->entityManager->getUnitOfWork()->getEntityById($node->identity());
+
+        if ($entity) {
             return $entity;
         }
         $cl = $className !== null ? $className : $this->className;
@@ -336,36 +353,12 @@ class ObjectHydration
             return $i2;
         }
 
+        if ($refresh) {
+
+        }
         $instance = $cm->newInstance();
-        foreach ($cm->getPropertiesMetadata() as $field => $meta) {
-            if ($meta instanceof EntityPropertyMetadata) {
-                if ($node->hasValue($field)) {
-                    $meta->setValue($instance, $node->value($field));
-                }
-            } elseif ($meta instanceof Label) {
-                $label = $meta->name;
-                /*
-                $v = $node->hasLabel($label);
-                if ($property = $reflClass->getProperty($field)) {
-                    $property->setAccessible(true);
-                    $property->setValue($instance, $v);
-                }
-                */
-            }
-        }
+        $this->populateDataToInstance($node, $cm, $instance);
 
-        foreach ($cm->getLabeledProperties() as $labeledProperty) {
-            $v = $node->hasLabel($labeledProperty->getLabelName()) ? true : false;
-            $labeledProperty->setLabel($instance, $v);
-        }
-
-        foreach ($cm->getRelationships() as $relationship) {
-            if ($relationship->isCollection()) {
-                $relationship->initializeCollection($instance);
-            }
-        }
-
-        $cm->setId($instance, $node->identity());
         $this->entityManager->getUnitOfWork()->addManaged($instance);
 
         return $instance;
@@ -382,7 +375,7 @@ class ObjectHydration
             }
             $value = null;
             if ($field->isEntity()) {
-                $value = $this->hydrate($record, false, $field->getFieldName(), ClassUtils::getFullClassName($field->getTarget(), $resultMapper->getClassName()));
+                $value = $this->getNodeBaseInstance($record, $field->getFieldName(), ClassUtils::getFullClassName($field->getTarget(), $resultMapper->getClassName()));
             } else {
                 $value = $record->get($field->getFieldName());
             }
@@ -394,6 +387,22 @@ class ObjectHydration
         return $instance;
     }
 
+    private function getNodeBaseInstance(Record $record, $identifier = 'n', $className = null)
+    {
+
+        $classN = null !== $className ? $className : $this->className;
+        $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
+        $cm = $this->entityManager->getClassMetadataFor($classN);
+
+        return $baseInstance;
+    }
+
+    /**
+     * Hydrate a complete result set.
+     * @param Result $result
+     *
+     * @return array
+     */
     public function hydrateResultSet(Result $result)
     {
         $entities = [];
@@ -425,6 +434,44 @@ class ObjectHydration
         }
 
         return $className;
+    }
+
+    /**
+     * @param Node $node
+     * @param NodeEntityMetadata $cm
+     * @param object$instance
+     */
+    private function populateDataToInstance(Node $node, $cm, $instance)
+    {
+        foreach ($cm->getPropertiesMetadata() as $field => $meta) {
+            if ($meta instanceof EntityPropertyMetadata) {
+                if ($node->hasValue($field)) {
+                    $meta->setValue($instance, $node->value($field));
+                }
+            } elseif ($meta instanceof Label) {
+                $label = $meta->name;
+                /*
+                $v = $node->hasLabel($label);
+                if ($property = $reflClass->getProperty($field)) {
+                    $property->setAccessible(true);
+                    $property->setValue($instance, $v);
+                }
+                */
+            }
+        }
+
+        foreach ($cm->getLabeledProperties() as $labeledProperty) {
+            $v = $node->hasLabel($labeledProperty->getLabelName()) ? true : false;
+            $labeledProperty->setLabel($instance, $v);
+        }
+
+        foreach ($cm->getRelationships() as $relationship) {
+            if ($relationship->isCollection()) {
+                $relationship->initializeCollection($instance);
+            }
+        }
+
+        $cm->setId($instance, $node->identity());
     }
 
 }
