@@ -48,6 +48,7 @@ class ObjectHydration
     const OPTION_ADD_LAZY_LOAD = 'lazy_load';
     const OPTION_CONSIDER_ALL_LACY = 'all_lazy';
     const OPTION_REFRESH = 'refresh';
+    const OPTION_IDENTIFIER = 'identifier';
 
 
     /**
@@ -65,16 +66,17 @@ class ObjectHydration
     }
 
 
-    public function hydrate(Record $record, $options)
+    public function hydrate(Record $record, array $options = [])
     {
         $andAddLazyLoad = isset($options[self::OPTION_ADD_LAZY_LOAD]) ? $options[self::OPTION_ADD_LAZY_LOAD] : false;
         $considerAllLazy = isset($options[self::OPTION_CONSIDER_ALL_LACY]) ? $options[self::OPTION_CONSIDER_ALL_LACY] : false;
         $refresh = isset($options[self::OPTION_REFRESH]) ? $options[self::OPTION_REFRESH] : false;
+        $identifier = isset($options[self::OPTION_IDENTIFIER]) ? $options[self::OPTION_IDENTIFIER] : 'n';
 
         // getNodeBaseInstance
         $classMeta = $this->entityManager->getClassMetadataFor($record);
-        $classN = null !== $className ? $className : $this->className;
-        $baseInstance = $this->hydrateNode($record->get($identifier), $classN);
+        $classN = $classMeta->getClassName();
+        $baseInstance = $this->hydrateNode($record->get($identifier), $classN, $refresh);
         $cm = $this->entityManager->getClassMetadataFor($classN);
         foreach ($this->classMetadata->getSimpleRelationships(false) as $key => $association) {
             $relId = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($association->getType()));
@@ -88,7 +90,7 @@ class ObjectHydration
                             $baseId = $record->nodeValue($identifier)->identity();
                             $nodeToUse = $v['end']->identity() === $baseId ? $v['start'] : $v['end'];
                         }
-                        $v2 = $this->hydrateNode($nodeToUse, $this->getTargetFullClassName($association->getTargetEntity()), true);
+                        $v2 = $this->hydrateNodeAndProxy($nodeToUse, $this->getTargetFullClassName($association->getTargetEntity()));
                         $association->addToCollection($baseInstance, $v2);
                         $this->entityManager->getUnitOfWork()->addManaged($v2);
                         $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $v2, $association->getPropertyName(), $association);
@@ -197,8 +199,8 @@ class ObjectHydration
         if (null !== $possibleRE = $this->entityManager->getUnitOfWork()->getRelationshipEntityById($relId)) {
             return $possibleRE;
         }
-        $start = $this->hydrateNode($reMap['start'], $startNodeMetadata->getClassName(), true);
-        $end = $this->hydrateNode($reMap['end'], $endNodeMetadata->getClassName(), true);
+        $start = $this->hydrateNodeAndProxy($reMap['start'], $startNodeMetadata->getClassName());
+        $end = $this->hydrateNodeAndProxy($reMap['end'], $endNodeMetadata->getClassName());
         $reInstance = $reMetadata->newInstance();
         $reMetadata->setId($reInstance, $relId);
         $reMetadata->setStartNodeProperty($reInstance, $start);
@@ -237,126 +239,146 @@ class ObjectHydration
         return $this->entityManager->getRepository($target);
     }
 
-    private function hydrateNode(Node $node, $className = null, $andProxy = false, $refresh = false)
+    private function hydrateNodeAndProxy(Node $node, $className = null)
     {
-        $entity = $this->entityManager->getUnitOfWork()->getEntityById($node->identity());
-
-        if ($entity) {
+        if ($entity = $this->entityManager->getUnitOfWork()->getEntityById($node->identity())) {
             return $entity;
         }
+
         $cl = $className !== null ? $className : $this->className;
         $cm = $className === null ? $this->classMetadata : $this->entityManager->getClassMetadataFor($cl);
         $pmVersion = !method_exists(Version::class, 'getVersion') ? 1 : (int) Version::getVersion()[0];
 
         $em = $this->entityManager;
-        if ($andProxy) {
-            if ($pmVersion >= 2) {
-                $initializer = function ($ghostObject, $method, array $parameters, &$initializer, array $properties) use ($cm, $node, $em, $pmVersion) {
-                    $initializer = null;
-                    /*
-                    foreach ($cm->getPropertiesMetadata() as $field => $meta) {
-                        if ($node->hasValue($field)) {
+        if ($pmVersion >= 2) {
+            $initializer = function ($ghostObject, $method, array $parameters, &$initializer, array $properties) use ($cm, $node, $em, $pmVersion) {
+                $initializer = null;
+                /*
+                foreach ($cm->getPropertiesMetadata() as $field => $meta) {
+                    if ($node->hasValue($field)) {
 
-                            $key = null;
-                            if ($meta->getReflectionProperty()->isPrivate()) {
-                                $key = '\\0' . $cm->getClassName() . '\\0' . $meta->getPropertyName();
-                            } else if($meta->getReflectionProperty()->isProtected()) {
-                                $key = '' . "\0" . '*' . "\0" . $meta->getPropertyName();
-                            } else if ($meta->getReflectionProperty()->isPublic()) {
-                                $key = $meta->getPropertyName();
-                            }
+                        $key = null;
+                        if ($meta->getReflectionProperty()->isPrivate()) {
+                            $key = '\\0' . $cm->getClassName() . '\\0' . $meta->getPropertyName();
+                        } else if($meta->getReflectionProperty()->isProtected()) {
+                            $key = '' . "\0" . '*' . "\0" . $meta->getPropertyName();
+                        } else if ($meta->getReflectionProperty()->isPublic()) {
+                            $key = $meta->getPropertyName();
+                        }
 
-                            if (null !== $key) {
-                                $properties[$key] = $node->value($field);
-                            }
+                        if (null !== $key) {
+                            $properties[$key] = $node->value($field);
+                        }
 
-                            foreach ($cm->getLabeledProperties() as $labeledProperty) {
-                                //$v = $node->hasLabel($labeledProperty->getLabelName()) ? true : false;
-                                //$labeledProperty->setLabel($instance, $v);
-                            }
+                        foreach ($cm->getLabeledProperties() as $labeledProperty) {
+                            //$v = $node->hasLabel($labeledProperty->getLabelName()) ? true : false;
+                            //$labeledProperty->setLabel($instance, $v);
                         }
                     }
-                    */
-
-                    foreach ($cm->getSimpleRelationships(false) as $relationship) {
-                        if (!$relationship->isCollection()) {
-                            $finder = new RelationshipsFinder($em, $relationship->getTargetEntity(), $relationship);
-                            $instances = $finder->find($node->identity());
-                            if (count($instances) > 0) {
-                                $properties[ProxyUtils::getPropertyIdentifier($relationship->getReflectionProperty(), $cm->getClassName())] = $instances[0];
-                            }
-                        }
-                    }
-
-                    return true;
-                };
-            } else {
-                $initializer = function ($ghostObject, $method, array $parameters, &$initializer) use ($cm, $node, $em, $pmVersion) {
-                    $initializer = null;
-                    foreach ($cm->getPropertiesMetadata() as $field => $meta) {
-                        if ($node->hasValue($field)) {
-                            $meta->setValue($ghostObject, $node->value($field));
-                        }
-                    }
-
-                    foreach ($cm->getSimpleRelationships(false) as $relationship) {
-                        if (!$relationship->isCollection()) {
-                            $finder = new RelationshipsFinder($em, $relationship->getTargetEntity(), $relationship);
-                            $instances = $finder->find($node->identity());
-                            if (count($instances) > 0) {
-                                $relationship->setValue($ghostObject, $instances[0]);
-                            }
-                        }
-                    }
-
-                    $cm->setId($ghostObject, $node->identity());
-
-                    return true;
-                };
-            }
-
-            $proxyOptions = [
-                'skippedProperties' => [
-                    ''."\0".'*'."\0".'id',
-                ],
-            ];
-
-            $instance = 2 === $pmVersion ? $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer, $proxyOptions) : $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer);
-            foreach ($cm->getPropertiesMetadata() as $field => $propertyMetadata) {
-                if ($node->hasValue($field)) {
-                    $propertyMetadata->setValue($instance, $node->value($field));
                 }
-            }
+                */
 
-            $cm->setId($instance, $node->identity());
-
-            foreach ($cm->getRelationships() as $relationship) {
-                if (!$relationship->isRelationshipEntity()) {
-                    if ($relationship->isCollection()) {
-                        $lazyCollection = new LazyRelationshipCollection($this->entityManager, $instance, $relationship->getTargetEntity(), $relationship);
-                        $relationship->setValue($instance, $lazyCollection);
-                        continue;
+                foreach ($cm->getSimpleRelationships(false) as $relationship) {
+                    if (!$relationship->isCollection()) {
+                        $finder = new RelationshipsFinder($em, $relationship->getTargetEntity(), $relationship);
+                        $instances = $finder->find($node->identity());
+                        if (count($instances) > 0) {
+                            $properties[ProxyUtils::getPropertyIdentifier($relationship->getReflectionProperty(), $cm->getClassName())] = $instances[0];
+                        }
                     }
                 }
 
-                if ($relationship->isRelationshipEntity()) {
-                    if ($relationship->isCollection()) {
-                        $lazyCollection = new LazyRelationshipCollection($this->entityManager, $instance, $relationship->getRelationshipEntityClass(), $relationship);
-                        $relationship->setValue($instance, $lazyCollection);
-                    } else {
+                return true;
+            };
+        } else {
+            $initializer = function ($ghostObject, $method, array $parameters, &$initializer) use ($cm, $node, $em, $pmVersion) {
+                $initializer = null;
+                foreach ($cm->getPropertiesMetadata() as $field => $meta) {
+                    if ($node->hasValue($field)) {
+                        $meta->setValue($ghostObject, $node->value($field));
                     }
                 }
-            }
-            $i2 = clone $instance;
-            $this->entityManager->getUnitOfWork()->addManaged($i2);
 
-            return $i2;
+                foreach ($cm->getSimpleRelationships(false) as $relationship) {
+                    if (!$relationship->isCollection()) {
+                        $finder = new RelationshipsFinder($em, $relationship->getTargetEntity(), $relationship);
+                        $instances = $finder->find($node->identity());
+                        if (count($instances) > 0) {
+                            $relationship->setValue($ghostObject, $instances[0]);
+                        }
+                    }
+                }
+
+                $cm->setId($ghostObject, $node->identity());
+
+                return true;
+            };
         }
+
+        $proxyOptions = [
+            'skippedProperties' => [
+                ''."\0".'*'."\0".'id',
+            ],
+        ];
+
+        $instance = 2 === $pmVersion ? $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer, $proxyOptions) : $this->lazyLoadingFactory->createProxy($cm->getClassName(), $initializer);
+        foreach ($cm->getPropertiesMetadata() as $field => $propertyMetadata) {
+            if ($node->hasValue($field)) {
+                $propertyMetadata->setValue($instance, $node->value($field));
+            }
+        }
+
+        $cm->setId($instance, $node->identity());
+
+        foreach ($cm->getRelationships() as $relationship) {
+            if (!$relationship->isRelationshipEntity()) {
+                if ($relationship->isCollection()) {
+                    $lazyCollection = new LazyRelationshipCollection($this->entityManager, $instance, $relationship->getTargetEntity(), $relationship);
+                    $relationship->setValue($instance, $lazyCollection);
+                    continue;
+                }
+            }
+
+            if ($relationship->isRelationshipEntity()) {
+                if ($relationship->isCollection()) {
+                    $lazyCollection = new LazyRelationshipCollection($this->entityManager, $instance, $relationship->getRelationshipEntityClass(), $relationship);
+                    $relationship->setValue($instance, $lazyCollection);
+                } else {
+                }
+            }
+        }
+
+        $i2 = clone $instance;
+        $this->entityManager->getUnitOfWork()->addManaged($i2);
+
+        return $i2;
+    }
+
+    /**
+     * Create a instance of the object and populate it with data.
+     *
+     * @param Node $node
+     * @param string|null $className
+     * @param bool $refresh
+     *
+     * @return null|object
+     */
+    private function hydrateNode(Node $node, $className = null, $refresh = false)
+    {
+        $entity = $this->entityManager->getUnitOfWork()->getEntityById($node->identity());
+        if ($entity && !$refresh) {
+            return $entity;
+        }
+
+        $cl = $className !== null ? $className : $this->className;
+        $cm = $className === null ? $this->classMetadata : $this->entityManager->getClassMetadataFor($cl);
 
         if ($refresh) {
-
+            $instance = $entity;
+        } else {
+            $instance = $cm->newInstance();
         }
-        $instance = $cm->newInstance();
+
         $this->populateDataToInstance($node, $cm, $instance);
 
         $this->entityManager->getUnitOfWork()->addManaged($instance);
