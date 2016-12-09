@@ -11,13 +11,15 @@
 
 namespace GraphAware\Neo4j\OGM;
 
+use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\FileCacheReader;
 use Doctrine\Common\EventManager;
 use Doctrine\Common\Persistence\ObjectManager;
 use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\Client\ClientInterface;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
-use GraphAware\Neo4j\OGM\Mapping\AnnotationDriver;
-use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactory;
+use GraphAware\Neo4j\OGM\Metadata\Factory\Annotation\AnnotationGraphEntityMetadataFactory;
+use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactoryInterface;
 use GraphAware\Neo4j\OGM\Metadata\GraphEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
@@ -27,22 +29,19 @@ use GraphAware\Neo4j\OGM\Util\ClassUtils;
 class EntityManager implements ObjectManager
 {
     /**
-     * @var \GraphAware\Neo4j\OGM\UnitOfWork
+     * @var UnitOfWork
      */
     protected $uow;
 
     /**
-     * @var \GraphAware\Neo4j\Client\ClientInterface
+     * @var ClientInterface
      */
     protected $databaseDriver;
 
     /**
-     * @var \GraphAware\Neo4j\OGM\Repository\BaseRepository[]
+     * @var BaseRepository[]
      */
     protected $repositories = [];
-
-    /** @var \GraphAware\Neo4j\OGM\Mapping\AnnotationDriver */
-    protected $annotationDriver;
 
     /**
      * @var QueryResultMapper[]
@@ -55,7 +54,7 @@ class EntityManager implements ObjectManager
     protected $loadedMetadata = [];
 
     /**
-     * @var \GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactory
+     * @var AnnotationGraphEntityMetadataFactory
      */
     protected $metadataFactory;
 
@@ -95,13 +94,21 @@ class EntityManager implements ObjectManager
         return new self($client);
     }
 
-    public function __construct(ClientInterface $databaseDriver, $cacheDirectory = null, EventManager $eventManager = null)
-    {
-        $this->annotationDriver = new AnnotationDriver($cacheDirectory);
+    public function __construct(
+        ClientInterface $databaseDriver,
+        $cacheDirectory = null,
+        EventManager $eventManager = null,
+        GraphEntityMetadataFactoryInterface $metadataFactory = null
+    ) {
         $this->eventManager = $eventManager ?: new EventManager();
         $this->uow = new UnitOfWork($this);
         $this->databaseDriver = $databaseDriver;
-        $this->metadataFactory = new GraphEntityMetadataFactory($this->annotationDriver->getReader());
+
+        if ($metadataFactory === null) {
+            $reader = new FileCacheReader(new AnnotationReader(), $cacheDirectory, $debug = true);
+            $metadataFactory = new AnnotationGraphEntityMetadataFactory($reader);
+        }
+        $this->metadataFactory = $metadataFactory;
     }
 
     /**
@@ -184,14 +191,6 @@ class EntityManager implements ObjectManager
         return $this->eventManager;
     }
 
-    /**
-     * @return \GraphAware\Neo4j\OGM\Mapping\AnnotationDriver
-     */
-    public function getAnnotationDriver()
-    {
-        return $this->annotationDriver;
-    }
-
     public function persist($entity)
     {
         if (!is_object($entity)) {
@@ -207,7 +206,7 @@ class EntityManager implements ObjectManager
     }
 
     /**
-     * @return \GraphAware\Neo4j\OGM\UnitOfWork
+     * @return UnitOfWork
      */
     public function getUnitOfWork()
     {
@@ -215,7 +214,7 @@ class EntityManager implements ObjectManager
     }
 
     /**
-     * @return \GraphAware\Neo4j\Client\Client
+     * @return \GraphAware\Neo4j\Client\ClientInterface
      */
     public function getDatabaseDriver()
     {
@@ -225,7 +224,7 @@ class EntityManager implements ObjectManager
     public function getResultMappingMetadata($class)
     {
         if (!array_key_exists($class, $this->resultMappers)) {
-            $this->resultMappers[$class] = $this->annotationDriver->readQueryResult($class);
+            $this->resultMappers[$class] = $this->metadataFactory->createQueryResultMapper($class);
             foreach ($this->resultMappers[$class]->getFields() as $field) {
                 if ($field->isEntity()) {
                     $targetFQDN = ClassUtils::getFullClassName($field->getTarget(), $class);
@@ -275,7 +274,7 @@ class EntityManager implements ObjectManager
     /**
      * @param string $class
      *
-     * @return \GraphAware\Neo4j\OGM\Repository\BaseRepository
+     * @return BaseRepository
      */
     public function getRepository($class)
     {

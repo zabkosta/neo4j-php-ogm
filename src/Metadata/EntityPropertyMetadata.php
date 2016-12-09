@@ -74,6 +74,14 @@ class EntityPropertyMetadata
     }
 
     /**
+     * @return PropertyAnnotationMetadata
+     */
+    public function getPropertyAnnotationMetadata()
+    {
+        return $this->propertyAnnotationMetadata;
+    }
+
+    /**
      * @param object $object
      *
      * @return mixed

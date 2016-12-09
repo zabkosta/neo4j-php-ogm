@@ -12,10 +12,9 @@
 namespace GraphAware\Neo4j\OGM\Tests\Metadata;
 
 use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Annotations\AnnotationRegistry;
 use Doctrine\Common\Annotations\FileCacheReader;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
-use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactory;
+use GraphAware\Neo4j\OGM\Metadata\Factory\Annotation\AnnotationGraphEntityMetadataFactory;
 use GraphAware\Neo4j\OGM\Metadata\GraphEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
@@ -30,22 +29,20 @@ class MetadataFactoryITest extends \PHPUnit_Framework_TestCase
     protected $annotationReader;
 
     /**
-     * @var \GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactory
+     * @var AnnotationGraphEntityMetadataFactory
      */
     protected $entityMetadataFactory;
 
     public function setUp()
     {
         parent::setUp();
-        $mappingDir = getenv('basedir').DIRECTORY_SEPARATOR.'src/Mapping/';
-        AnnotationRegistry::registerFile($mappingDir.'/Neo4jOGMAnnotations.php');
         $this->annotationReader = new FileCacheReader(
             new AnnotationReader(),
             getenv('proxydir'),
             true
         );
 
-        $this->entityMetadataFactory = new GraphEntityMetadataFactory($this->annotationReader);
+        $this->entityMetadataFactory = new AnnotationGraphEntityMetadataFactory($this->annotationReader);
     }
 
     public function testNodeEntityMetadataIsCreated()

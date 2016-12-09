@@ -30,7 +30,7 @@ final class Property
      */
     public $key;
 
-    /*
+    /**
      * @var bool
      */
     public $nullable;
