@@ -9,53 +9,56 @@
  * file that was distributed with this source code.
  */
 
-namespace GraphAware\Neo4j\OGM\Metadata\Factory;
+namespace GraphAware\Neo4j\OGM\Metadata\Factory\Annotation;
 
 use Doctrine\Common\Annotations\Reader;
 use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Annotations\Lazy;
+use GraphAware\Neo4j\OGM\Annotations\MappedResult;
 use GraphAware\Neo4j\OGM\Annotations\Node;
 use GraphAware\Neo4j\OGM\Annotations\OrderBy;
+use GraphAware\Neo4j\OGM\Annotations\QueryResult;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Annotations\RelationshipEntity;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
 use GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata;
 use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
+use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactoryInterface;
 use GraphAware\Neo4j\OGM\Metadata\LabeledPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
-use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
+use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
-use SebastianBergmann\CodeCoverage\Report\PHP;
+use GraphAware\Neo4j\OGM\Metadata\ResultField;
 
-class GraphEntityMetadataFactory
+class AnnotationGraphEntityMetadataFactory implements GraphEntityMetadataFactoryInterface
 {
     /**
-     * @var \Doctrine\Common\Annotations\Reader
+     * @var Reader
      */
     private $reader;
 
     /**
-     * @var \GraphAware\Neo4j\OGM\Metadata\Factory\NodeAnnotationMetadataFactory
+     * @var NodeAnnotationMetadataFactory
      */
     private $nodeAnnotationMetadataFactory;
 
     /**
-     * @var \GraphAware\Neo4j\OGM\Metadata\Factory\PropertyAnnotationMetadataFactory
+     * @var PropertyAnnotationMetadataFactory
      */
     private $propertyAnnotationMetadataFactory;
 
     /**
-     * @var \GraphAware\Neo4j\OGM\Metadata\Factory\IdAnnotationMetadataFactory
+     * @var IdAnnotationMetadataFactory
      */
     private $IdAnnotationMetadataFactory;
 
     /**
-     * @var \GraphAware\Neo4j\OGM\Metadata\Factory\RelationshipEntityMetadataFactory
+     * @var RelationshipEntityMetadataFactory
      */
     private $relationshipEntityMetadataFactory;
 
     /**
-     * @param \Doctrine\Common\Annotations\Reader $reader
+     * @param Reader $reader
      */
     public function __construct(Reader $reader)
     {
@@ -66,11 +69,6 @@ class GraphEntityMetadataFactory
         $this->relationshipEntityMetadataFactory = new RelationshipEntityMetadataFactory($reader);
     }
 
-    /**
-     * @param string $className
-     *
-     * @return NodeEntityMetadata|RelationshipEntityMetadata
-     */
     public function create($className)
     {
         $reflectionClass = new \ReflectionClass($className);
@@ -103,15 +101,63 @@ class GraphEntityMetadataFactory
                 }
             }
 
+            if ($entityIdMetadata === null) {
+                throw new MappingException(sprintf('The class "%s" must have ID mapping defined', $className));
+            }
+
             return new NodeEntityMetadata($className, $reflectionClass, $annotationMetadata, $entityIdMetadata, $propertiesMetadata, $relationshipsMetadata);
         } elseif (null !== $annotation = $this->reader->getClassAnnotation($reflectionClass, RelationshipEntity::class)) {
             return $this->relationshipEntityMetadataFactory->create($className);
         }
 
-        if (null !== get_parent_class($className)) {
+        if (false !== get_parent_class($className)) {
             return $this->create(get_parent_class($className));
         }
 
         throw new MappingException(sprintf('The class "%s" is not a valid OGM entity', $className));
+    }
+
+    public function supports($className)
+    {
+        $reflectionClass = new \ReflectionClass($className);
+
+        if (
+            $this->reader->getClassAnnotation($reflectionClass, Node::class) === null
+            && get_parent_class($className) !== false
+        ) {
+            return $this->supports(get_parent_class($className));
+        }
+
+        return true;
+    }
+
+    public function supportsQueryResult($className)
+    {
+        $reflClass = new \ReflectionClass($className);
+        $classAnnotations = $this->reader->getClassAnnotations($reflClass);
+
+        foreach ($classAnnotations as $classAnnotation) {
+            if ($classAnnotation instanceof QueryResult) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function createQueryResultMapper($className)
+    {
+        $reflClass = new \ReflectionClass($className);
+        $queryResultMapper = new QueryResultMapper($className);
+
+        foreach ($reflClass->getProperties() as $property) {
+            foreach ($this->reader->getPropertyAnnotations($property) as $propertyAnnotation) {
+                if ($propertyAnnotation instanceof MappedResult) {
+                    $queryResultMapper->addField(new ResultField($property->getName(), $propertyAnnotation->type, $propertyAnnotation->target));
+                }
+            }
+        }
+
+        return $queryResultMapper;
     }
 }

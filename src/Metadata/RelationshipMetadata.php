@@ -56,6 +56,7 @@ final class RelationshipMetadata
      * @param \ReflectionProperty                            $reflectionProperty
      * @param \GraphAware\Neo4j\OGM\Annotations\Relationship $relationshipAnnotation
      * @param bool                                           $isLazy
+     * @param OrderBy                                        $orderBy
      */
     public function __construct($className, \ReflectionProperty $reflectionProperty, Relationship $relationshipAnnotation, $isLazy = false, OrderBy $orderBy = null)
     {
