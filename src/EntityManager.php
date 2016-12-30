@@ -54,7 +54,7 @@ class EntityManager implements ObjectManager
     protected $loadedMetadata = [];
 
     /**
-     * @var AnnotationGraphEntityMetadataFactory
+     * @var GraphEntityMetadataFactoryInterface
      */
     protected $metadataFactory;
 

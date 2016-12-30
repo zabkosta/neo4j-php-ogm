@@ -37,7 +37,8 @@ a `Person` wrote a `Movie`
 
 ### Mapping definition
 
-Mapping definition is done by using **Annotations** on your domain object entities, let's build the Person model :
+Mapping definition is done by using **Annotations** on your domain object entities, 
+or **XML** mapping files (XML mapping documentation can be found [here](xml-mapping.md)). Let's build the Person model :
 
 ```php
 <?php
