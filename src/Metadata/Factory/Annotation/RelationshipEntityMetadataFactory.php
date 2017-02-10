@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace GraphAware\Neo4j\OGM\Metadata\Factory;
+namespace GraphAware\Neo4j\OGM\Metadata\Factory\Annotation;
 
 use Doctrine\Common\Annotations\Reader;
 use GraphAware\Neo4j\OGM\Annotations\EndNode;

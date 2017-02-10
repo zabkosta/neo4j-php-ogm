@@ -31,7 +31,8 @@
     "autoload": {
         "psr-4": {
             "GraphAware\\Neo4j\\OGM\\": "src/"
-        }
+        },
+        "files": ["src/Mapping/Neo4jOGMAnnotations.php"]
     },
     "autoload-dev": {
         "psr-4": {

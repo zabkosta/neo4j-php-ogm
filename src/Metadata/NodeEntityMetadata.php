@@ -38,7 +38,7 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     /**
      * NodeEntityMetadata constructor.
      *
-     * @param \GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata       $className
+     * @param string                                                $className
      * @param \ReflectionClass                                      $reflectionClass
      * @param \GraphAware\Neo4j\OGM\Metadata\NodeAnnotationMetadata $nodeAnnotationMetadata
      * @param \GraphAware\Neo4j\OGM\Metadata\EntityIdMetadata       $entityIdMetadata
