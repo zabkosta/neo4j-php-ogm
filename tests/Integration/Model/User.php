@@ -96,6 +96,13 @@ class User
      */
     protected $userResources;
 
+    /**
+     * @var int
+     *
+     * @OGM\Property()
+     */
+    protected $updatedAt;
+
     public function __construct($login, $age = null)
     {
         $this->login = $login;
@@ -280,6 +287,16 @@ class User
         $userResource = new UserResource($this, $resource, $amount);
         $this->userResources->add($userResource);
         $resource->getUserResources()->add($userResource);
+    }
+
+    public function setUpdatedAt(\DateTime $dateTime)
+    {
+        $this->updatedAt = $dateTime->getTimestamp();
+    }
+
+    public function getUpdatedAt()
+    {
+        return $this->updatedAt;
     }
 
     /** @see \Serializable::serialize() */
