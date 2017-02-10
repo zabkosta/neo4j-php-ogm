@@ -30,6 +30,13 @@ class Account
      */
     protected $user;
 
+    /**
+     * @var Group
+     *
+     * @OGM\Relationship(type="IN_GROUP", direction="OUTGOING", targetEntity="Group", mappedBy="accounts")
+     */
+    protected $group;
+
     public function __construct()
     {
         $this->credentials = str_repeat('x'.time(), 2);
@@ -57,5 +64,18 @@ class Account
     public function getUser()
     {
         return $this->user;
+    }
+
+    /**
+     * @return Group
+     */
+    public function getGroup()
+    {
+        return $this->group;
+    }
+
+    public function setGroup(Group $group)
+    {
+        $this->group = $group;
     }
 }

@@ -341,7 +341,6 @@ class BaseRepository
             $this->hydrateFetchRelationships($instance, $record);
             $this->entityManager->getUnitOfWork()->addManaged($instance);
             $instances[] = $instance;
-
         }
 
         return $instances;
