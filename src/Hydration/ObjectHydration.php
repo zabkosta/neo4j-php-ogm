@@ -10,7 +10,6 @@
  * file that was distributed with this source code.
  */
 
-
 namespace GraphAware\Neo4j\OGM\Hydration;
 
 use GraphAware\Common\Result\Record;
@@ -25,14 +24,8 @@ use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
-use GraphAware\Neo4j\OGM\Query\Pagination;
-use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 use GraphAware\Neo4j\OGM\Util\ProxyUtils;
-use ProxyManager\Configuration;
-use ProxyManager\Factory\LazyLoadingGhostFactory;
-use ProxyManager\FileLocator\FileLocator;
-use ProxyManager\GeneratorStrategy\FileWriterGeneratorStrategy;
 use ProxyManager\Version;
 
 
@@ -194,6 +187,11 @@ class ObjectHydration
         return $baseInstance;
     }
 
+    private function setInversedAssociation($a, $b, $c)
+    {
+        $this->entityManager->getRepository($this->className)->setInversedAssociation($a, $b, $c);
+    }
+
     private function hydrateRelationshipEntity(
         RelationshipEntityMetadata $reMetadata,
         array $reMap,
@@ -245,7 +243,7 @@ class ObjectHydration
 
     private function getHydrator($target)
     {
-        return $this->entityManager->getRepository($target);
+        return $this->entityManager->getHydrator($target);
     }
 
     private function hydrateNodeAndProxy(Node $node, $className = null)
@@ -387,6 +385,8 @@ class ObjectHydration
         } else {
             $instance = $cm->newInstance();
         }
+
+        $instance = $cm->newInstance();
 
         $this->populateDataToInstance($node, $cm, $instance);
 

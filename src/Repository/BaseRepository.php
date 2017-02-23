@@ -338,6 +338,36 @@ class BaseRepository
         }
     }
 
+    public function setInversedAssociation($baseInstance, $otherInstance, $relationshipKey)
+    {
+        $class = get_class($otherInstance);
+        if (false !== get_parent_class($otherInstance)) {
+            $class = get_parent_class($otherInstance);
+        }
+        $assoc = $this->classMetadata->getRelationship($relationshipKey);
+        if ($assoc->hasMappedByProperty()) {
+            $mappedBy = $assoc->getMappedByProperty();
+            $reflClass = $this->getReflectionClass($class);
+            $property = $reflClass->getProperty($mappedBy);
+            $property->setAccessible(true);
+            $otherClassMetadata = $this->entityManager->getClassMetadataFor(get_class($otherInstance));
+            if ($otherClassMetadata instanceof RelationshipMetadata || $otherClassMetadata instanceof RelationshipEntityMetadata) {
+                return;
+            }
+            if ($otherClassMetadata->getRelationship($mappedBy)->isCollection()) {
+                if (null === $property->getValue($otherInstance)) {
+                    $mt = $otherClassMetadata->getRelationship($mappedBy);
+                    $lazy = new LazyRelationshipCollection($this->entityManager, $otherInstance, $mt->getTargetEntity(), $mt, $baseInstance);
+                    $property->setValue($otherInstance, $lazy);
+                } else {
+                    $property->getValue($otherInstance)->addInit($baseInstance);
+                }
+            } else {
+                $property->setValue($otherInstance, $baseInstance);
+            }
+        }
+    }
+
     public function paginated($first, $max, array $order = [])
     {
         return $this->findAll(['first' => $first, 'max' => $max, 'order' => $order]);
