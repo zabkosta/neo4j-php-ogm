@@ -31,6 +31,14 @@ class User
     protected $profile;
 
     /**
+     * @var Account
+     *
+     * @OGM\Relationship(type="HAS_ACCOUNT", direction="OUTGOING", targetEntity="Account", mappedBy="user")
+     * @OGM\Fetch()
+     */
+    protected $account;
+
+    /**
      * User constructor.
      * @param string $login
      */
@@ -38,6 +46,7 @@ class User
     {
         $this->login = $login;
         $this->profile = new Profile($login.'@graphaware.com');
+        $this->account = new Account();
     }
 
     /**
@@ -62,5 +71,13 @@ class User
     public function getProfile()
     {
         return $this->profile;
+    }
+
+    /**
+     * @return Account
+     */
+    public function getAccount()
+    {
+        return $this->account;
     }
 }

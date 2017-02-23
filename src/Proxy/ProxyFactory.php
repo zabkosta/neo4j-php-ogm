@@ -22,20 +22,19 @@ class ProxyFactory
         $this->proxyDir = $em->getProxyDirectory();
     }
 
-    public function fromNode(Node $node, $mappedByProperty = null)
+    public function fromNode(Node $node, array $mappedByProperties = array())
     {
         $object = $this->createProxy();
         $object->__setNode($node);
         $initializers = [];
         foreach ($this->classMetadata->getSimpleRelationships() as $relationship) {
-            //var_dump($relationship->getPropertyName() . ' - ' . $mappedByProperty);
-            if (!$relationship->isFetch() && !$relationship->getPropertyName() !== $mappedByProperty) {
+            if (!$relationship->isFetch() && !in_array($relationship->getPropertyName(), $mappedByProperties)) {
                 $initializer = $this->getInitializerFor($relationship);
                 $initializers[$relationship->getPropertyName()] = $initializer;
             }
         }
         $object->__setInitializers($initializers);
-        if (null !== $mappedByProperty) {
+        foreach ($mappedByProperties as $mappedByProperty) {
             $object->__setInitialized($mappedByProperty);
         }
 

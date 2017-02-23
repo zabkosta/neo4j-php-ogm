@@ -76,7 +76,7 @@ class SingleNodeInitializer
         $cm = $this->em->getClassMetadata($class);
 
         if (count($cm->getRelationships()) > 0) {
-            $o = $this->em->getProxyFactory($cm)->fromNode($result->firstRecord()->get('n'), $this->relationshipMetadata->getMappedByProperty());
+            $o = $this->em->getProxyFactory($cm)->fromNode($result->firstRecord()->get('n'), array($this->relationshipMetadata->getMappedByProperty()));
             $this->em->getRepository($class)->hydrateProperties($o, $result->firstRecord()->get('n'));
 
             return $o;

@@ -25,6 +25,15 @@ class ProxyIntegrationTest extends IntegrationTestCase
         $this->assertEquals(spl_object_hash($user), spl_object_hash($userRef));
     }
 
+    public function testFetchRelationsAreNotReInitialized()
+    {
+        /** @var User $user */
+        $user = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
+        $account = $user->getAccount();
+        $userRef = $account->getUser();
+        $this->assertEquals(spl_object_hash($user), spl_object_hash($userRef));
+    }
+
     private function createGraph()
     {
         $user = new User('ikwattro');

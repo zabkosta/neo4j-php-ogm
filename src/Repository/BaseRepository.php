@@ -327,11 +327,16 @@ class BaseRepository
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         return $this->entityManager->getHydrator()->hydrateResultSet($result);
 =======
+=======
+        $fetchedMappedBy = $this->classMetadata->getMappedByFieldsForFetch();
+
+>>>>>>> test that fetch relationships are not re-initialized
         $instances = [];
         foreach ($result->records() as $record) {
-            $instance = $this->entityManager->getProxyFactory($this->classMetadata)->fromNode($record->get('n'));
+            $instance = $this->entityManager->getProxyFactory($this->classMetadata)->fromNode($record->get('n'), $fetchedMappedBy);
             $this->hydrateProperties($instance, $record->get('n'));
             $this->hydrateFetchRelationships($instance, $record);
             $this->entityManager->getUnitOfWork()->addManaged($instance);
@@ -358,10 +363,11 @@ class BaseRepository
                 }
                 $otherInstance = null !== $this->entityManager->getUnitOfWork()->getEntityById($record->get($identifier)->identity())
                     ? $this->entityManager->getUnitOfWork()->getEntityById($record->get($identifier))
-                    : $this->entityManager->getProxyFactory($otherNodeMeta)->fromNode($record->get($identifier));
+                    : $this->entityManager->getProxyFactory($otherNodeMeta)->fromNode($record->get($identifier), $this->classMetadata->getMappedByFieldsForFetch());
                 $this->hydrateProperties($otherInstance, $record->get($identifier), $otherNodeMeta);
                 $this->entityManager->getUnitOfWork()->addManaged($otherInstance);
                 $relationship->setValue($instance, $otherInstance);
+                $this->setInversedAssociation($instance, $otherInstance, $relationship->getPropertyName());
                 $this->entityManager->getUnitOfWork()->addManagedRelationshipReference($instance, $otherInstance, $relationship->getPropertyName(), $relationship);
             }
         }

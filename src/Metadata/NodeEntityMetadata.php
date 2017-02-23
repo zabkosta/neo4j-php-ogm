@@ -312,4 +312,16 @@ final class NodeEntityMetadata extends GraphEntityMetadata
 
         return null;
     }
+
+    public function getMappedByFieldsForFetch()
+    {
+        $fields = [];
+        foreach ($this->getFetchRelationships() as $relationship) {
+            if ($relationship->hasMappedByProperty()) {
+                $fields[] = $relationship->getMappedByProperty();
+            }
+        }
+
+        return $fields;
+    }
 }
