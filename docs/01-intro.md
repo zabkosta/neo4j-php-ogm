@@ -451,7 +451,7 @@ class Movie
     ...
 
     /**
-     * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Person", collection=true)
+     * @OGM\Relationship(type="ACTED_IN", direction="INCOMING", targetEntity="Person", collection=true)
      * @var ArrayCollection|Person[]
      */
     protected $actors;
