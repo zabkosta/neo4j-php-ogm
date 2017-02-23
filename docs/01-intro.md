@@ -27,7 +27,7 @@ Let's take a look at the movie graph and define what our domain objects will loo
 We can identify the following entities :
 
 * a **Person** having a `name` and `born` properties
-* a **Movie** having a `title`, `tagline` and `release` properties
+* a **Movie** having a `title`, `tagline` and `released` properties
 
 Also, the following relationships can be identified :
 
@@ -246,16 +246,16 @@ class Movie
      * @OGM\Property(type="int")
      * @var int
      */
-    protected $release;
+    protected $released;
 
     /**
      * @param string $title
-     * @param string|null $release
+     * @param string|null $released
      */
-    public function __construct($title, $release = null)
+    public function __construct($title, $released = null)
     {
         $this->title = $title;
-        $this->release = $release;
+        $this->released = $released;
     }
 
     /**
@@ -293,9 +293,9 @@ class Movie
     /**
      * @return int
      */
-    public function getRelease()
+    public function getReleased()
     {
-        return $this->release;
+        return $this->released;
     }
 }
 ```
@@ -458,12 +458,12 @@ class Movie
 
     /**
      * @param string $title
-     * @param string|null $release
+     * @param string|null $released
      */
-    public function __construct($title, $release = null)
+    public function __construct($title, $released = null)
     {
         $this->title = $title;
-        $this->release = $release;
+        $this->released = $released;
         $this->actors = new ArrayCollection();
     }
 
