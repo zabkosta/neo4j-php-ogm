@@ -32,7 +32,7 @@ class Movie
      * @OGM\Property(type="int")
      * @var int
      */
-    protected $release;
+    protected $released;
 
     /**
      * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Person", collection=true)
@@ -42,12 +42,12 @@ class Movie
 
     /**
      * @param string $title
-     * @param string|null $release
+     * @param string|null $released
      */
-    public function __construct($title, $release = null)
+    public function __construct($title, $released = null)
     {
         $this->title = $title;
-        $this->release = $release;
+        $this->released = $released;
         $this->actors = new ArrayCollection();
     }
 
@@ -94,9 +94,9 @@ class Movie
     /**
      * @return int
      */
-    public function getRelease()
+    public function getReleased()
     {
-        return $this->release;
+        return $this->released;
     }
 
     /**
