@@ -33,7 +33,7 @@ class SingleNodeInitializer
         $result = $this->em->getDatabaseDriver()->run($query, ['startId' => $startId]);
 
         $object = $this->handleResult($result);
-        $this->em->getRepository(get_class($object))->hydrateProperties($object, $result->firstRecord()->get('n'));
+        $this->em->getHydrator(get_class($object))->populateDataToInstance($result->firstRecord()->get('n'), $this->metadata, $object);
         $this->em->getUnitOfWork()->addManaged($object);
         $this->em->getRepository(get_class($baseInstance))->setInversedAssociation($baseInstance, $object, $this->relationshipMetadata->getPropertyName());
         $this->em->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $object, $this->relationshipMetadata->getPropertyName(), $this->relationshipMetadata);
@@ -77,7 +77,7 @@ class SingleNodeInitializer
 
         if (count($cm->getRelationships()) > 0) {
             $o = $this->em->getProxyFactory($cm)->fromNode($result->firstRecord()->get('n'), array($this->relationshipMetadata->getMappedByProperty()));
-            $this->em->getRepository($class)->hydrateProperties($o, $result->firstRecord()->get('n'));
+            $this->em->getHydrator($this->metadata->getClassName())->populateDataToInstance($result->firstRecord()->get('n'), $this->metadata, $o);
 
             return $o;
         }

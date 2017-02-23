@@ -121,6 +121,7 @@ class EntityManager implements EntityManagerInterface
             $metadataFactory = new AnnotationGraphEntityMetadataFactory($reader);
         }
         $this->metadataFactory = $metadataFactory;
+        $this->proxyDirectory = $cacheDirectory;
     }
 
     /**

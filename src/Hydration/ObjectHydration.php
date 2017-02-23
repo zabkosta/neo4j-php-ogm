@@ -386,7 +386,7 @@ class ObjectHydration
             $instance = $cm->newInstance();
         }
 
-        $instance = $cm->newInstance();
+        $instance = $this->entityManager->getProxyFactory($this->classMetadata)->fromNode($node);
 
         $this->populateDataToInstance($node, $cm, $instance);
 
@@ -472,7 +472,7 @@ class ObjectHydration
      * @param NodeEntityMetadata $cm
      * @param object$instance
      */
-    private function populateDataToInstance(Node $node, $cm, $instance)
+    public function populateDataToInstance(Node $node, $cm, $instance)
     {
         foreach ($cm->getPropertiesMetadata() as $field => $meta) {
             if ($meta instanceof EntityPropertyMetadata) {
