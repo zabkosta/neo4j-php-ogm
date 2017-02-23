@@ -23,11 +23,24 @@ class SingleNodeInitializer
         $this->metadata = $nodeEntityMetadata;
     }
 
-    public final function initialize(Node $node)
+    public function initialize(Node $node, $baseInstance)
     {
         $startId = $node->identity();
-        $relationshipType = $this->relationshipMetadata->getType();
+        $relQueryPart = $this->getRelQueryPart();
 
+        $query = 'MATCH (start)'.$relQueryPart.'(n) WHERE id(start) = {startId} RETURN n';
+
+        $result = $this->em->getDatabaseDriver()->run($query, ['startId' => $startId]);
+
+        $object = $this->handleResult($result);
+        $this->em->getRepository(get_class($baseInstance))->setInversedAssociation($baseInstance, $object, $this->relationshipMetadata->getPropertyName());
+
+        return $object;
+
+    }
+
+    protected function getRelQueryPart()
+    {
         switch ($this->relationshipMetadata->getDirection()) {
             case 'INCOMING':
                 $relStr = '<-[rel_%s:%s]-';
@@ -40,16 +53,13 @@ class SingleNodeInitializer
                 break;
         }
 
+        $relationshipType = $this->relationshipMetadata->getType();
         $relQueryPart = sprintf($relStr, strtolower($relationshipType), $relationshipType);
-        $query = 'MATCH (start)'.$relQueryPart.'(n) WHERE id(start) = {startId} RETURN n';
 
-        $result = $this->em->getDatabaseDriver()->run($query, ['startId' => $startId]);
-
-        return $this->handleResult($result);
-
+        return $relQueryPart;
     }
 
-    public final function handleResult(Result $result)
+    public function handleResult(Result $result)
     {
         if ($result->size() === 0) {
             return null;

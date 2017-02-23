@@ -27,12 +27,20 @@ class Init
     protected $name;
 
     /**
-     * @OGM\Relationship(type="RELATES", direction="OUTGOING", targetEntity="Related")
+     * @OGM\Relationship(type="RELATES", direction="OUTGOING", targetEntity="Related", mappedBy="init")
      * @OGM\Lazy()
      *
      * @var Related
      */
     protected $relation;
+
+    /**
+     * @var Profile
+     *
+     * @OGM\Relationship(type="HAS_PROFILE", direction="OUTGOING", targetEntity="Profile", mappedBy="init")
+     * @OGM\Fetch()
+     */
+    protected $profile;
 
     public function __construct($name = null)
     {
@@ -61,6 +69,14 @@ class Init
     public function getRelation()
     {
         return $this->relation;
+    }
+
+    /**
+     * @return Profile
+     */
+    public function getProfile()
+    {
+        return $this->profile;
     }
 
 }

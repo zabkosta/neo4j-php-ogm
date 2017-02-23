@@ -24,7 +24,7 @@ class ProxyFactoryTest extends IntegrationTestCase
 
     public function testProxyIsReturnedFromRepository()
     {
-        $this->em->clear();
+        $this->clearDb();
         $id = $this->createSmallGraph();
 
         $init = $this->em->getRepository(Init::class)->findOneById($id);
@@ -34,10 +34,14 @@ class ProxyFactoryTest extends IntegrationTestCase
         $this->assertEquals('Ale', $init->getName());
         $this->assertInstanceOf(Related::class, $init->getRelation());
         $this->assertEquals('Chris', $init->getRelation()->getName());
+        $this->assertInstanceOf(Profile::class, $init->getProfile());
+        $this->assertEquals('php@graphaware.com', $init->getProfile()->getEmail());
+        $this->assertInstanceOf(Init::class, $init->getRelation()->getInit());
+        $this->assertEquals(spl_object_hash($init), spl_object_hash($init->getRelation()->getInit()));
     }
 
     private function createSmallGraph()
     {
-        return $this->client->run('CREATE (n:Init {name:"Ale"})-[:RELATES]->(n2:Related {name:"Chris"}) RETURN id(n) AS id')->firstRecord()->get('id');
+        return $this->client->run('CREATE (n:Init {name:"Ale"})-[:RELATES]->(n2:Related {name:"Chris"}), (n)-[:HAS_PROFILE]->(:Profile {email:"php@graphaware.com"}) RETURN id(n) AS id')->firstRecord()->get('id');
     }
 }

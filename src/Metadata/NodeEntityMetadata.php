@@ -171,6 +171,22 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     }
 
     /**
+     * @param bool $andRelationshipEntities
+     * @return RelationshipMetadata[]
+     */
+    public function getFetchRelationships($andRelationshipEntities = false)
+    {
+        $rels = [];
+        foreach ($this->relationships as $relationship) {
+            if ($relationship->isFetch() && !$relationship->isRelationshipEntity()) {
+                $rels[] = $relationship;
+            }
+        }
+
+        return $rels;
+    }
+
+    /**
      * @param $key
      *
      * @return \GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata

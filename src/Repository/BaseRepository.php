@@ -240,66 +240,66 @@ class BaseRepository
         $label = $this->classMetadata->getLabel();
         $idId = $isId ? 'id(n)' : sprintf('n.%s', $key);
         $query = sprintf('MATCH (n:%s) WHERE %s = {%s}', $label, $idId, $key);
-//        /** @var \GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata[] $associations */
-//        $associations = $this->classMetadata->getNonLazyRelationships();
-//        $assocReturns = [];
-//        foreach ($associations as $identifier => $association) {
-//            $type = $association->isRelationshipEntity() ? $this->entityManager->getRelationshipEntityMetadata($association->getRelationshipEntityClass())->getType() : $association->getType();
-//            switch ($association->getDirection()) {
-//                case 'INCOMING':
-//                    $relStr = '<-[rel_%s:%s]-';
-//                    break;
-//                case 'OUTGOING':
-//                    $relStr = '-[rel_%s:%s]->';
-//                    break;
-//                default:
-//                    $relStr = '-[rel_%s:%s]-';
-//                    break;
-//            }
-//
-//            $relationshipIdentifier = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($type));
-//            $relQueryPart = sprintf($relStr, $relationshipIdentifier, $type);
-//            $query .= PHP_EOL;
-//            $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$association->getPropertyName().')';
-//            $query .= ' WITH n, ';
-//            $query .= implode(', ', $assocReturns);
-//            if (!empty($assocReturns)) {
-//                $query .= ', ';
-//            }
-//            $relid = 'rel_'.$relationshipIdentifier;
-//            if ($association->hasOrderBy()) {
-//                $orderProperty = $association->getPropertyName().'.'.$association->getOrderByPropery();
-//                if ($association->isRelationshipEntity()) {
-//                    $reMetadata = $this->entityManager->getRelationshipEntityMetadata($association->getRelationshipEntityClass());
-//                    $split = explode('.', $association->getOrderByPropery());
-//                    if (count($split) > 1) {
-//                        $reName = $split[0];
-//                        $v = $split[1];
-//                        if ($reMetadata->getStartNodePropertyName() === $reName || $reMetadata->getEndNodePropertyName() === $reName) {
-//                            $orderProperty = $association->getPropertyName().'.'.$v;
-//                        }
-//                    } else {
-//                        if (null !== $reMetadata->getPropertyMetadata($association->getOrderByPropery())) {
-//                            $orderProperty = $relid.'.'.$association->getOrderByPropery();
-//                        }
-//                    }
-//                }
-//                $query .= $relid.', '.$association->getPropertyName().' ORDER BY '.$orderProperty.' '.$association->getOrder();
-//                $query .= PHP_EOL;
-//                $query .= ' WITH n, ';
-//                $query .= implode(', ', $assocReturns);
-//                if (!empty($assocReturns)) {
-//                    $query .= ', ';
-//                }
-//            }
-//            if ($association->isCollection() || $association->isRelationshipEntity()) {
-//                $query .= sprintf(' CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
-//                $assocReturns[] = $relid;
-//            } else {
-//                $query .= $association->getPropertyName();
-//                $assocReturns[] = $association->getPropertyName();
-//            }
-//        }
+        /** @var \GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata[] $associations */
+        $associations = $this->classMetadata->getFetchRelationships();
+        $assocReturns = [];
+        foreach ($associations as $identifier => $association) {
+            $type = $association->isRelationshipEntity() ? $this->entityManager->getRelationshipEntityMetadata($association->getRelationshipEntityClass())->getType() : $association->getType();
+            switch ($association->getDirection()) {
+                case 'INCOMING':
+                    $relStr = '<-[rel_%s:%s]-';
+                    break;
+                case 'OUTGOING':
+                    $relStr = '-[rel_%s:%s]->';
+                    break;
+                default:
+                    $relStr = '-[rel_%s:%s]-';
+                    break;
+            }
+
+            $relationshipIdentifier = sprintf('%s_%s', strtolower($association->getPropertyName()), strtolower($type));
+            $relQueryPart = sprintf($relStr, $relationshipIdentifier, $type);
+            $query .= PHP_EOL;
+            $query .= 'OPTIONAL MATCH (n)'.$relQueryPart.'('.$association->getPropertyName().')';
+            $query .= ' WITH n, ';
+            $query .= implode(', ', $assocReturns);
+            if (!empty($assocReturns)) {
+                $query .= ', ';
+            }
+            $relid = 'rel_'.$relationshipIdentifier;
+            if ($association->hasOrderBy()) {
+                $orderProperty = $association->getPropertyName().'.'.$association->getOrderByPropery();
+                if ($association->isRelationshipEntity()) {
+                    $reMetadata = $this->entityManager->getRelationshipEntityMetadata($association->getRelationshipEntityClass());
+                    $split = explode('.', $association->getOrderByPropery());
+                    if (count($split) > 1) {
+                        $reName = $split[0];
+                        $v = $split[1];
+                        if ($reMetadata->getStartNodePropertyName() === $reName || $reMetadata->getEndNodePropertyName() === $reName) {
+                            $orderProperty = $association->getPropertyName().'.'.$v;
+                        }
+                    } else {
+                        if (null !== $reMetadata->getPropertyMetadata($association->getOrderByPropery())) {
+                            $orderProperty = $relid.'.'.$association->getOrderByPropery();
+                        }
+                    }
+                }
+                $query .= $relid.', '.$association->getPropertyName().' ORDER BY '.$orderProperty.' '.$association->getOrder();
+                $query .= PHP_EOL;
+                $query .= ' WITH n, ';
+                $query .= implode(', ', $assocReturns);
+                if (!empty($assocReturns)) {
+                    $query .= ', ';
+                }
+            }
+            if ($association->isCollection() || $association->isRelationshipEntity()) {
+                $query .= sprintf(' CASE count(%s) WHEN 0 THEN [] ELSE collect({start:startNode(%s), end:endNode(%s), rel:%s}) END as %s', $relid, $relid, $relid, $relid, $relid);
+                $assocReturns[] = $relid;
+            } else {
+                $query .= $association->getPropertyName();
+                $assocReturns[] = $association->getPropertyName();
+            }
+        }
 
         $query .= PHP_EOL;
         $query .= 'RETURN n';
@@ -319,14 +319,37 @@ class BaseRepository
         foreach ($result->records() as $record) {
             $instance = $this->entityManager->getProxyFactory($this->classMetadata)->fromNode($record->get('n'));
             $this->hydrateProperties($instance, $record->get('n'));
+            $this->hydrateFetchRelationships($instance, $record);
             $instances[] = $instance;
 
         }
 
         return $instances;
+    }
 
+<<<<<<< HEAD
         return $this->hydrateResultSet($result);
 >>>>>>> repository makes basic use of proxy
+=======
+    private function hydrateFetchRelationships($instance, Record $record)
+    {
+        foreach ($this->classMetadata->getFetchRelationships() as $relationship) {
+            $identifier = $relationship->getPropertyName();
+            $otherClass = $relationship->getTargetEntity();
+            $otherNodeMeta = $this->entityManager->getClassMetadata($otherClass);
+            if (!$relationship->isCollection()) {
+                if (null === $record->get($identifier)) {
+                    continue;
+                }
+                $otherInstance = null !== $this->entityManager->getUnitOfWork()->getEntityById($record->get($identifier)->identity())
+                    ? $this->entityManager->getUnitOfWork()->getEntityById($record->get($identifier))
+                    : $this->entityManager->getProxyFactory($otherNodeMeta)->fromNode($record->get($identifier));
+                $this->hydrateProperties($otherInstance, $record->get($identifier), $otherNodeMeta);
+                $this->entityManager->getUnitOfWork()->addManaged($otherInstance);
+                $relationship->setValue($instance, $otherInstance);
+            }
+        }
+>>>>>>> node collection initializer and set inversed during proxy initialization
     }
 
     public function paginated($first, $max, array $order = [])

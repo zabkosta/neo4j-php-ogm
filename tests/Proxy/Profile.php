@@ -5,14 +5,9 @@ namespace GraphAware\Neo4j\OGM\Tests\Proxy;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
- *
- * @OGM\Node(label="Related")
- *
- * Class Related
- * @package GraphAware\Neo4j\OGM\Tests\Proxy
- *
+ * @OGM\Node(label="Profile")
  */
-class Related
+class Profile
 {
     /**
      * @var int
@@ -26,18 +21,18 @@ class Related
      *
      * @OGM\Property(type="string")
      */
-    protected $name;
+    protected $email;
 
     /**
      * @var Init
      *
-     * @OGM\Relationship(type="RELATES", targetEntity="Init", direction="INCOMING")
+     * @OGM\Relationship(targetEntity="Init", type="HAS_PROFILE", direction="INCOMING")
      */
     protected $init;
 
-    public function __construct($name = null)
+    public function __construct($email)
     {
-        $this->name = $name;
+        $this->email = $email;
     }
 
     /**
@@ -51,9 +46,9 @@ class Related
     /**
      * @return string
      */
-    public function getName()
+    public function getEmail()
     {
-        return $this->name;
+        return $this->email;
     }
 
     /**
