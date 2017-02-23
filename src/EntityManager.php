@@ -115,12 +115,19 @@ class EntityManager implements EntityManagerInterface
         $this->eventManager = $eventManager ?: new EventManager();
         $this->uow = new UnitOfWork($this);
         $this->databaseDriver = $databaseDriver;
+<<<<<<< HEAD
 
         if ($metadataFactory === null) {
             $reader = new FileCacheReader(new AnnotationReader(), $cacheDirectory, $debug = true);
             $metadataFactory = new AnnotationGraphEntityMetadataFactory($reader);
         }
         $this->metadataFactory = $metadataFactory;
+=======
+        $this->metadataFactory = new GraphEntityMetadataFactory($this->annotationDriver->getReader());
+        $this->proxyDirectory = null !== $cacheDirectory
+            ? $cacheDirectory.DIRECTORY_SEPARATOR.'proxy'
+            : sys_get_temp_dir().DIRECTORY_SEPARATOR.'proxy';
+>>>>>>> addressed comments
     }
 
     /**

@@ -15,7 +15,7 @@ class ProxyFactory
 
     protected $proxyDir;
 
-    public function __construct(EntityManager $em, NodeEntityMetadata $classMetadata, $proxyDir = null)
+    public function __construct(EntityManager $em, NodeEntityMetadata $classMetadata)
     {
         $this->em = $em;
         $this->classMetadata = $classMetadata;
