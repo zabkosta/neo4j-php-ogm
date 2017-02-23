@@ -25,7 +25,7 @@ use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Proxy\ProxyFactory;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
-use GraphAware\Neo4j\OGM\Repository\ObjectHydration;
+use GraphAware\Neo4j\OGM\Hydration\ObjectHydration;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 class EntityManager implements EntityManagerInterface

@@ -11,7 +11,7 @@
  */
 
 
-namespace GraphAware\Neo4j\OGM\Repository;
+namespace GraphAware\Neo4j\OGM\Hydration;
 
 use GraphAware\Common\Result\Record;
 use GraphAware\Common\Result\Result;
