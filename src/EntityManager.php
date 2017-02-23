@@ -23,6 +23,7 @@ use GraphAware\Neo4j\OGM\Metadata\GraphEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
+use GraphAware\Neo4j\OGM\Repository\ObjectHydration;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 class EntityManager implements EntityManagerInterface
@@ -222,6 +223,12 @@ class EntityManager implements EntityManagerInterface
     public function getUnitOfWork()
     {
         return $this->uow;
+    }
+
+    public function getHydrator($mode='')
+    {
+        // TODO imprive this. Maybe need different type of hydrators.
+        return new ObjectHydration($this);
     }
 
     /**

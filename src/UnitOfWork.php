@@ -15,6 +15,7 @@ use Doctrine\Common\Collections\AbstractLazyCollection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use GraphAware\Neo4j\Client\Stack;
+use GraphAware\Neo4j\OGM\Exception\OGMInvalidArgumentException;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
 use GraphAware\Neo4j\OGM\Persister\FlushOperationProcessor;
@@ -584,8 +585,6 @@ class UnitOfWork
         if (null === $id) {
             throw new \LogicException('Entity marked as not managed but could not find identity');
         }
-
-        unset($this->entityIds[$oid]);
         unset($this->entitiesById[$id]);
     }
 
@@ -615,7 +614,7 @@ class UnitOfWork
     {
         if (!array_key_exists($class, $this->persisters)) {
             $classMetadata = $this->entityManager->getClassMetadataFor($class);
-            $this->persisters[$class] = new EntityPersister($class, $classMetadata);
+            $this->persisters[$class] = new EntityPersister($this->entityManager, $class, $classMetadata);
         }
 
         return $this->persisters[$class];
@@ -759,8 +758,69 @@ class UnitOfWork
      */
     public function refresh($entity)
     {
-        // TODO write me
-        trigger_error("Function not implemented.", E_USER_ERROR);
+        $visited = array();
+
+        $this->doRefresh($entity, $visited);
+    }
+
+    /**
+     * Executes a refresh operation on an entity.
+     *
+     * @param object $entity  The entity to refresh.
+     * @param array  $visited The already visited entities during cascades.
+     *
+     * @return void
+     */
+    private function doRefresh($entity, array &$visited)
+    {
+        $oid = spl_object_hash($entity);
+
+        if (isset($visited[$oid])) {
+            return; // Prevent infinite recursion
+        }
+
+        $visited[$oid] = $entity; // mark visited
+
+        if ($this->getEntityState($entity) !== self::STATE_MANAGED) {
+            throw OGMInvalidArgumentException::entityNotManaged($entity);
+        }
+
+        $this->getPersister(get_class($entity))->refresh($this->entityIds[$oid], $entity);
+
+        $this->cascadeRefresh($entity, $visited);
+    }
+
+    /**
+     * Cascades a refresh operation to associated entities.
+     *
+     * @param object $entity
+     * @param array  $visited
+     *
+     * @return void
+     */
+    private function cascadeRefresh($entity, array &$visited)
+    {
+        $class = $this->entityManager->getClassMetadata(get_class($entity));
+
+        foreach ($class->getRelationships() as $relationship) {
+            $value = $relationship->getValue($entity);
+
+            switch (true) {
+                case ($value instanceof Collection):
+                case (is_array($value)):
+                    foreach ($value as $relatedEntity) {
+                        $this->doRefresh($relatedEntity, $visited);
+                    }
+                    break;
+
+                case ($value !== null):
+                    $this->doRefresh($value, $visited);
+                    break;
+
+                default:
+                    // Do nothing
+            }
+        }
     }
 
     /**
