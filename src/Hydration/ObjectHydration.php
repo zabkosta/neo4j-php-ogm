@@ -57,11 +57,20 @@ class ObjectHydration
     private $entityManager;
 
     /**
+     * @var string
+     */
+    private $className;
+
+    private $classMetadata;
+
+    /**
      *
      * @param EntityManager $entityManager
      */
-    public function __construct(EntityManager $entityManager)
+    public function __construct($className, EntityManager $entityManager)
     {
+        $this->className = $className;
+        $this->classMetadata = $entityManager->getClassMetadataFor($className);
         $this->entityManager = $entityManager;
     }
 
@@ -74,7 +83,7 @@ class ObjectHydration
         $identifier = isset($options[self::OPTION_IDENTIFIER]) ? $options[self::OPTION_IDENTIFIER] : 'n';
 
         // getNodeBaseInstance
-        $classMeta = $this->entityManager->getClassMetadataFor($record);
+        $classMeta = $this->entityManager->getClassMetadataFor($this->className);
         $classN = $classMeta->getClassName();
         $baseInstance = $this->hydrateNode($record->get($identifier), $classN, $refresh);
         $cm = $this->entityManager->getClassMetadataFor($classN);

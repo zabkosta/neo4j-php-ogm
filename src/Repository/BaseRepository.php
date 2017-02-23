@@ -224,7 +224,7 @@ class BaseRepository
 
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters, json_encode($tag));
 
-        return $this->entityManager->getHydrator()->hydrateResultSet($result);
+        return $this->entityManager->getHydrator($this->className)->hydrateResultSet($result);
     }
 
     /**
@@ -313,7 +313,7 @@ class BaseRepository
         $result = $this->entityManager->getDatabaseDriver()->run($query, $parameters);
 
 
-        return $this->entityManager->getHydrator()->hydrateResultSet($result);
+        return $this->entityManager->getHydrator($this->className)->hydrateResultSet($result);
     }
 
     private function hydrateFetchRelationships($instance, Record $record)
@@ -389,7 +389,7 @@ class BaseRepository
         $results = [];
         $mappingMetadata = $this->entityManager->getResultMappingMetadata($resultMapping->getQueryResultClass());
         foreach ($result->records() as $record) {
-            $results[] = $this->entityManager->getHydrator()->hydrateQueryRecord($mappingMetadata, $record);
+            $results[] = $this->entityManager->getHydrator($this->className)->hydrateQueryRecord($mappingMetadata, $record);
         }
 
         return $resultMapping->getQueryResultType() === QueryResultMapping::RESULT_SINGLE ? $results[0] : $results;

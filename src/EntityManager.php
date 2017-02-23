@@ -237,10 +237,9 @@ class EntityManager implements EntityManagerInterface
         return $this->uow;
     }
 
-    public function getHydrator($mode='')
+    public function getHydrator($className, $mode='')
     {
-        // TODO imprive this. Maybe need different type of hydrators.
-        return new ObjectHydration($this);
+        return new ObjectHydration($className, $this);
     }
 
     /**
