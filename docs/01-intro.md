@@ -71,6 +71,16 @@ class Person
     protected $born;
 
     /**
+     * @param string $name
+     * @param int|null $born
+     */
+    public function __construct($name, $born = null)
+    {
+        $this->name = $name;
+        $this->born = $born;
+    }
+
+    /**
      * @return int
      */
     public function getId()
