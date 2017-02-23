@@ -130,25 +130,37 @@ class EntityManager implements ObjectManager
     /**
      * {@inheritdoc}
      */
-    public function merge($object)
+    public function merge($entity)
     {
-        // TODO: Implement merge() method.
+        if (!is_object($entity)) {
+            throw new \Exception('EntityManager::merge() expects an object');
+        }
+
+        $this->uow->merge($entity);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function detach($object)
+    public function detach($entity)
     {
-        // TODO: Implement detach() method.
+        if (!is_object($entity)) {
+            throw new \Exception('EntityManager::detach() expects an object');
+        }
+
+        $this->uow->detach($entity);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function refresh($object)
+    public function refresh($entity)
     {
-        // TODO: Implement refresh() method.
+        if (!is_object($entity)) {
+            throw new \Exception('EntityManager::refresh() expects an object');
+        }
+
+        $this->uow->refresh($entity);
     }
 
     /**
@@ -173,14 +185,14 @@ class EntityManager implements ObjectManager
 
     public function initializeObject($obj)
     {
-        // @todo
-        return null;
+        $this->uow->initializeObject($obj);
     }
 
-    public function contains($object)
+    public function contains($entity)
     {
-        /* @todo */
-        return true;
+        return $this->uow->isScheduledForCreate($entity)
+        || $this->uow->isManaged($entity)
+        && ! $this->uow->isScheduledForDelete($entity);
     }
 
     /**

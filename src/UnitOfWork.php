@@ -21,6 +21,10 @@ use GraphAware\Neo4j\OGM\Persister\FlushOperationProcessor;
 use GraphAware\Neo4j\OGM\Persister\RelationshipEntityPersister;
 use GraphAware\Neo4j\OGM\Persister\RelationshipPersister;
 
+/**
+ * @author Christophe Willemsen <christophe@graphaware.com>
+ * @author Tobias Nyholm <tobias.nyholm@gmail.com>
+ */
 class UnitOfWork
 {
     const STATE_NEW = 'STATE_NEW';
@@ -28,6 +32,8 @@ class UnitOfWork
     const STATE_MANAGED = 'STATE_MANAGED';
 
     const STATE_DELETED = 'STATE_DELETED';
+
+    const STATE_DETACHED = 'STATE_DETACHED';
 
     /**
      * @var EntityManager
@@ -541,7 +547,7 @@ class UnitOfWork
             return self::STATE_NEW;
         }
 
-        throw new \LogicException('entity state cannot be assumed');
+        return self::STATE_DETACHED;
     }
 
     public function addManaged($entity)
@@ -556,6 +562,31 @@ class UnitOfWork
         $this->entityIds[$oid] = $id;
         $this->entitiesById[$id] = $entity;
         $this->manageEntityReference($oid);
+    }
+
+    /**
+     * @param object $entity
+     *
+     * @return bool
+     */
+    public function isManaged($entity)
+    {
+        return isset($this->entityIds[spl_object_hash($entity)]);
+    }
+
+    private function removeManaged($entity)
+    {
+        $oid = spl_object_hash($entity);
+        unset($this->entityIds[$oid]);
+
+        $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entity));
+        $id = $classMetadata->getIdValue($entity);
+        if (null === $id) {
+            throw new \LogicException('Entity marked as not managed but could not find identity');
+        }
+
+        unset($this->entityIds[$oid]);
+        unset($this->entitiesById[$id]);
     }
 
     public function scheduleDelete($entity)
@@ -614,11 +645,153 @@ class UnitOfWork
     }
 
     /**
+     * Merges the state of the given detached entity into this UnitOfWork.
+     *
+     * @param object $entity
+     *
+     * @return object The managed copy of the entity.
+     */
+    public function merge($entity)
+    {
+        // TODO write me
+        trigger_error("Function not implemented.", E_USER_ERROR);
+    }
+
+    /**
+     * Detaches an entity from the persistence management. It's persistence will
+     * no longer be managed by Doctrine.
+     *
+     * @param object $entity The entity to detach.
+     *
+     * @return void
+     */
+    public function detach($entity)
+    {
+        $visited = array();
+
+        $this->doDetach($entity, $visited);
+    }
+
+    /**
+     * Executes a detach operation on the given entity.
+     *
+     * @param object  $entity
+     * @param array   $visited
+     * @param boolean $noCascade if true, don't cascade detach operation.
+     *
+     * @return void
+     */
+    private function doDetach($entity, array &$visited, $noCascade = false)
+    {
+        $oid = spl_object_hash($entity);
+
+        if (isset($visited[$oid])) {
+            return; // Prevent infinite recursion
+        }
+
+        $visited[$oid] = $entity; // mark visited
+
+        switch ($this->getEntityState($entity, self::STATE_DETACHED)) {
+            case self::STATE_MANAGED:
+                if ($this->isManaged($entity)) {
+                    $this->removeManaged($entity);
+                }
+
+                unset(
+                    $this->nodesScheduledForCreate[$oid],
+                    $this->nodesScheduledForUpdate[$oid],
+                    $this->nodesScheduledForDelete[$oid],
+                    $this->entityStates[$oid]
+                );
+                break;
+            case self::STATE_NEW:
+            case self::STATE_DETACHED:
+                return;
+        }
+
+        $this->entityStates[$oid] = self::STATE_DETACHED;
+
+        if ( ! $noCascade) {
+            $this->cascadeDetach($entity, $visited);
+        }
+    }
+
+    /**
+     * Cascades a detach operation to associated entities.
+     *
+     * @param object $entity
+     * @param array  $visited
+     *
+     * @return void
+     */
+    private function cascadeDetach($entity, array &$visited)
+    {
+        $class = $this->entityManager->getClassMetadata(get_class($entity));
+
+        foreach ($class->getRelationships() as $relationship) {
+            $value = $relationship->getValue($entity);
+
+            switch (true) {
+                case ($value instanceof Collection):
+                case (is_array($value)):
+                    foreach ($value as $relatedEntity) {
+                        $this->doDetach($relatedEntity, $visited);
+                    }
+                    break;
+
+                case ($value !== null):
+                    $this->doDetach($value, $visited);
+                    break;
+
+                default:
+                    // Do nothing
+            }
+        }
+    }
+
+    /**
+     * Refreshes the state of the given entity from the database, overwriting
+     * any local, unpersisted changes.
+     *
+     * @param object $entity The entity to refresh.
+     *
+     * @return void
+     */
+    public function refresh($entity)
+    {
+        // TODO write me
+        trigger_error("Function not implemented.", E_USER_ERROR);
+    }
+
+    /**
+     * Helper method to initialize a lazy loading proxy or persistent collection.
+     *
+     * @param object $obj
+     *
+     * @return void
+     */
+    public function initializeObject($obj)
+    {
+        // TODO write me
+        trigger_error("Function not implemented.", E_USER_ERROR);
+    }
+
+    /**
      * @return array
      */
     public function getNodesScheduledForCreate()
     {
         return $this->nodesScheduledForCreate;
+    }
+
+    /**
+     * @param object $entity
+     *
+     * @return bool
+     */
+    public function isScheduledForCreate($entity)
+    {
+        return isset($this->nodesScheduledForCreate[spl_object_hash($entity)]);
     }
 
     /**
@@ -635,6 +808,16 @@ class UnitOfWork
     public function getNodesScheduledForDelete()
     {
         return $this->nodesScheduledForDelete;
+    }
+
+    /**
+     * @param object $entity
+     *
+     * @return bool
+     */
+    public function isScheduledForDelete($entity)
+    {
+        return isset($this->nodesScheduledForDelete[spl_object_hash($entity)]);
     }
 
     /**
