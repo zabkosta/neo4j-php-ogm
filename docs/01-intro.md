@@ -560,7 +560,7 @@ namespace Movies;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
- * @OGM\Node(name="User")
+ * @OGM\Node(label="User")
  */
 class User
 {
@@ -693,6 +693,11 @@ class Rating
 Let's also add the corresponding annotation in the User class :
 
 ```php
+
+use Doctrine\Common\Collections\ArrayCollection;
+
+...
+
 class User
 {
     ...
