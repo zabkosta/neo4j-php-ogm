@@ -7,7 +7,7 @@ use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Util\NodeProxy;
 use GraphAware\Neo4j\OGM\Proxy\EntityProxy;
 
-class ProxyTest extends IntegrationTestCase
+class ProxyFactoryTest extends IntegrationTestCase
 {
     public function testProxyCreation()
     {
@@ -20,6 +20,16 @@ class ProxyTest extends IntegrationTestCase
         $this->assertInstanceOf(EntityProxy::class, $o);
         $this->assertInstanceOf(Related::class, $o->getRelation());
         $this->assertNotNull($o->getRelation()->getId());
+    }
+
+    public function testProxyIsReturnedFromRepository()
+    {
+        $this->em->clear();
+        $id = $this->createSmallGraph();
+
+        $init = $this->em->getRepository(Init::class)->findOneById($id);
+        $this->assertInstanceOf(Init::class, $init);
+        $this->assertInstanceOf(EntityProxy::class, $init);
     }
 
     private function createSmallGraph()

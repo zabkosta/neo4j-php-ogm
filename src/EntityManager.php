@@ -20,8 +20,10 @@ use GraphAware\Neo4j\OGM\Exception\MappingException;
 use GraphAware\Neo4j\OGM\Metadata\Factory\Annotation\AnnotationGraphEntityMetadataFactory;
 use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactoryInterface;
 use GraphAware\Neo4j\OGM\Metadata\GraphEntityMetadata;
+use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
+use GraphAware\Neo4j\OGM\Proxy\ProxyFactory;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Repository\ObjectHydration;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
@@ -67,6 +69,11 @@ class EntityManager implements EntityManagerInterface
      * @var string
      */
     protected $proxyDirectory;
+
+    /**
+     * @var array
+     */
+    protected $proxyFactories = [];
 
     /**
      * @param string            $host
@@ -326,11 +333,19 @@ class EntityManager implements EntityManagerInterface
     {
         return $this->proxyDirectory;
     }
-
+    
     public function getAnnotationDriver()
     {
         // TODO: Implement getAnnotationDriver() method.
     }
 
 
+    public function getProxyFactory(NodeEntityMetadata $entityMetadata)
+    {
+        if (!array_key_exists($entityMetadata->getClassName(), $this->proxyFactories)) {
+            $this->proxyFactories[$entityMetadata->getClassName()] = new ProxyFactory($this, $entityMetadata);
+        }
+
+        return $this->proxyFactories[$entityMetadata->getClassName()];
+    }
 }

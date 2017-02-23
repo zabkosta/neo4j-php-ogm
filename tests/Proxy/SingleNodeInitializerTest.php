@@ -18,7 +18,7 @@ class SingleNodeInitializerTest extends IntegrationTestCase
         $this->assertTrue($relMeta->isLazy());
 
         $initializer = new SingleNodeInitializer($this->em, $relMeta, $metadata);
-        $related = $initializer->fromNode($node);
+        $related = $initializer->initialize($node);
         $this->assertInstanceOf(Related::class, $related);
         $this->assertNotNull($related->getId());
     }

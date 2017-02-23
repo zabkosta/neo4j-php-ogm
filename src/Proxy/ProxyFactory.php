@@ -5,6 +5,7 @@ namespace GraphAware\Neo4j\OGM\Proxy;
 use GraphAware\Common\Type\Node;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
+use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 
 class ProxyFactory
 {
@@ -27,12 +28,20 @@ class ProxyFactory
         $object->__setNode($node);
         $initializers = [];
         foreach ($this->classMetadata->getSimpleRelationships() as $relationship) {
-            $initializer = new SingleNodeInitializer($this->em, $relationship, $this->em->getClassMetadata($relationship->getTargetEntity()));
+            $initializer = $this->getInitializerFor($relationship);
             $initializers[$relationship->getPropertyName()] = $initializer;
         }
         $object->__setInitializers($initializers);
 
         return $object;
+    }
+
+    private function getInitializerFor(RelationshipMetadata $relationship) {
+        if (!$relationship->isCollection()) {
+            $initializer = new SingleNodeInitializer($this->em, $relationship, $this->em->getClassMetadata($relationship->getTargetEntity()));
+        }
+
+        return $initializer;
     }
 
     protected function createProxy()
