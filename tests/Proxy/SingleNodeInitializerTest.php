@@ -23,6 +23,14 @@ class SingleNodeInitializerTest extends IntegrationTestCase
         $this->assertNotNull($related->getId());
     }
 
+    public function testProxyIsReturnedWhenCalledFromRepository()
+    {
+        $this->clearDb();
+        $id = $this->createSmallGraph();
+        $init = $this->em->getRepository(Init::class)->findOneById($id);
+        $this->assertInstanceOf(Related::class, $init->getRelation());
+    }
+
     private function createSmallGraph()
     {
         return $this->client->run('CREATE (n:Init)-[:RELATES]->(n2:Related) RETURN id(n) AS id')->firstRecord()->get('id');

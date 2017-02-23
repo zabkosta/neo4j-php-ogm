@@ -64,6 +64,11 @@ class EntityManager implements EntityManagerInterface
     protected $eventManager;
 
     /**
+     * @var string
+     */
+    protected $proxyDirectory;
+
+    /**
      * @param string            $host
      * @param string|null       $cacheDir
      * @param EventManager|null $eventManager
@@ -313,4 +318,19 @@ class EntityManager implements EntityManagerInterface
         $this->uow = null;
         $this->uow = new UnitOfWork($this);
     }
+
+    /**
+     * @return string
+     */
+    public function getProxyDirectory()
+    {
+        return $this->proxyDirectory;
+    }
+
+    public function getAnnotationDriver()
+    {
+        // TODO: Implement getAnnotationDriver() method.
+    }
+
+
 }
