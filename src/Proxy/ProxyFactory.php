@@ -64,7 +64,7 @@ class $proxyClass extends $class implements EntityProxy
 {
     private \$em;
     private \$initialized = [];
-    private \$intializers = [];
+    private \$initializers = [];
     private \$node;
     
     public function __setNode(\$node)
@@ -79,8 +79,11 @@ class $proxyClass extends $class implements EntityProxy
     
     public function __initializeProperty(\$propertyName)
     {
-        \$value = \$this->initializers[\$propertyName]->initialize(\$this->node, \$this);
-        \$this->\$propertyName = \$value;
+        if (!array_key_exists(\$propertyName, \$this->initialized)) {
+            \$value = \$this->initializers[\$propertyName]->initialize(\$this->node, \$this);
+            \$this->\$propertyName = \$value;
+            \$this->initialized[\$propertyName] = null;
+        }
     }
     
     $methodProxies

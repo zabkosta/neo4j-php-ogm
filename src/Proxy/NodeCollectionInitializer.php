@@ -23,6 +23,7 @@ class NodeCollectionInitializer extends SingleNodeInitializer
         $repository = $this->em->getRepository(get_class($baseInstance));
         foreach ($otherInstances as $instance) {
             $repository->setInversedAssociation($baseInstance, $instance, $this->relationshipMetadata->getPropertyName());
+            $this->em->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $instance, $this->relationshipMetadata->getPropertyName(), $this->relationshipMetadata);
         }
 
         return $otherInstances;
@@ -32,8 +33,13 @@ class NodeCollectionInitializer extends SingleNodeInitializer
     {
         $instances = new ArrayCollection();
         $class = $class = $this->relationshipMetadata->getDirection() === 'INCOMING' ? $this->metadata->getClassName() : $this->relationshipMetadata->getTargetEntity();
+        $cm = $this->em->getClassMetadata($class);
         foreach ($result->records() as $record) {
-            $instances->add($this->em->getRepository($class)->hydrate($record, false, $this->relationshipMetadata->getPropertyName()));
+            $o = count($cm->getRelationships()) > 1
+                ? $this->em->getProxyFactory($cm)->fromNode($record->get($this->relationshipMetadata->getPropertyName()))
+                : $this->em->getRepository($class)->hydrate($record, false, $this->relationshipMetadata->getPropertyName());
+            $this->em->getRepository($class)->hydrateProperties($o, $record->get($this->relationshipMetadata->getPropertyName()));
+            $instances->add($o);
         }
 
         return $instances;
