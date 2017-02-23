@@ -87,7 +87,9 @@ PROXY;
         $this->checkProxyDirectory();
         file_put_contents($proxyFile, $content);
 
-        require $proxyFile;
+        if (!class_exists($proxyClass)) {
+            require $proxyFile;
+        }
 
         return $this->newProxyInstance($proxyClass);
 

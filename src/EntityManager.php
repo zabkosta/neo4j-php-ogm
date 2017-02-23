@@ -340,6 +340,10 @@ class EntityManager implements EntityManagerInterface
     }
 
 
+    /**
+     * @param NodeEntityMetadata $entityMetadata
+     * @return ProxyFactory
+     */
     public function getProxyFactory(NodeEntityMetadata $entityMetadata)
     {
         if (!array_key_exists($entityMetadata->getClassName(), $this->proxyFactories)) {

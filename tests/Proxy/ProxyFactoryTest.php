@@ -30,6 +30,8 @@ class ProxyFactoryTest extends IntegrationTestCase
         $init = $this->em->getRepository(Init::class)->findOneById($id);
         $this->assertInstanceOf(Init::class, $init);
         $this->assertInstanceOf(EntityProxy::class, $init);
+        $this->assertNotNull($init->getId());
+        $this->assertInstanceOf(Related::class, $init->getRelation());
     }
 
     private function createSmallGraph()
