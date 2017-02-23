@@ -32,66 +32,60 @@ class UnitOfWork
     /**
      * @var EntityManager
      */
-    protected $entityManager;
+    private $entityManager;
 
     /**
      * @var \Doctrine\Common\EventManager
      */
-    protected $eventManager;
+    private $eventManager;
 
-    protected $flushOperationProcessor;
+    private $flushOperationProcessor;
 
-    protected $managedEntities = [];
+    private $entityStates = [];
 
-    protected $entityStates = [];
+    private $hashesMap = [];
 
-    protected $hashesMap = [];
+    private $entityIds = [];
 
-    protected $entityIds = [];
+    private $nodesScheduledForCreate = [];
 
-    protected $nodesScheduledForCreate = [];
+    private $nodesScheduledForUpdate = [];
 
-    protected $nodesScheduledForUpdate = [];
+    private $nodesScheduledForDelete = [];
 
-    protected $nodesScheduledForDelete = [];
+    private $relationshipsScheduledForCreated = [];
 
-    protected $relationshipsScheduledForCreated = [];
+    private $relationshipsScheduledForDelete = [];
 
-    protected $relationshipsScheduledForDelete = [];
+    private $relEntitiesScheduledForCreate = [];
 
-    protected $relEntitiesScheduledForCreate = [];
+    private $relEntitesScheduledForUpdate = [];
 
-    protected $relEntitesScheduledForUpdate = [];
+    private $relEntitesScheduledForDelete = [];
 
-    protected $relEntitesScheduledForDelete = [];
+    private $persisters = [];
 
-    protected $relEntitiesById = [];
+    private $relationshipEntityPersisters = [];
 
-    protected $relEntitiesMap = [];
+    private $relationshipPersister;
 
-    protected $persisters = [];
+    private $entitiesById = [];
 
-    protected $relationshipEntityPersisters = [];
+    private $managedRelationshipReferences = [];
 
-    protected $relationshipPersister;
+    private $entityStateReferences = [];
 
-    protected $entitiesById = [];
+    private $managedRelationshipEntities = [];
 
-    protected $managedRelationshipReferences = [];
+    private $relationshipEntityReferences = [];
 
-    protected $entityStateReferences = [];
+    private $relationshipEntityStates = [];
 
-    protected $managedRelationshipEntities = [];
+    private $reEntityIds = [];
 
-    protected $relationshipEntityReferences = [];
+    private $reEntitiesById = [];
 
-    protected $relationshipEntityStates = [];
-
-    protected $reEntityIds = [];
-
-    protected $reEntitiesById = [];
-
-    protected $managedRelationshipEntitiesMap = [];
+    private $managedRelationshipEntitiesMap = [];
 
     public function __construct(EntityManager $manager)
     {
