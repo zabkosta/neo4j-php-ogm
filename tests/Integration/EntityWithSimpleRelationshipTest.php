@@ -81,4 +81,25 @@ class EntityWithSimpleRelationshipTest extends IntegrationTestCase
         $this->assertInstanceOf(Person::class, $owner);
         $this->assertEquals(spl_object_hash($mike), spl_object_hash($owner));
     }
+
+    public function testPersonWithCarLoadedCanModifyCarModelName()
+    {
+        $person = new Person('Mike');
+        $car = new Car('Bugatti', $person);
+        $person->setCar($car);
+        $this->em->persist($person);
+        $this->em->flush();
+        $this->em->clear();
+
+        $entities = $this->em->getRepository(Person::class)->findAll();
+        /** @var Person $mike */
+        $mike = $entities[0];
+        $mikeCar = $mike->getCar();
+        $this->assertInstanceOf(Car::class, $mikeCar);
+        $mikeCar->setModel('Maseratti');
+        $this->em->flush();
+
+        $result = $this->client->run('MATCH (n:Person)-[:OWNS]->(c:Car {model: "Maseratti"}) RETURN c');
+        $this->assertEquals(1, $result->size());
+    }
 }

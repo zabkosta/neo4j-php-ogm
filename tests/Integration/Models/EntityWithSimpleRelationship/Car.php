@@ -64,5 +64,15 @@ class Car
         return $this->owner;
     }
 
+    /**
+     * @param string $model
+     */
+    public function setModel($model)
+    {
+        $this->model = $model;
+    }
+
+
+
 
 }
