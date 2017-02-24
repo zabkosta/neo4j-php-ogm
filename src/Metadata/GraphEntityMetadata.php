@@ -187,4 +187,12 @@ abstract class GraphEntityMetadata implements ClassMetadata
 
         return $values;
     }
+
+    /**
+     * @return string
+     */
+    public function getEntityAlias()
+    {
+        return strtolower(sprintf('%s_%s', str_replace("\\", "_", $this->className), spl_object_hash($this)));
+    }
 }

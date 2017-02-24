@@ -17,12 +17,14 @@ use Doctrine\Common\EventManager;
 use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\Client\ClientInterface;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
+use GraphAware\Neo4j\OGM\Hydrator\EntityHydrator;
 use GraphAware\Neo4j\OGM\Metadata\Factory\Annotation\AnnotationGraphEntityMetadataFactory;
 use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactoryInterface;
 use GraphAware\Neo4j\OGM\Metadata\GraphEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
+use GraphAware\Neo4j\OGM\Persisters\BasicEntityPersister;
 use GraphAware\Neo4j\OGM\Proxy\ProxyFactory;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
 use GraphAware\Neo4j\OGM\Hydration\ObjectHydration;
@@ -74,6 +76,16 @@ class EntityManager implements EntityManagerInterface
      * @var array
      */
     protected $proxyFactories = [];
+
+    /**
+     * @var array
+     */
+    protected $entityHydrators = [];
+
+    /**
+     * @var array
+     */
+    protected $entityPersisters = [];
 
     /**
      * @param string            $host
@@ -351,5 +363,23 @@ class EntityManager implements EntityManagerInterface
         }
 
         return $this->proxyFactories[$entityMetadata->getClassName()];
+    }
+
+    /**
+     * @param $className
+     * @return EntityHydrator
+     */
+    public function getEntityHydrator($className)
+    {
+        if (!array_key_exists($className, $this->entityHydrators)) {
+            $this->entityHydrators[$className] = new EntityHydrator($className, $this);
+        }
+
+        return $this->entityHydrators[$className];
+    }
+
+    public function getEntityPersister($className)
+    {
+        return new BasicEntityPersister($className, $this->getClassMetadataFor($className), $this);
     }
 }
