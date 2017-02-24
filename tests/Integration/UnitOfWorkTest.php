@@ -7,6 +7,7 @@ use GraphAware\Neo4j\OGM\Tests\Integration\Model\AuthUser;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Model\User;
 
+
 class UnitOfWorkTest extends IntegrationTestCase
 {
     public function testContains()
