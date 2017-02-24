@@ -77,5 +77,8 @@ class EntityWithSimpleRelationshipTest extends IntegrationTestCase
         $mike = $entities[0];
         $mikeCar = $mike->getCar();
         $this->assertInstanceOf(Car::class, $mikeCar);
+        $owner = $mikeCar->getOwner();
+        $this->assertInstanceOf(Person::class, $owner);
+        $this->assertEquals(spl_object_hash($mike), spl_object_hash($owner));
     }
 }
