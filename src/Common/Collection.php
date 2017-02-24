@@ -15,4 +15,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 class Collection extends ArrayCollection
 {
+    public function addInit($o)
+    {
+        $collection = array_merge($this->getValues(), [$o]);
+
+        return new self($collection);
+    }
 }

@@ -50,7 +50,8 @@ class RelationshipsFinder
         $instances = [];
 
         foreach ($result->records() as $record) {
-            $instances[] = $repo->hydrate($record, true, 'end', $this->className, true, true);
+            $instances[] = $this->em->getHydrator($this->className)->hydrate($record);
+//            $instances[] = $repo->hydrate($record, true, 'end', $this->className, true, true);
         }
 
         return $instances;

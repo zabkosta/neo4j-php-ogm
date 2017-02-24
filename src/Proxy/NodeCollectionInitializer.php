@@ -38,7 +38,8 @@ class NodeCollectionInitializer extends SingleNodeInitializer
             $o = count($cm->getRelationships()) > 1
                 ? $this->em->getProxyFactory($cm)->fromNode($record->get($this->relationshipMetadata->getPropertyName()))
                 : $this->em->getRepository($class)->hydrate($record, false, $this->relationshipMetadata->getPropertyName());
-            $this->em->getRepository($class)->hydrateProperties($o, $record->get($this->relationshipMetadata->getPropertyName()));
+            $otherNodeMeta = $this->em->getClassMetadataFor($this->relationshipMetadata->getTargetEntity());
+            $this->em->getHydrator($class)->populateDataToInstance($record->get($this->relationshipMetadata->getPropertyName()), $otherNodeMeta, $o);
             $instances->add($o);
         }
 

@@ -34,7 +34,6 @@ class User
      * @var Account
      *
      * @OGM\Relationship(type="HAS_ACCOUNT", direction="OUTGOING", targetEntity="Account", mappedBy="user")
-     * @OGM\Fetch()
      */
     protected $account;
 
