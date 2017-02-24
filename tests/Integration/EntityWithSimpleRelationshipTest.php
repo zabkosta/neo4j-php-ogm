@@ -72,5 +72,10 @@ class EntityWithSimpleRelationshipTest extends IntegrationTestCase
         $this->assertCount(1, $entities);
 
         $this->assertInstanceOf(EntityProxy::class, $entities[0]);
+
+        /** @var Person $mike */
+        $mike = $entities[0];
+        $mikeCar = $mike->getCar();
+        $this->assertInstanceOf(Car::class, $mikeCar);
     }
 }

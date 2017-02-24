@@ -41,6 +41,30 @@ class EntityHydrator
         return $result;
     }
 
+    /**
+     * @param Result $dbResult
+     * @param object $sourceEntity
+     */
+    public function hydrateSimpleRelationship($alias, Result $dbResult, $sourceEntity)
+    {
+        if (0 === $dbResult->size()) {
+            return;
+        }
+
+        $relationshipMetadata = $this->_classMetadata->getRelationship($alias);
+        $targetHydrator = $this->_em->getEntityHydrator($relationshipMetadata->getTargetEntity());
+        $targetMeta = $this->_em->getClassMetadataFor($relationshipMetadata->getTargetEntity());
+        $hydrated = $targetHydrator->hydrateAll($dbResult);
+
+        $o = $hydrated[0];
+        $relationshipMetadata->setValue($sourceEntity, $o);
+
+        $mappedBy = $relationshipMetadata->getMappedByProperty();
+        if ($mappedBy) {
+            $targetMeta->getRelationship($mappedBy)->setValue($o, $sourceEntity);
+        }
+    }
+
     protected function hydrateRecord(Record $record, array &$result)
     {
         $cqlAliasMap = $this->getAliases();

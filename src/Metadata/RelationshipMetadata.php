@@ -285,4 +285,12 @@ final class RelationshipMetadata
         $this->reflectionProperty->setAccessible(true);
         $this->reflectionProperty->setValue($object, $value);
     }
+
+    /**
+     * @return string
+     */
+    public function getAlias()
+    {
+        return strtolower(sprintf('%s_%s', $this->propertyName, spl_object_hash($this)));
+    }
 }

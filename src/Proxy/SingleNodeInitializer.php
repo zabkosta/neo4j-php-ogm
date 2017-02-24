@@ -25,21 +25,8 @@ class SingleNodeInitializer
 
     public function initialize(Node $node, $baseInstance)
     {
-        $startId = $node->identity();
-        $relQueryPart = $this->getRelQueryPart();
-
-        $query = 'MATCH (start)'.$relQueryPart.'(n) WHERE id(start) = {startId} RETURN n';
-
-        $result = $this->em->getDatabaseDriver()->run($query, ['startId' => $startId]);
-
-        $object = $this->handleResult($result);
-        $this->em->getHydrator(get_class($object))->populateDataToInstance($result->firstRecord()->get('n'), $this->metadata, $object);
-        $this->em->getUnitOfWork()->addManaged($object);
-        $this->em->getRepository(get_class($baseInstance))->setInversedAssociation($baseInstance, $object, $this->relationshipMetadata->getPropertyName());
-        $this->em->getUnitOfWork()->addManagedRelationshipReference($baseInstance, $object, $this->relationshipMetadata->getPropertyName(), $this->relationshipMetadata);
-
-        return $object;
-
+        $persister = $this->em->getEntityPersister($this->metadata->getClassName());
+        $persister->getSimpleRelationship($this->relationshipMetadata->getPropertyName(), $baseInstance);
     }
 
     protected function getRelQueryPart()
