@@ -34,6 +34,13 @@ class Car
      */
     protected $owner;
 
+    /**
+     * @OGM\Relationship(type="HAS_MODEL_NUMBER", direction="OUTGOING", targetEntity="ModelNumber", mappedBy="carReference")
+     *
+     * @var ModelNumber
+     */
+    protected $modelNumber;
+
     public function __construct($model, Person $owner = null)
     {
         $this->model = $model;
@@ -70,6 +77,22 @@ class Car
     public function setModel($model)
     {
         $this->model = $model;
+    }
+
+    /**
+     * @return ModelNumber
+     */
+    public function getModelNumber()
+    {
+        return $this->modelNumber;
+    }
+
+    /**
+     * @param ModelNumber $modelNumber
+     */
+    public function setModelNumber($modelNumber)
+    {
+        $this->modelNumber = $modelNumber;
     }
 
 
