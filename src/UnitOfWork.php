@@ -16,6 +16,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use GraphAware\Common\Result\ResultCollection;
 use GraphAware\Common\Type\Node;
+use GraphAware\Common\Type\Relationship;
 use GraphAware\Neo4j\Client\Stack;
 use GraphAware\Neo4j\OGM\Exception\OGMInvalidArgumentException;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
@@ -983,6 +984,18 @@ class UnitOfWork
         $this->addManaged($entity);
 
         return $entity;
+    }
+
+    public function createRelationshipEntity(Relationship $relationship, $className, $sourceEntity, $field)
+    {
+        $classMetadata = $this->entityManager->getClassMetadataFor($className);
+        $o = $classMetadata->newInstance();
+        $oid = spl_object_hash($o);
+        $this->originalEntityData[$oid] = $relationship->values();
+        $classMetadata->setId($o, $relationship->identity());
+        $this->addManagedRelationshipEntity($o, $sourceEntity, $field);
+
+        return $o;
     }
 
     private function newInstance(NodeEntityMetadata $class, Node $node)

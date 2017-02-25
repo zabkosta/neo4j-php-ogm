@@ -166,14 +166,14 @@ class BasicEntityPersister
     {
         $relationshipMeta = $this->_classMetadata->getRelationship($alias);
         $relAlias = $relationshipMeta->getAlias();
-        $targetAlias = $this->_em->getClassMetadataFor($relationshipMeta->getTargetEntity())->getEntityAlias();
+        $targetAlias = $this->_em->getClassMetadataFor($relationshipMeta->getRelationshipEntityClass())->getEntityAlias();
         $sourceEntityId = $this->_classMetadata->getIdValue($sourceEntity);
         $relationshipType = $relationshipMeta->getType();
 
         $isIncoming = $relationshipMeta->getDirection() === DirectionUtils::INCOMING ? '<' : '';
         $isOutgoing = $relationshipMeta->getDirection() === DirectionUtils::OUTGOING ? '>' : '';
 
-        $target = $isIncoming ? 'endNode' : 'startNode';
+        $target = $isIncoming ? 'startNode' : 'endNode';
 
         $relPattern = sprintf('%s-[%s:`%s`]-%s', $isIncoming, $relAlias, $relationshipType, $isOutgoing);
 

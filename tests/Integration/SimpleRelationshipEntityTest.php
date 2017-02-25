@@ -71,6 +71,9 @@ class SimpleRelationshipEntityTest extends IntegrationTestCase
         $this->assertGraphNotExist('(g:Guest {name:"john"})-[:RATED {score: 3.5}]->(h:Hotel {name:"Crowne"})');
     }
 
+    /**
+     * @group simple-re-load
+     */
     public function testRatingCanBeLoaded()
     {
         $this->client->run('CREATE (g:Guest {name:"john"})-[:RATED {score: 3.5}]->(h:Hotel {name:"Crowne"})');

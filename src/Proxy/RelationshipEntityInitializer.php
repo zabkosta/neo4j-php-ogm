@@ -18,6 +18,6 @@ class RelationshipEntityInitializer extends SingleNodeInitializer
     public function initialize(Node $node, $baseInstance)
     {
         $persister = $this->em->getEntityPersister($this->metadata->getClassName());
-        $persister->getRelationshipEntity($this->relationshipMetadata, $baseInstance);
+        $persister->getRelationshipEntity($this->relationshipMetadata->getPropertyName(), $baseInstance);
     }
 }
