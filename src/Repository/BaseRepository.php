@@ -92,16 +92,34 @@ class BaseRepository
         $this->lazyLoadingFactory = new LazyLoadingGhostFactory($config);
     }
 
+    /**
+     * @return array
+     */
     public function findAll()
     {
         return $this->findBy([]);
     }
 
+    /**
+     * @param array $criteria
+     * @param array|null $orderBy
+     * @param null|int $limit
+     * @param null|int $offset
+     *
+     * @return array
+     */
     public function findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
     {
         $persister = $this->entityManager->getEntityPersister($this->className);
 
         return $persister->loadAll($criteria, $orderBy, $limit, $offset);
+    }
+
+    public function findOneBy(array $criteria, array $orderBy = null)
+    {
+        $persister = $this->entityManager->getEntityPersister($this->className);
+
+        return $persister->load($criteria);
     }
 
     /**

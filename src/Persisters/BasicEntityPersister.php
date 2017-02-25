@@ -22,6 +22,21 @@ class BasicEntityPersister
         $this->_em = $em;
     }
 
+    public function load(array $criteria, array $oderBy = null)
+    {
+        $stmt = $this->getMatchCypher($criteria);
+        $result = $this->_em->getDatabaseDriver()->run($stmt->text(), $stmt->parameters());
+
+        if ($result->size() > 1) {
+            throw new \LogicException(sprintf('Expected only 1 record, got %d', $result->size()));
+        }
+
+        $hydrator = $this->_em->getEntityHydrator($this->_className);
+        $entities = $hydrator->hydrateAll($result);
+
+        return count($entities) === 1 ? $entities[0] : null;
+    }
+
     public function loadAll(array $criteria = [], array $orderBy = null, $limit = null, $offset = null)
     {
         $stmt = $this->getMatchCypher($criteria, $orderBy, $limit, $offset);

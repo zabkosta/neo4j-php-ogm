@@ -30,4 +30,33 @@ class RepositoryFindByTest extends IntegrationTestCase
         $users = $this->em->getRepository(User::class)->findBy(['age' => 41]);
         $this->assertCount(2, $users);
     }
+
+    public function testFindOnByLogin()
+    {
+        $this->clearDb();
+        $user1 = new User('user1');
+        $user2 = new User('user2');
+        $this->persist($user1, $user2);
+        $this->em->flush();
+        $this->em->clear();
+
+        $user = $this->em->getRepository(User::class)->findOneBy(['login' => 'user1']);
+        $this->assertInstanceOf(User::class, $user);
+
+        $this->assertNull($this->em->getRepository(User::class)->findOneBy(['login' => 'user3']));
+    }
+
+    public function testFindOneByThrowsExceptionWhenMultipleFound()
+    {
+        $this->clearDb();
+        $user1 = new User('user1');
+        $user2 = new User('user1');
+        $this->persist($user1, $user2);
+        $this->em->flush();
+        $this->em->clear();
+
+        $this->setExpectedException(\LogicException::class);
+        $user = $this->em->getRepository(User::class)->findOneBy(['login' => 'user1']);
+    }
+
 }
