@@ -167,7 +167,7 @@ use Movies\Person;
 $manager = EntityManager::create('http://localhost:7474');
 
 $personRepository = $manager->getRepository(Person::class);
-$tomHanks = $personRepository->findOneBy('name', 'Tom Hanks');
+$tomHanks = $personRepository->findOneBy(['name' => 'Tom Hanks']);
 ```
 
 The available methods on the repository are :
@@ -416,7 +416,7 @@ Simply with this annotation, the nodes connected by an outgoing `ACTED_IN` relat
 take Tom Hanks again and all his movies :
 
 ```php
-$tomHanks = $manager->getRepository(Person::class)->findOneBy('name', 'Tom Hanks');
+$tomHanks = $manager->getRepository(Person::class)->findOneBy(['name' => 'Tom Hanks']);
 echo sprintf('Tom Hanks played in %d movies', count($tomHanks->getMovies())) . PHP_EOL;
 
 foreach ($tomHanks->getMovies() as $movie) {
@@ -528,7 +528,7 @@ Let's modify the related `Cast Away` movie related to Tom Hanks to a new `Cast A
 ```php
 // Find Tom Hanks, filter his movies to find Cast Away and rename it to Cast Away 2
 /** @var Person $tomHanks */
-$tomHanks = $manager->getRepository(Person::class)->findOneBy('name', 'Tom Hanks');
+$tomHanks = $manager->getRepository(Person::class)->findOneBy(['name' => 'Tom Hanks']);
 $filter = array_values(array_filter($tomHanks->getMovies()->toArray(), function(\Movies\Movie $movie) {
     return 'Cast Away' === $movie->getTitle();
 }));
@@ -742,7 +742,7 @@ Now let's create a new User, find 'The Matrix' movie and create a rating :
 ```php
 $user = new User('cypher666');
 /** @var Movie $movie */
-$movie = $manager->getRepository(Movie::class)->findOneBy('title', 'The Matrix');
+$movie = $manager->getRepository(Movie::class)->findOneBy(['title' => 'The Matrix']);
 $user->rateMovie($movie, '4.5');
 $manager->persist($user);
 $manager->flush();
@@ -752,22 +752,6 @@ And check our graph :
 
 ![rel-entity](_05-re.png)
 
-
-### Lazy Loading
-
-You can now mark relationship properties as lazy, in order to defer the call to the database when you actually need
-to read the property.
-
-For example :
-
-```php
-    /**
-     * @OGM\Relationship(targetEntity="User", type="WORKS_AT", direction="INCOMING", collection=true)
-     * @OGM\Lazy()
-     * @return User[]
-     */
-    protected $employees;
-```
 
 ### Ordering related entities
 

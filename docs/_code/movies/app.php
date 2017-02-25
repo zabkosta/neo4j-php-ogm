@@ -8,12 +8,12 @@ use Movies\Person;
 use Movies\User;
 
 // Entity manager setup
-$em = EntityManager::create('http://localhost:7676');
+$em = EntityManager::create('http://localhost:7474');
 playMovies($em->getDatabaseDriver());
 
 // Retrieving a node
 $personRepository = $em->getRepository(Person::class);
-$tomHanks = $personRepository->findOneBy('name', 'Tom Hanks');
+$tomHanks = $personRepository->findOneBy(['name' => 'Tom Hanks']);
 
 // Updating an entity
 $actor = new Person('Kevin Ross', 1976);
@@ -28,7 +28,7 @@ $em->flush();
 $em->clear();
 
 // Relationships retrieval
-$tomHanks = $em->getRepository(Person::class)->findOneBy('name', 'Tom Hanks');
+$tomHanks = $em->getRepository(Person::class)->findOneBy(['name' => 'Tom Hanks']);
 echo sprintf('Tom Hanks played in %d movies', count($tomHanks->getMovies())).PHP_EOL;
 
 /** @var Movie $movie */
@@ -44,7 +44,7 @@ $em->clear();
 
 // Find Tom Hanks, filter his movies to find Cast Away and rename it to Cast Away 2
 /** @var Person $tomHanks */
-$tomHanks = $em->getRepository(Person::class)->findOneBy('name', 'Tom Hanks');
+$tomHanks = $em->getRepository(Person::class)->findOneBy(['name' => 'Tom Hanks']);
 $filter = array_values(array_filter($tomHanks->getMovies()->toArray(), function (\Movies\Movie $movie) {
     return 'Cast Away' === $movie->getTitle();
 }));
@@ -58,7 +58,7 @@ $em->flush();
 
 $user = new User('cypher666');
 /** @var Movie $movie */
-$movie = $em->getRepository(Movie::class)->findOneBy('title', 'The Matrix');
+$movie = $em->getRepository(Movie::class)->findOneBy(['title' => 'The Matrix']);
 $user->rateMovie($movie, '4.5');
 $em->persist($user);
 $em->flush();
