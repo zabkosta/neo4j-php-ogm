@@ -6,6 +6,7 @@ use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\EntityWithSimpleRelationship\Car;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\EntityWithSimpleRelationship\ModelNumber;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\EntityWithSimpleRelationship\Person;
+use GraphAware\Neo4j\OGM\UnitOfWork;
 
 /**
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
@@ -53,8 +54,9 @@ class GithubIssue49 extends IntegrationTestCase
         $person = $persons[0];
         $person->setName('Tom');
 
-        // TODO make sure it does not fetch Car or ModelNumber from db.
-        $this->em->persist($person);
-        $this->em->flush();
+        $uow = new UnitOfWork($this->em);
+        $visited = [];
+        $uow->doPersist($person, $visited);
+        $this->assertCount(1, $visited);
     }
 }
