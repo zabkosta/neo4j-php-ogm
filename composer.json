@@ -45,5 +45,10 @@
         "phpunit/phpunit": "^5.2",
         "symfony/finder": "^3.0",
         "symfony/stopwatch": "^3.0"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
     }
 }
