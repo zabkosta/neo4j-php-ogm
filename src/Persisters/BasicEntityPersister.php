@@ -213,7 +213,11 @@ class BasicEntityPersister
 
         $cypher  = 'MATCH (n) WHERE id(n) = {id} ';
         $cypher .= 'MATCH (n)'.$relPattern.'('.$targetAlias.') ';
-        $cypher .= 'RETURN collect('.$targetAlias.') AS '.$targetAlias;
+        $cypher .= 'RETURN '.$targetAlias.' AS '.$targetAlias . ' ';
+
+        if ($relationshipMeta->hasOrderBy()) {
+            $cypher .= 'ORDER BY '.$targetAlias.'.'.$relationshipMeta->getOrderByPropery() .' '.$relationshipMeta->getOrder();
+        }
 
         $params = ['id' => $sourceEntityId];
 

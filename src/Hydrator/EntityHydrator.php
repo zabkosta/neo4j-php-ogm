@@ -85,8 +85,8 @@ class EntityHydrator
         $coll = $relationshipMetadata->getValue($sourceEntity);
         $targetHydrator = $this->_em->getEntityHydrator($relationshipMetadata->getTargetEntity());
         $targetMeta = $this->_em->getClassMetadataFor($relationshipMetadata->getTargetEntity());
-        $nodes = $dbResult->firstRecord()->get($targetMeta->getEntityAlias());
-        foreach ($nodes as $node) {
+        foreach ($dbResult->records() as $record) {
+            $node = $record->get($targetMeta->getEntityAlias());
             $item = $targetHydrator->hydrateNode($node, $relationshipMetadata->getTargetEntity());
             $coll->add($item);
             $mappedBy = $relationshipMetadata->getMappedByProperty();
