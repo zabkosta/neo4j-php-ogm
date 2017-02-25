@@ -55,7 +55,7 @@ class SimpleRelationshipEntityTest extends IntegrationTestCase
         $this->assertGraphExist('(g:Guest {name:"john"})-[:RATED {score: 4.8}]->(h:Hotel {name:"Crowne"})');
     }
 
-    public function testRatingIsRemovedWhenUnreferenced()
+    public function testRatingCanBeRemoved()
     {
         $guest = new Guest('john');
         $hotel = new Hotel('Crowne');
@@ -68,5 +68,6 @@ class SimpleRelationshipEntityTest extends IntegrationTestCase
         $hotel->setRating(null);
         $this->em->remove($rating);
         $this->em->flush();
+        $this->assertGraphNotExist('(g:Guest {name:"john"})-[:RATED {score: 3.5}]->(h:Hotel {name:"Crowne"})');
     }
 }
