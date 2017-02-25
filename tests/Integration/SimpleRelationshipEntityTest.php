@@ -81,5 +81,8 @@ class SimpleRelationshipEntityTest extends IntegrationTestCase
         $guest = $this->em->getRepository(Guest::class)->findOneBy(['name' => 'john']);
         $this->assertInstanceOf(Guest::class, $guest);
         $this->assertInstanceOf(Rating::class, $guest->getRating());
+        $this->assertInstanceOf(Hotel::class, $guest->getRating()->getHotel());
+        $this->assertEquals(3.5, $guest->getRating()->getScore());
+        $this->assertEquals(spl_object_hash($guest), spl_object_hash($guest->getRating()->getHotel()->getRating()->getGuest()));
     }
 }
