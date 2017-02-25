@@ -14,12 +14,12 @@ class EntityHydrator
     /**
      * @var EntityManager
      */
-    protected $_em;
+    private $_em;
 
     /**
      * @var NodeEntityMetadata
      */
-    protected $_classMetadata;
+    private $_classMetadata;
 
     public function __construct($className, EntityManager $em)
     {

@@ -9,11 +9,11 @@ use GraphAware\Neo4j\OGM\Util\DirectionUtils;
 
 class BasicEntityPersister
 {
-    protected $_className;
+    private $_className;
 
-    protected $_classMetadata;
+    private $_classMetadata;
 
-    protected $_em;
+    private $_em;
 
     public function __construct($className, NodeEntityMetadata $classMetadata, EntityManager $em)
     {
