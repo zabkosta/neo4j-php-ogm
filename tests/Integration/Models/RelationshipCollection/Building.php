@@ -21,7 +21,7 @@ class Building
     protected $id;
 
     /**
-     * @OGM\Relationship(type="HAS_FLOOR", direction="OUTGOING", mappedBy="building", collection=true, targetEntity="Building")
+     * @OGM\Relationship(type="HAS_FLOOR", direction="OUTGOING", mappedBy="building", collection=true, targetEntity="Floor")
      *
      * @var Collection
      */

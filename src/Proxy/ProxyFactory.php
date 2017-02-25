@@ -45,7 +45,7 @@ class ProxyFactory
         if (!$relationship->isCollection()) {
             $initializer = new SingleNodeInitializer($this->em, $relationship, $this->classMetadata);
         } else if ($relationship->isCollection()) {
-            $initializer = new NodeCollectionInitializer($this->em, $relationship, $this->em->getClassMetadata($relationship->getTargetEntity()));
+            $initializer = new NodeCollectionInitializer($this->em, $relationship, $this->classMetadata);
         }
 
         return $initializer;

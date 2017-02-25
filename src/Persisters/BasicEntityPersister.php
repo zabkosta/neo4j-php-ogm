@@ -41,6 +41,15 @@ class BasicEntityPersister
         $hydrator->hydrateSimpleRelationship($alias, $result, $sourceEntity);
     }
 
+    public function getSimpleRelationshipCollection($alias, $sourceEntity)
+    {
+        $stmt = $this->getSimpleRelationshipCollectionStatement($alias, $sourceEntity);
+        $result = $this->_em->getDatabaseDriver()->run($stmt->text(), $stmt->parameters());
+        $hydrator = $this->_em->getEntityHydrator($this->_className);
+
+        $hydrator->hydrateSimpleRelationshipCollection($alias, $result, $sourceEntity);
+    }
+
     /**
      * @param $criteria
      * @param null|int $limit
@@ -75,6 +84,28 @@ class BasicEntityPersister
         $cypher .= 'RETURN '.$targetAlias;
 
         $params = ['id' => (int) $sourceEntityId];
+
+        return Statement::create($cypher, $params);
+    }
+
+    private function getSimpleRelationshipCollectionStatement($alias, $sourceEntity)
+    {
+        $relationshipMeta = $this->_classMetadata->getRelationship($alias);
+        $relAlias = $relationshipMeta->getAlias();
+        $targetAlias = $this->_em->getClassMetadataFor($relationshipMeta->getTargetEntity())->getEntityAlias();
+        $sourceEntityId = $this->_classMetadata->getIdValue($sourceEntity);
+        $relationshipType = $relationshipMeta->getType();
+
+        $isIncoming = $relationshipMeta->getDirection() === DirectionUtils::INCOMING ? '<' : '';
+        $isOutgoing = $relationshipMeta->getDirection() === DirectionUtils::OUTGOING ? '>' : '';
+
+        $relPattern = sprintf('%s-[%s:`%s`]-%s', $isIncoming, $relAlias, $relationshipType, $isOutgoing);
+
+        $cypher  = 'MATCH (n) WHERE id(n) = {id} ';
+        $cypher .= 'MATCH (n)'.$relPattern.'('.$targetAlias.') ';
+        $cypher .= 'RETURN collect('.$targetAlias.') AS '.$targetAlias;
+
+        $params = ['id' => $sourceEntityId];
 
         return Statement::create($cypher, $params);
     }

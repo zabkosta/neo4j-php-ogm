@@ -55,5 +55,9 @@ class EntityWithSimpleRelationshipCollectionTest extends IntegrationTestCase
         $b = $entities[0];
         $this->assertInstanceOf(Building::class, $b);
         $floors = $b->getFloors();
+        $this->assertCount(1, $floors);
+        /** @var Floor $floor */
+        $floor = $floors[0];
+        $this->assertEquals(spl_object_hash($b), spl_object_hash($floor->getBuilding()));
     }
 }
