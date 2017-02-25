@@ -14,10 +14,13 @@ namespace GraphAware\Neo4j\OGM;
 use Doctrine\Common\Collections\AbstractLazyCollection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use GraphAware\Common\Result\ResultCollection;
 use GraphAware\Common\Type\Node;
+use GraphAware\Common\Type\Relationship;
 use GraphAware\Neo4j\Client\Stack;
 use GraphAware\Neo4j\OGM\Exception\OGMInvalidArgumentException;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
+use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
 use GraphAware\Neo4j\OGM\Persister\FlushOperationProcessor;
@@ -98,6 +101,8 @@ class UnitOfWork
 
     private $originalEntityData = [];
 
+    private $reOriginalData = [];
+
     public function __construct(EntityManager $manager)
     {
         $this->entityManager = $manager;
@@ -108,6 +113,9 @@ class UnitOfWork
 
     public function persist($entity)
     {
+        if (!$this->isNodeEntity($entity)) {
+            return;
+        }
         $visited = [];
 
         $this->doPersist($entity, $visited);
@@ -191,6 +199,7 @@ class UnitOfWork
         //Detect changes
         $this->detectRelationshipReferenceChanges();
         $this->detectRelationshipEntityChanges();
+        $this->computeRelationshipEntityPropertiesChanges();
         $this->detectEntityChanges();
         $statements = [];
 
@@ -252,11 +261,33 @@ class UnitOfWork
             $statement = $rePersister->getUpdateQuery($entity);
             $reStack->push($statement->text(), $statement->parameters());
         }
+
+        $results = $tx->runStack($reStack);
+        foreach ($results as $result) {
+            foreach ($result->records() as $record) {
+                $gid = $record->get('id');
+                $oid = $record->get('oid');
+                $this->hydrateRelationshipEntityId($oid, $gid);
+                $this->relationshipEntityStates[$oid] = self::STATE_MANAGED;
+            }
+        }
+
+        $reDeleteStack = Stack::create('rel_entity_delete');
         foreach ($this->relEntitesScheduledForDelete as $o) {
             $statement = $this->getRelationshipEntityPersister(get_class($o))->getDeleteQuery($o);
-            $reStack->push($statement->text(), $statement->parameters());
+            $reDeleteStack->push($statement->text(), $statement->parameters());
         }
-        $tx->runStack($reStack);
+
+        $results = $tx->runStack($reDeleteStack);
+        foreach ($results as $result) {
+            foreach ($result->records() as $record) {
+                $oid = $record->get('oid');
+                $this->relationshipEntityStates[$record->get('oid')] = self::STATE_DELETED;
+                $id = $this->reEntityIds[$oid];
+                unset($this->reEntityIds[$oid]);
+                unset($this->reEntitiesById[$id]);
+            }
+        }
 
         $updateNodeStack = Stack::create('update_nodes');
         foreach ($this->nodesScheduledForUpdate as $entity) {
@@ -381,7 +412,24 @@ class UnitOfWork
             $reA = $this->reEntitiesById[$this->reEntityIds[$oid]];
             $reB = $this->relationshipEntityReferences[$this->reEntityIds[$oid]];
             $this->computeRelationshipEntityChanges($reA, $reB);
-            $this->checkRelationshipEntityDeletions($reA);
+//            $this->checkRelationshipEntityDeletions($reA);
+        }
+    }
+
+    private function computeRelationshipEntityPropertiesChanges()
+    {
+        foreach ($this->relationshipEntityStates as $oid => $state) {
+            if ($state === self::STATE_MANAGED) {
+                $e = $this->reEntitiesById[$this->reEntityIds[$oid]];
+                $cm = $this->entityManager->getClassMetadataFor(get_class($e));
+                $newValues = $cm->getPropertyValuesArray($e);
+                if (!array_key_exists($oid, $this->reOriginalData)) {
+                }
+                $originalValues = $this->reOriginalData[$oid];
+                if (count(array_diff($originalValues, $newValues)) > 0) {
+                    $this->relEntitesScheduledForUpdate[$oid] = $e;
+                }
+            }
         }
     }
 
@@ -407,6 +455,14 @@ class UnitOfWork
         $poid = spl_object_hash($pointOfView);
         $this->managedRelationshipEntities[$poid][$field][] = $oid;
         $this->managedRelationshipEntitiesMap[$oid][$poid] = $field;
+        $this->reOriginalData[$oid] = $this->getOriginalRelationshipEntityData($entity);
+    }
+
+    private function getOriginalRelationshipEntityData($entity)
+    {
+        $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entity));
+
+        return $classMetadata->getPropertyValuesArray($entity);
     }
 
     public function getRelationshipEntityById($id)
@@ -595,7 +651,17 @@ class UnitOfWork
     public function scheduleDelete($entity)
     {
         $oid = spl_object_hash($entity);
-        $this->nodesScheduledForDelete[] = $entity;
+        if ($this->isNodeEntity($entity)) {
+            $this->nodesScheduledForDelete[] = $entity;
+            return;
+        }
+
+        if ($this->isRelationshipEntity($entity)) {
+            $this->relEntitesScheduledForDelete[] = $entity;
+            return;
+        }
+
+        throw new \RuntimeException(sprintf('Neither Node entity or Relationship entity detected'));
     }
 
     /**
@@ -605,7 +671,6 @@ class UnitOfWork
      */
     public function getEntityById($id)
     {
-        //var_dump($id);
         return isset($this->entitiesById[$id]) ? $this->entitiesById[$id] : null;
     }
 
@@ -645,6 +710,18 @@ class UnitOfWork
         $p = $refl0->getProperty('id');
         $p->setAccessible(true);
         $p->setValue($this->nodesScheduledForCreate[$oid], $gid);
+    }
+
+    public function hydrateRelationshipEntityId($oid, $gid)
+    {
+        $refl0 = new \ReflectionObject($this->relEntitiesScheduledForCreate[$oid][0]);
+        $p = $refl0->getProperty('id');
+        $p->setAccessible(true);
+        $p->setValue($this->relEntitiesScheduledForCreate[$oid][0], $gid);
+        $this->reEntityIds[$oid] = $gid;
+        $this->reEntitiesById[$gid] = $this->relEntitiesScheduledForCreate[$oid][0];
+        $this->relationshipEntityReferences[$gid] = clone $this->relEntitiesScheduledForCreate[$oid][0];
+        $this->reOriginalData[$oid] = $this->getOriginalRelationshipEntityData($this->relEntitiesScheduledForCreate[$oid][0]);
     }
 
     /**
@@ -954,10 +1031,36 @@ class UnitOfWork
         return $entity;
     }
 
+    public function createRelationshipEntity(Relationship $relationship, $className, $sourceEntity, $field)
+    {
+        $classMetadata = $this->entityManager->getClassMetadataFor($className);
+        $o = $classMetadata->newInstance();
+        $oid = spl_object_hash($o);
+        $this->originalEntityData[$oid] = $relationship->values();
+        $classMetadata->setId($o, $relationship->identity());
+        $this->addManagedRelationshipEntity($o, $sourceEntity, $field);
+
+        return $o;
+    }
+
     private function newInstance(NodeEntityMetadata $class, Node $node)
     {
         $proxyFactory = $this->entityManager->getProxyFactory($class);
         /** @todo make possible to instantiate proxy without the node object */
         return $proxyFactory->fromNode($node);
+    }
+
+    private function isNodeEntity($entity)
+    {
+        $meta = $this->entityManager->getClassMetadataFor(get_class($entity));
+
+        return $meta instanceof NodeEntityMetadata;
+    }
+
+    private function isRelationshipEntity($entity)
+    {
+        $meta = $this->entityManager->getClassMetadataFor(get_class($entity));
+
+        return $meta instanceof RelationshipEntityMetadata;
     }
 }

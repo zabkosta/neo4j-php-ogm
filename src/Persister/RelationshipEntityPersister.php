@@ -59,7 +59,8 @@ class RelationshipEntityPersister
         if (!empty($parameters['fields'])) {
             $query .= 'SET r += {fields} ';
         }
-        $query .= 'RETURN id(r) as id';
+        $query .= 'RETURN id(r) AS id, {oid} AS oid';
+        $parameters['oid'] = spl_object_hash($entity);
 
         return Statement::create($query, $parameters);
     }
@@ -68,7 +69,7 @@ class RelationshipEntityPersister
     {
         $id = $this->classMetadata->getIdValue($entity);
 
-        $query = sprintf('START rel=rel(%d) SET rel += {fields}', $id);
+        $query = sprintf('MATCH ()-[rel]->() WHERE id(rel) = %d SET rel += {fields}', $id);
 
         $parameters = [
             'fields' => [],
@@ -85,8 +86,9 @@ class RelationshipEntityPersister
     public function getDeleteQuery($entity)
     {
         $id = $this->classMetadata->getIdValue($entity);
-        $query = 'START rel=rel('.$id.') DELETE rel';
+        $query = 'START rel=rel('.$id.') DELETE rel RETURN {oid} AS oid';
+        $params = ['oid' => spl_object_hash($entity)];
 
-        return Statement::create($query);
+        return Statement::create($query, $params);
     }
 }

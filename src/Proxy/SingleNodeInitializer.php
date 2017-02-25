@@ -37,47 +37,4 @@ class SingleNodeInitializer
         $persister = $this->em->getEntityPersister($this->metadata->getClassName());
         $persister->getSimpleRelationship($this->relationshipMetadata->getPropertyName(), $baseInstance);
     }
-
-    protected function getRelQueryPart()
-    {
-        switch ($this->relationshipMetadata->getDirection()) {
-            case 'INCOMING':
-                $relStr = '<-[rel_%s:%s]-';
-                break;
-            case 'OUTGOING':
-                $relStr = '-[rel_%s:%s]->';
-                break;
-            default:
-                $relStr = '-[rel_%s:%s]-';
-                break;
-        }
-
-        $relationshipType = $this->relationshipMetadata->getType();
-        $relQueryPart = sprintf($relStr, strtolower($relationshipType), $relationshipType);
-
-        return $relQueryPart;
-    }
-
-    public function handleResult(Result $result)
-    {
-        if ($result->size() === 0) {
-            return null;
-        }
-
-        if ($result->size() > 1) {
-            throw new \RuntimeException(sprintf('Expected only 1 result, got %d', $result->size()));
-        }
-
-        $class = $this->relationshipMetadata->getDirection() === 'INCOMING' ? $this->metadata->getClassName() : $this->relationshipMetadata->getTargetEntity();
-        $cm = $this->em->getClassMetadata($class);
-
-        if (count($cm->getRelationships()) > 0) {
-            $o = $this->em->getProxyFactory($cm)->fromNode($result->firstRecord()->get('n'), array($this->relationshipMetadata->getMappedByProperty()));
-            $this->em->getHydrator($this->metadata->getClassName())->populateDataToInstance($result->firstRecord()->get('n'), $this->metadata, $o);
-
-            return $o;
-        }
-
-        return $this->em->getRepository($class)->hydrate($result->firstRecord(), false);
-    }
 }

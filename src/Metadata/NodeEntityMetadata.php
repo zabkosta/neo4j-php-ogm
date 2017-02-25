@@ -196,6 +196,8 @@ final class NodeEntityMetadata extends GraphEntityMetadata
         if (array_key_exists($key, $this->relationships)) {
             return $this->relationships[$key];
         }
+
+        return null;
     }
 
     /**

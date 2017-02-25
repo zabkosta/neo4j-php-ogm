@@ -103,6 +103,27 @@ class BasicEntityPersister
         $hydrator->hydrateSimpleRelationshipCollection($alias, $result, $sourceEntity);
     }
 
+    public function getRelationshipEntity($alias, $sourceEntity)
+    {
+        $stmt = $this->getRelationshipEntityStatement($alias, $sourceEntity);
+        $result = $this->_em->getDatabaseDriver()->run($stmt->text(), $stmt->parameters());
+        if ($result->size() > 1) {
+            throw new \RuntimeException(sprintf('Expected 1 result, got %d', $result->size()));
+        }
+        $hydrator = $this->_em->getEntityHydrator($this->_className);
+
+        $hydrator->hydrateRelationshipEntity($alias, $result, $sourceEntity);
+    }
+
+    public function getRelationshipEntityCollection($alias, $sourceEntity)
+    {
+        $stmt = $this->getRelationshipEntityStatement($alias, $sourceEntity);
+        $result = $this->_em->getDatabaseDriver()->run($stmt->text(), $stmt->parameters());
+        $hydrator = $this->_em->getEntityHydrator($this->_className);
+
+        $hydrator->hydrateRelationshipEntity($alias, $result, $sourceEntity);
+    }
+
     /**
      * @param $criteria
      * @param null|int $limit
@@ -149,6 +170,30 @@ class BasicEntityPersister
         $cypher .= 'RETURN '.$targetAlias;
 
         $params = ['id' => (int) $sourceEntityId];
+
+        return Statement::create($cypher, $params);
+    }
+
+    private function getRelationshipEntityStatement($alias, $sourceEntity)
+    {
+        $relationshipMeta = $this->_classMetadata->getRelationship($alias);
+        $relAlias = $relationshipMeta->getAlias();
+        $targetAlias = $this->_em->getClassMetadataFor($relationshipMeta->getRelationshipEntityClass())->getEntityAlias();
+        $sourceEntityId = $this->_classMetadata->getIdValue($sourceEntity);
+        $relationshipType = $relationshipMeta->getType();
+
+        $isIncoming = $relationshipMeta->getDirection() === DirectionUtils::INCOMING ? '<' : '';
+        $isOutgoing = $relationshipMeta->getDirection() === DirectionUtils::OUTGOING ? '>' : '';
+
+        $target = $isIncoming ? 'startNode' : 'endNode';
+
+        $relPattern = sprintf('%s-[%s:`%s`]-%s', $isIncoming, $relAlias, $relationshipType, $isOutgoing);
+
+        $cypher  = 'MATCH (n) WHERE id(n) = {id} ';
+        $cypher .= 'MATCH (n)'.$relPattern.'('.$targetAlias.') ';
+        $cypher .= 'RETURN {target: '.$target.'('.$relAlias.'), re: '.$relAlias.'} AS '.$relAlias;
+
+        $params = ['id' => $sourceEntityId];
 
         return Statement::create($cypher, $params);
     }

@@ -154,6 +154,34 @@ final class RelationshipEntityMetadata extends GraphEntityMetadata
         return null;
     }
 
+    public function getOtherClassNameForOwningClass($class)
+    {
+        if ($this->startNodeEntityMetadata === $class) {
+            return $this->endNodeEntityMetadata;
+        }
+
+        return $this->startNodeEntityMetadata;
+    }
+
+    public function getInversedSide($name)
+    {
+        if ($this->startNodeReflectionProperty->getName() === $name) {
+            return $this->endNodeReflectionProperty;
+        }
+
+        return $this->startNodeReflectionProperty;
+    }
+
+    public function getStartNodeClass()
+    {
+        return $this->startNodeEntityMetadata;
+    }
+
+    public function getEndNodeClass()
+    {
+        return $this->endNodeEntityMetadata;
+    }
+
     public function isAssociationInverseSide($assocName)
     {
         // Not implemented

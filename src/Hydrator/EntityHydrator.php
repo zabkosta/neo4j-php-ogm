@@ -11,12 +11,14 @@
 
 namespace GraphAware\Neo4j\OGM\Hydrator;
 
+use GraphAware\Common\Type\Relationship;
 use GraphAware\Common\Result\Record;
 use GraphAware\Common\Result\Result;
 use GraphAware\Common\Type\Node;
 use GraphAware\Neo4j\OGM\Common\Collection;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
+use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 
 class EntityHydrator
 {
@@ -100,6 +102,94 @@ class EntityHydrator
         }
     }
 
+    public function hydrateRelationshipEntity($alias, Result $dbResult, $sourceEntity)
+    {
+        $relationshipMetadata = $this->_classMetadata->getRelationship($alias);
+        /** @var RelationshipEntityMetadata $relationshipEntityMetadata */
+        $relationshipEntityMetadata = $this->_em->getClassMetadataFor($relationshipMetadata->getRelationshipEntityClass());
+        $otherClass = $this->guessOtherClassName($alias);
+        $otherMetadata = $this->_em->getClassMetadataFor($otherClass);
+        $otherHydrator = $this->_em->getEntityHydrator($otherClass);
+
+        // initialize collection on source entity to avoid it being null
+        if ($relationshipMetadata->isCollection()) {
+            $relationshipMetadata->initializeCollection($sourceEntity);
+        }
+
+        // we iterate the result of records which are a map
+        // {target: (Node) , re: (Relationship) }
+        foreach ($dbResult->records() as $record) {
+            $k = $relationshipMetadata->getAlias();
+            /** @var Node $targetNode */
+            $targetNode = $record->get($k)['target'];
+            /** @var Relationship $relationship */
+            $relationship = $record->get($k)['re'];
+
+            // hydrate the target node :
+            $targetEntity = $otherHydrator->hydrateNode($targetNode);
+
+            // create the relationship entity
+            $entity = $this->_em->getUnitOfWork()->createRelationshipEntity(
+                $relationship,
+                $relationshipEntityMetadata->getClassName(),
+                $sourceEntity,
+                $relationshipMetadata->getPropertyName()
+            );
+
+            // set properties on the relationship entity
+            foreach ($relationshipEntityMetadata->getPropertiesMetadata() as $key => $propertyMetadata) {
+                if ($relationship->hasValue($key)) {
+                    $relationshipEntityMetadata->getPropertyMetadata($key)->setValue($entity, $relationship->get($key));
+                }
+            }
+
+            // set the start node
+            if ($relationshipEntityMetadata->getStartNodeClass() === $this->_classMetadata->getClassName()) {
+                $relationshipEntityMetadata->setStartNodeProperty($entity, $sourceEntity);
+            } else {
+                $relationshipEntityMetadata->setStartNodeProperty($entity, $targetEntity);
+            }
+
+            // set the end node
+            if ($relationshipEntityMetadata->getEndNodeClass() === $this->_classMetadata->getClassName()) {
+                $relationshipEntityMetadata->setEndNodeProperty($entity, $sourceEntity);
+            } else {
+                $relationshipEntityMetadata->setEndNodeProperty($entity, $targetEntity);
+            }
+
+            // set the relationship entity on the source entity
+            if (!$relationshipMetadata->isCollection()) {
+                $relationshipMetadata->setValue($sourceEntity, $entity);
+            } else {
+                $relationshipMetadata->initializeCollection($sourceEntity);
+                $relationshipMetadata->addToCollection($sourceEntity, $entity);
+            }
+
+            // guess the name of the property on the other node
+            foreach ($otherMetadata->getRelationships() as $rel) {
+                if ($rel->isRelationshipEntity() && $rel->getRelationshipEntityClass() === $relationshipEntityMetadata->getClassName()) {
+                    if (!$rel->isCollection()) {
+                        $rel->setValue($targetEntity, $entity);
+                    } else {
+                        $rel->initializeCollection($targetEntity);
+                        $rel->addToCollection($targetEntity, $entity);
+                    }
+                }
+            }
+        }
+    }
+
+
+    private function guessOtherClassName($alias)
+    {
+        $relationshipMetadata = $this->_classMetadata->getRelationship($alias);
+        /** @var RelationshipEntityMetadata $relationshipEntityMetadata */
+        $relationshipEntityMetadata = $this->_em->getClassMetadataFor($relationshipMetadata->getRelationshipEntityClass());
+        $inversedSide = $relationshipEntityMetadata->getOtherClassNameForOwningClass($this->_classMetadata->getClassName());
+        /** @todo will not work for Direction.BOTH */
+        return $inversedSide;
+    }
+
     private function initRelationshipCollection($alias, $sourceEntity)
     {
         $this->_classMetadata->getRelationship($alias)->initializeCollection($sourceEntity);
@@ -131,8 +221,9 @@ class EntityHydrator
         }
     }
 
-    protected function hydrateNode(Node $node, $class)
+    protected function hydrateNode(Node $node, $class = null)
     {
+        $cm = null === $class ? $this->_classMetadata->getClassName() : $class;
         $id = $node->identity();
 
         // Check the entity is not managed yet by the uow
@@ -141,7 +232,7 @@ class EntityHydrator
         }
 
         // create the entity
-        $entity = $this->_em->getUnitOfWork()->createEntity($node, $class, $id);
+        $entity = $this->_em->getUnitOfWork()->createEntity($node, $cm, $id);
         $this->hydrateProperties($entity, $node);
 
         return $entity;

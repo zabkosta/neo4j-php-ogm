@@ -11,15 +11,14 @@
 
 namespace GraphAware\Neo4j\OGM\Proxy;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use GraphAware\Common\Result\Result;
 use GraphAware\Common\Type\Node;
 
-class NodeCollectionInitializer extends SingleNodeInitializer
+class RelationshipEntityCollectionInitializer extends RelationshipEntityInitializer
 {
     public function initialize(Node $node, $baseInstance)
     {
         $persister = $this->em->getEntityPersister($this->metadata->getClassName());
-        $persister->getSimpleRelationshipCollection($this->relationshipMetadata->getPropertyName(), $baseInstance);
+        $persister->getRelationshipEntityCollection($this->relationshipMetadata->getPropertyName(), $baseInstance);
     }
+
 }
