@@ -22,22 +22,4 @@ class NodeCollectionInitializer extends SingleNodeInitializer
         $persister = $this->em->getEntityPersister($this->metadata->getClassName());
         $persister->getSimpleRelationshipCollection($this->relationshipMetadata->getPropertyName(), $baseInstance);
     }
-
-    public function handleResult(Result $result)
-    {
-        $instances = new ArrayCollection();
-        $class = $class = $this->relationshipMetadata->getDirection() === 'INCOMING' ? $this->metadata->getClassName() : $this->relationshipMetadata->getTargetEntity();
-        $cm = $this->em->getClassMetadata($class);
-        foreach ($result->records() as $record) {
-            $o = count($cm->getRelationships()) > 1
-                ? $this->em->getProxyFactory($cm)->fromNode($record->get($this->relationshipMetadata->getPropertyName()))
-                : $this->em->getRepository($class)->hydrate($record, false, $this->relationshipMetadata->getPropertyName());
-            $otherNodeMeta = $this->em->getClassMetadataFor($this->relationshipMetadata->getTargetEntity());
-            $this->em->getHydrator($class)->populateDataToInstance($record->get($this->relationshipMetadata->getPropertyName()), $otherNodeMeta, $o);
-            $instances->add($o);
-        }
-
-        return $instances;
-    }
-
 }

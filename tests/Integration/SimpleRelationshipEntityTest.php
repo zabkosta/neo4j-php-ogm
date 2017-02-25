@@ -70,4 +70,13 @@ class SimpleRelationshipEntityTest extends IntegrationTestCase
         $this->em->flush();
         $this->assertGraphNotExist('(g:Guest {name:"john"})-[:RATED {score: 3.5}]->(h:Hotel {name:"Crowne"})');
     }
+
+    public function testRatingCanBeLoaded()
+    {
+        $this->client->run('CREATE (g:Guest {name:"john"})-[:RATED {score: 3.5}]->(h:Hotel {name:"Crowne"})');
+        /** @var Guest $guest */
+        $guest = $this->em->getRepository(Guest::class)->findOneBy(['name' => 'john']);
+        $this->assertInstanceOf(Guest::class, $guest);
+        $this->assertInstanceOf(Rating::class, $guest->getRating());
+    }
 }

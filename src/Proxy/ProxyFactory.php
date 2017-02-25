@@ -37,7 +37,7 @@ class ProxyFactory
         $object->__setNode($node);
         $initializers = [];
         foreach ($this->classMetadata->getSimpleRelationships() as $relationship) {
-            if (!$relationship->isFetch() && !in_array($relationship->getPropertyName(), $mappedByProperties)) {
+            if (!in_array($relationship->getPropertyName(), $mappedByProperties)) {
                 $initializer = $this->getInitializerFor($relationship);
                 $initializers[$relationship->getPropertyName()] = $initializer;
             }
