@@ -23,7 +23,7 @@ class Building
     /**
      * @OGM\Relationship(type="HAS_FLOOR", direction="OUTGOING", mappedBy="building", collection=true, targetEntity="Floor")
      *
-     * @var Collection
+     * @var Collection|Floor[]
      */
     protected $floors;
 

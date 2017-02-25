@@ -80,7 +80,13 @@ class EntityHydrator
             $coll->add($item);
             $mappedBy = $relationshipMetadata->getMappedByProperty();
             if ($mappedBy) {
-                $targetMeta->getRelationship($mappedBy)->setValue($item, $sourceEntity);
+                $mappedRel = $targetMeta->getRelationship($mappedBy);
+                if ($mappedRel->isCollection()) {
+                    $mappedRel->initializeCollection($item);
+                    $mappedRel->getValue($item)->add($sourceEntity);
+                } else {
+                    $mappedRel->setValue($item, $sourceEntity);
+                }
             }
         }
     }

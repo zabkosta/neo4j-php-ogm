@@ -106,4 +106,43 @@ class EntityWithSimpleRelationshipCollectionTest extends IntegrationTestCase
             $this->assertInstanceOf(Building::class, $floor->getBuilding());
         }
     }
+
+    public function testFloorLevelCanBeChangedWithoutClear()
+    {
+        $building = new Building();
+        $floor1 = new Floor(1);
+        $building->getFloors()->add($floor1);
+        $this->em->persist($building);
+        $this->em->flush();
+        $floor2 = new Floor(2);
+        $building->getFloors()->add($floor2);
+        $this->em->flush();
+        $floor2->setLevel(5);
+        $this->em->flush();
+
+        $result = $this->client->run('MATCH (n:Building)-[:HAS_FLOOR]->(f:Floor {level: 5}) RETURN n, f');
+        $this->assertEquals(1, $result->size());
+    }
+
+    public function testFloorLevelCanBeChangedWithClear()
+    {
+        $building = new Building();
+        $floor1 = new Floor(1);
+        $building->getFloors()->add($floor1);
+        $this->em->persist($building);
+        $this->em->flush();
+        $this->em->clear();
+
+        $entities = $this->em->getRepository(Building::class)->findAll();
+        /** @var Building $building */
+        $building = $entities[0];
+        $floor1 = $building->getFloors()[0];
+        $floor1->setLevel(5);
+        $floor2 = new Floor(2);
+        $building->getFloors()->add($floor2);
+        $this->em->flush();
+
+        $result = $this->client->run('MATCH (n:Building)-[:HAS_FLOOR]->(f:Floor {level: 5}) RETURN n, f');
+        $this->assertEquals(1, $result->size());
+    }
 }
