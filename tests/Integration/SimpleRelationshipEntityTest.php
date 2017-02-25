@@ -69,6 +69,32 @@ class SimpleRelationshipEntityTest extends IntegrationTestCase
         $this->em->remove($rating);
         $this->em->flush();
         $this->assertGraphNotExist('(g:Guest {name:"john"})-[:RATED {score: 3.5}]->(h:Hotel {name:"Crowne"})');
+        $guest->setName('John');
+        $this->em->flush();
+        $this->assertGraphExist('(g:Guest {name:"John"})');
+        $this->assertGraphNotExist('(g:Guest)-[:RATED]->(x)');
+    }
+
+    public function testRatingCanBeRemovedAfterLoad()
+    {
+        $guest = new Guest('john');
+        $hotel = new Hotel('Crowne');
+        $rating = new Rating($guest, $hotel, 3.5);
+        $guest->setRating($rating);
+        $this->em->persist($guest);
+        $this->em->flush();
+        $this->assertGraphExist('(g:Guest {name:"john"})-[:RATED {score: 3.5}]->(h:Hotel {name:"Crowne"})');
+        $this->em->clear();
+
+        $john = $this->em->getRepository(Guest::class)->findOneBy(['name' => 'john']);
+        /** @var Hotel $crowne */
+        $crowne = $this->em->getRepository(Hotel::class)->findOneBy(['name' => 'Crowne']);
+        $this->assertEquals(spl_object_hash($john), spl_object_hash($crowne->getRating()->getGuest()));
+        $this->em->remove($crowne->getRating());
+        $john->setRating(null);
+        $crowne->setRating(null);
+        $this->em->flush();
+        $this->assertGraphNotExist('(g:Guest {name:"john"})-[:RATED]->(h:Hotel)');
     }
 
     /**
