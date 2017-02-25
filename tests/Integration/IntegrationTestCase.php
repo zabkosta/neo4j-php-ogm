@@ -59,6 +59,13 @@ class IntegrationTestCase extends \PHPUnit_Framework_TestCase
         $this->createEntityManager();
     }
 
+    protected function persist(...$objects)
+    {
+        foreach ($objects as $object) {
+            $this->em->persist($object);
+        }
+    }
+
     protected function assertGraphNotExist($q)
     {
         $this->assertTrue($this->checkGraph($q)->size() < 1);

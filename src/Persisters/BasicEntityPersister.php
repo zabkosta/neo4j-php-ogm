@@ -61,9 +61,21 @@ class BasicEntityPersister
     {
         $identifier = $this->_classMetadata->getEntityAlias();
         $classLabel = $this->_classMetadata->getLabel();
-        $cypher = 'MATCH ('.$identifier.':'.$classLabel.') RETURN '.$identifier;
+        $cypher  = 'MATCH ('.$identifier.':'.$classLabel.') ';
 
-        return Statement::create($cypher);
+        $filter_cursor = 0;
+        $params = [];
+
+        foreach ($criteria as $key => $criterion) {
+            $key     = (string) $key;
+            $clause  = $filter_cursor === 0 ? 'WHERE' : 'AND';
+            $cypher .= sprintf('%s %s.%s = {%s} ', $clause, $identifier, $key, $key);
+            $params[$key] = $criterion;
+        }
+
+        $cypher .= 'RETURN '.$identifier;
+
+        return Statement::create($cypher, $params);
     }
 
     private function getSimpleRelationshipStatement($alias, $sourceEntity)
