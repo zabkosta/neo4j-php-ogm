@@ -107,6 +107,18 @@ class BasicEntityPersister
     {
         $stmt = $this->getRelationshipEntityStatement($alias, $sourceEntity);
         $result = $this->_em->getDatabaseDriver()->run($stmt->text(), $stmt->parameters());
+        if ($result->size() > 1) {
+            throw new \RuntimeException(sprintf('Expected 1 result, got %d', $result->size()));
+        }
+        $hydrator = $this->_em->getEntityHydrator($this->_className);
+
+        $hydrator->hydrateRelationshipEntity($alias, $result, $sourceEntity);
+    }
+
+    public function getRelationshipEntityCollection($alias, $sourceEntity)
+    {
+        $stmt = $this->getRelationshipEntityStatement($alias, $sourceEntity);
+        $result = $this->_em->getDatabaseDriver()->run($stmt->text(), $stmt->parameters());
         $hydrator = $this->_em->getEntityHydrator($this->_className);
 
         $hydrator->hydrateRelationshipEntity($alias, $result, $sourceEntity);

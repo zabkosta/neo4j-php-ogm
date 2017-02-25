@@ -48,6 +48,11 @@ class ProxyFactory
                     $initializer = new RelationshipEntityInitializer($this->em, $relationshipEntity, $this->classMetadata);
                     $initializers[$relationshipEntity->getPropertyName()] = $initializer;
                 }
+            } else {
+                if (!in_array($relationshipEntity->getPropertyName(), $mappedByProperties)) {
+                    $initializer = new RelationshipEntityCollectionInitializer($this->em, $relationshipEntity, $this->classMetadata);
+                    $initializers[$relationshipEntity->getPropertyName()] = $initializer;
+                }
             }
         }
         $object->__setInitializers($initializers);

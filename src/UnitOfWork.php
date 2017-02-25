@@ -261,10 +261,6 @@ class UnitOfWork
             $statement = $rePersister->getUpdateQuery($entity);
             $reStack->push($statement->text(), $statement->parameters());
         }
-        foreach ($this->relEntitesScheduledForDelete as $o) {
-            $statement = $this->getRelationshipEntityPersister(get_class($o))->getDeleteQuery($o);
-            $reStack->push($statement->text(), $statement->parameters());
-        }
 
         $results = $tx->runStack($reStack);
         foreach ($results as $result) {
@@ -273,6 +269,23 @@ class UnitOfWork
                 $oid = $record->get('oid');
                 $this->hydrateRelationshipEntityId($oid, $gid);
                 $this->relationshipEntityStates[$oid] = self::STATE_MANAGED;
+            }
+        }
+
+        $reDeleteStack = Stack::create('rel_entity_delete');
+        foreach ($this->relEntitesScheduledForDelete as $o) {
+            $statement = $this->getRelationshipEntityPersister(get_class($o))->getDeleteQuery($o);
+            $reDeleteStack->push($statement->text(), $statement->parameters());
+        }
+
+        $results = $tx->runStack($reDeleteStack);
+        foreach ($results as $result) {
+            foreach ($result->records() as $record) {
+                $oid = $record->get('oid');
+                $this->relationshipEntityStates[$record->get('oid')] = self::STATE_DELETED;
+                $id = $this->reEntityIds[$oid];
+                unset($this->reEntityIds[$oid]);
+                unset($this->reEntitiesById[$id]);
             }
         }
 

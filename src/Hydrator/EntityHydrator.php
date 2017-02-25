@@ -111,6 +111,11 @@ class EntityHydrator
         $otherMetadata = $this->_em->getClassMetadataFor($otherClass);
         $otherHydrator = $this->_em->getEntityHydrator($otherClass);
 
+        // initialize collection on source entity to avoid it being null
+        if ($relationshipMetadata->isCollection()) {
+            $relationshipMetadata->initializeCollection($sourceEntity);
+        }
+
         // we iterate the result of records which are a map
         // {target: (Node) , re: (Relationship) }
         foreach ($dbResult->records() as $record) {
@@ -153,12 +158,22 @@ class EntityHydrator
             }
 
             // set the relationship entity on the source entity
-            $relationshipMetadata->setValue($sourceEntity, $entity);
+            if (!$relationshipMetadata->isCollection()) {
+                $relationshipMetadata->setValue($sourceEntity, $entity);
+            } else {
+                $relationshipMetadata->initializeCollection($sourceEntity);
+                $relationshipMetadata->addToCollection($sourceEntity, $entity);
+            }
 
             // guess the name of the property on the other node
             foreach ($otherMetadata->getRelationships() as $rel) {
                 if ($rel->isRelationshipEntity() && $rel->getRelationshipEntityClass() === $relationshipEntityMetadata->getClassName()) {
-                    $rel->setValue($targetEntity, $entity);
+                    if (!$rel->isCollection()) {
+                        $rel->setValue($targetEntity, $entity);
+                    } else {
+                        $rel->initializeCollection($targetEntity);
+                        $rel->addToCollection($targetEntity, $entity);
+                    }
                 }
             }
         }
