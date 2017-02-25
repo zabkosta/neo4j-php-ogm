@@ -101,6 +101,8 @@ class UnitOfWork
 
     private $originalEntityData = [];
 
+    private $reOriginalData = [];
+
     public function __construct(EntityManager $manager)
     {
         $this->entityManager = $manager;
@@ -197,6 +199,7 @@ class UnitOfWork
         //Detect changes
         $this->detectRelationshipReferenceChanges();
         $this->detectRelationshipEntityChanges();
+        $this->computeRelationshipEntityPropertiesChanges();
         $this->detectEntityChanges();
         $statements = [];
 
@@ -269,6 +272,7 @@ class UnitOfWork
                 $gid = $record->get('id');
                 $oid = $record->get('oid');
                 $this->hydrateRelationshipEntityId($oid, $gid);
+                $this->relationshipEntityStates[$oid] = self::STATE_MANAGED;
             }
         }
 
@@ -395,7 +399,24 @@ class UnitOfWork
             $reA = $this->reEntitiesById[$this->reEntityIds[$oid]];
             $reB = $this->relationshipEntityReferences[$this->reEntityIds[$oid]];
             $this->computeRelationshipEntityChanges($reA, $reB);
-            $this->checkRelationshipEntityDeletions($reA);
+//            $this->checkRelationshipEntityDeletions($reA);
+        }
+    }
+
+    private function computeRelationshipEntityPropertiesChanges()
+    {
+        foreach ($this->relationshipEntityStates as $oid => $state) {
+            if ($state === self::STATE_MANAGED) {
+                $e = $this->reEntitiesById[$this->reEntityIds[$oid]];
+                $cm = $this->entityManager->getClassMetadataFor(get_class($e));
+                $newValues = $cm->getPropertyValuesArray($e);
+                if (!array_key_exists($oid, $this->reOriginalData)) {
+                }
+                $originalValues = $this->reOriginalData[$oid];
+                if (count(array_diff($originalValues, $newValues)) > 0) {
+                    $this->relEntitesScheduledForUpdate[$oid] = $e;
+                }
+            }
         }
     }
 
@@ -421,6 +442,14 @@ class UnitOfWork
         $poid = spl_object_hash($pointOfView);
         $this->managedRelationshipEntities[$poid][$field][] = $oid;
         $this->managedRelationshipEntitiesMap[$oid][$poid] = $field;
+        $this->reOriginalData[$oid] = $this->getOriginalRelationshipEntityData($entity);
+    }
+
+    private function getOriginalRelationshipEntityData($entity)
+    {
+        $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entity));
+
+        return $classMetadata->getPropertyValuesArray($entity);
     }
 
     public function getRelationshipEntityById($id)
@@ -629,7 +658,6 @@ class UnitOfWork
      */
     public function getEntityById($id)
     {
-        //var_dump($id);
         return isset($this->entitiesById[$id]) ? $this->entitiesById[$id] : null;
     }
 
@@ -677,6 +705,10 @@ class UnitOfWork
         $p = $refl0->getProperty('id');
         $p->setAccessible(true);
         $p->setValue($this->relEntitiesScheduledForCreate[$oid][0], $gid);
+        $this->reEntityIds[$oid] = $gid;
+        $this->reEntitiesById[$gid] = $this->relEntitiesScheduledForCreate[$oid][0];
+        $this->relationshipEntityReferences[$gid] = clone $this->relEntitiesScheduledForCreate[$oid][0];
+        $this->reOriginalData[$oid] = $this->getOriginalRelationshipEntityData($this->relEntitiesScheduledForCreate[$oid][0]);
     }
 
     /**

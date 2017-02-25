@@ -85,4 +85,95 @@ class SimpleRelationshipEntityTest extends IntegrationTestCase
         $this->assertEquals(3.5, $guest->getRating()->getScore());
         $this->assertEquals(spl_object_hash($guest), spl_object_hash($guest->getRating()->getHotel()->getRating()->getGuest()));
     }
+
+    /**
+     * @group simple-rel-upd
+     */
+    public function testRatingPropertyCanBeModified()
+    {
+        $guest = new Guest('john');
+        $hotel = new Hotel('Crowne');
+        $rating = new Rating($guest, $hotel, 3.5);
+        $guest->setRating($rating);
+        $this->em->persist($guest);
+        $this->em->flush();
+        $this->assertGraphExist('(g:Guest {name:"john"})-[:RATED {score: 3.5}]->(h:Hotel {name:"Crowne"})');
+        $rating->setScore(5.0);
+        $this->em->flush();
+        $this->assertGraphExist('(g:Guest {name:"john"})-[:RATED {score: 5.0}]->(h:Hotel {name:"Crowne"})');
+    }
+
+    /**
+     * @group simple-rel-upd
+     */
+    public function testRatingPropertyCanBeModifiedAfterLoad()
+    {
+        $guest = new Guest('john');
+        $hotel = new Hotel('Crowne');
+        $rating = new Rating($guest, $hotel, 3.5);
+        $guest->setRating($rating);
+        $this->em->persist($guest);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var Guest $john */
+        $john = $this->em->getRepository(Guest::class)->findOneBy(['name' => 'john']);
+        $john->getRating()->setScore(1.2);
+        $this->em->flush();
+        $this->assertGraphExist('(g:Guest {name:"john"})-[:RATED {score: 1.2}]->(h:Hotel {name:"Crowne"})');
+    }
+
+    public function testStartSideOfRelationshipEntityCanBeUpdated()
+    {
+        $guest = new Guest('john');
+        $hotel = new Hotel('Crowne');
+        $rating = new Rating($guest, $hotel, 3.5);
+        $guest->setRating($rating);
+        $this->em->persist($guest);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var Guest $john */
+        $john = $this->em->getRepository(Guest::class)->findOneBy(['name' => 'john']);
+        $rating = $john->getRating();
+        $john->setName('John');
+        $this->em->flush();
+        $this->assertGraphExist('(g:Guest {name:"John"})-[:RATED {score: 3.5}]->(h:Hotel {name:"Crowne"})');
+    }
+
+    public function testEndSideOfRelationshipEntityCanBeUpdated()
+    {
+        $guest = new Guest('john');
+        $hotel = new Hotel('Crowne');
+        $rating = new Rating($guest, $hotel, 3.5);
+        $guest->setRating($rating);
+        $this->em->persist($guest);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var Guest $john */
+        $john = $this->em->getRepository(Guest::class)->findOneBy(['name' => 'john']);
+        $john->getRating()->getHotel()->setName('Crowne Plaza');
+        $this->em->flush();
+        $this->assertGraphExist('(g:Guest {name:"john"})-[:RATED {score: 3.5}]->(h:Hotel {name:"Crowne Plaza"})');
+    }
+
+    public function testAllSidesCanBeUpdatedAtOnce()
+    {
+        $guest = new Guest('john');
+        $hotel = new Hotel('Crowne');
+        $rating = new Rating($guest, $hotel, 3.5);
+        $guest->setRating($rating);
+        $this->em->persist($guest);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var Guest $john */
+        $john = $this->em->getRepository(Guest::class)->findOneBy(['name' => 'john']);
+        $john->getRating()->setScore(1.2);
+        $john->setName('John');
+        $john->getRating()->getHotel()->setName('Crowne Plaza');
+        $this->em->flush();
+        $this->assertGraphExist('(g:Guest {name:"John"})-[:RATED {score: 1.2}]->(h:Hotel {name:"Crowne Plaza"})');
+    }
 }
