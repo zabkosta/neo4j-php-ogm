@@ -4,6 +4,7 @@ namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\RelationshipCollection\Building;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\RelationshipCollection\Floor;
+use Symfony\Component\Yaml\Tests\B;
 
 /**
  * Class EntityWithSimpleRelationshipCollectionTest
@@ -59,5 +60,50 @@ class EntityWithSimpleRelationshipCollectionTest extends IntegrationTestCase
         /** @var Floor $floor */
         $floor = $floors[0];
         $this->assertEquals(spl_object_hash($b), spl_object_hash($floor->getBuilding()));
+    }
+
+    public function testBuildingWithFloorsCanAddFloorWithoutClear()
+    {
+        $building = new Building();
+        $floor1 = new Floor(1);
+        $building->getFloors()->add($floor1);
+        $this->em->persist($building);
+        $this->em->flush();
+        $floor2 = new Floor(2);
+        $building->getFloors()->add($floor2);
+        $this->em->flush();
+
+        $result = $this->client->run('MATCH (n:Building)-[:HAS_FLOOR]->(f:Floor) RETURN n, f');
+        $this->assertEquals(2, $result->size());
+    }
+
+    public function testBuildingWithFloorsCanAddFloorWithClear()
+    {
+        $building = new Building();
+        $floor1 = new Floor(1);
+        $building->getFloors()->add($floor1);
+        $this->em->persist($building);
+        $this->em->flush();
+        $this->em->clear();
+
+        $entities = $this->em->getRepository(Building::class)->findAll();
+        /** @var Building $building */
+        $building = $entities[0];
+        $floor2 = new Floor(2);
+        $building->getFloors()->add($floor2);
+        $this->em->flush();
+
+        $result = $this->client->run('MATCH (n:Building)-[:HAS_FLOOR]->(f:Floor) RETURN n, f');
+        $this->assertEquals(2, $result->size());
+    }
+
+    public function testBuildingCanBeRetrievedFromFloor()
+    {
+        /** @var Floor[] $floors */
+        $floors = $this->em->getRepository(Floor::class)->findAll();
+
+        foreach ($floors as $floor) {
+            $this->assertInstanceOf(Building::class, $floor->getBuilding());
+        }
     }
 }
