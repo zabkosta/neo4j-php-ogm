@@ -25,6 +25,9 @@ class SimpleRelationshipEntityTest extends IntegrationTestCase
         $guest = new Guest('john');
         $hotel = new Hotel('Crowne');
         $rating = new Rating($guest, $hotel, 3.5);
+        $guest->setRating($rating);
         $this->em->persist($guest);
+        $this->em->flush();
+        $this->assertGraphExist('(g:Guest {name:"john"})-[:RATED {score: 3.5}]->(h:Hotel {name:"Crowne"})');
     }
 }
