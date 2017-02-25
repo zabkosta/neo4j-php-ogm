@@ -17,13 +17,17 @@ use Doctrine\Common\EventManager;
 use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\Client\ClientInterface;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
+use GraphAware\Neo4j\OGM\Hydrator\EntityHydrator;
 use GraphAware\Neo4j\OGM\Metadata\Factory\Annotation\AnnotationGraphEntityMetadataFactory;
 use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactoryInterface;
 use GraphAware\Neo4j\OGM\Metadata\GraphEntityMetadata;
+use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
+use GraphAware\Neo4j\OGM\Persisters\BasicEntityPersister;
+use GraphAware\Neo4j\OGM\Proxy\ProxyFactory;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
-use GraphAware\Neo4j\OGM\Repository\ObjectHydration;
+use GraphAware\Neo4j\OGM\Hydration\ObjectHydration;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 class EntityManager implements EntityManagerInterface
@@ -62,6 +66,26 @@ class EntityManager implements EntityManagerInterface
      * @var EventManager
      */
     protected $eventManager;
+
+    /**
+     * @var string
+     */
+    protected $proxyDirectory;
+
+    /**
+     * @var array
+     */
+    protected $proxyFactories = [];
+
+    /**
+     * @var array
+     */
+    protected $entityHydrators = [];
+
+    /**
+     * @var array
+     */
+    protected $entityPersisters = [];
 
     /**
      * @param string            $host
@@ -109,6 +133,7 @@ class EntityManager implements EntityManagerInterface
             $metadataFactory = new AnnotationGraphEntityMetadataFactory($reader);
         }
         $this->metadataFactory = $metadataFactory;
+        $this->proxyDirectory = $cacheDirectory;
     }
 
     /**
@@ -225,10 +250,9 @@ class EntityManager implements EntityManagerInterface
         return $this->uow;
     }
 
-    public function getHydrator($mode='')
+    public function getHydrator($className, $mode='')
     {
-        // TODO imprive this. Maybe need different type of hydrators.
-        return new ObjectHydration($this);
+        return new ObjectHydration($className, $this);
     }
 
     /**
@@ -312,5 +336,50 @@ class EntityManager implements EntityManagerInterface
     {
         $this->uow = null;
         $this->uow = new UnitOfWork($this);
+    }
+
+    /**
+     * @return string
+     */
+    public function getProxyDirectory()
+    {
+        return $this->proxyDirectory;
+    }
+    
+    public function getAnnotationDriver()
+    {
+        // TODO: Implement getAnnotationDriver() method.
+    }
+
+
+    /**
+     * @param NodeEntityMetadata $entityMetadata
+     * @return ProxyFactory
+     */
+    public function getProxyFactory(NodeEntityMetadata $entityMetadata)
+    {
+        if (!array_key_exists($entityMetadata->getClassName(), $this->proxyFactories)) {
+            $this->proxyFactories[$entityMetadata->getClassName()] = new ProxyFactory($this, $entityMetadata);
+        }
+
+        return $this->proxyFactories[$entityMetadata->getClassName()];
+    }
+
+    /**
+     * @param $className
+     * @return EntityHydrator
+     */
+    public function getEntityHydrator($className)
+    {
+        if (!array_key_exists($className, $this->entityHydrators)) {
+            $this->entityHydrators[$className] = new EntityHydrator($className, $this);
+        }
+
+        return $this->entityHydrators[$className];
+    }
+
+    public function getEntityPersister($className)
+    {
+        return new BasicEntityPersister($className, $this->getClassMetadataFor($className), $this);
     }
 }

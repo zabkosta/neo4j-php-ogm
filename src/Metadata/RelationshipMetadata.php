@@ -47,6 +47,11 @@ final class RelationshipMetadata
     private $isLazy;
 
     /**
+     * @var bool
+     */
+    private $isFetch;
+
+    /**
      * @var OrderBy
      */
     private $orderBy;
@@ -58,13 +63,14 @@ final class RelationshipMetadata
      * @param bool                                           $isLazy
      * @param OrderBy                                        $orderBy
      */
-    public function __construct($className, \ReflectionProperty $reflectionProperty, Relationship $relationshipAnnotation, $isLazy = false, OrderBy $orderBy = null)
+    public function __construct($className, \ReflectionProperty $reflectionProperty, Relationship $relationshipAnnotation, $isLazy = false, $isFetch = false, OrderBy $orderBy = null)
     {
         $this->className = $className;
         $this->propertyName = $reflectionProperty->getName();
         $this->reflectionProperty = $reflectionProperty;
         $this->relationshipAnnotation = $relationshipAnnotation;
         $this->isLazy = $isLazy;
+        $this->isFetch = $isFetch;
         $this->orderBy = $orderBy;
         if (null !== $orderBy) {
             if (!in_array($orderBy->order, ['ASC', 'DESC'], true)) {
@@ -118,11 +124,15 @@ final class RelationshipMetadata
      */
     public function isLazy()
     {
-        if (!$this->isCollection()) {
-            return false;
-        }
-
         return $this->isLazy;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFetch()
+    {
+        return $this->isFetch;
     }
 
     /**
@@ -197,18 +207,14 @@ final class RelationshipMetadata
         if (!$this->isCollection()) {
             throw new \LogicException(sprintf('The property mapping this relationship is not of collection type in "%s"', $this->className));
         }
-
-        if ($this->getValue($object) instanceof ArrayCollection || is_array($this->getValue($object)) || $this->getValue($object) instanceof LazyRelationshipCollection) {
+        if(is_array($this->getValue($object)) && !empty($this->getValue($object))) {
+            $this->setValue($object, new ArrayCollection($this->getValue($object)));
             return;
         }
-
-        if (null === $this->getValue($object)) {
-            $this->setValue($object, new Collection());
-
+        if ($this->getValue($object) instanceof ArrayCollection || $this->getValue($object) instanceof LazyRelationshipCollection) {
             return;
         }
-
-        //throw new \RuntimeException(sprintf('Unexpected initial value in %s', $this->className));
+        $this->setValue($object, new Collection());
     }
 
     /**
@@ -274,5 +280,14 @@ final class RelationshipMetadata
     {
         $this->reflectionProperty->setAccessible(true);
         $this->reflectionProperty->setValue($object, $value);
+    }
+
+    /**
+     * @return string
+     */
+    public function getAlias()
+    {
+        /** @todo find another fixed string for query caching */
+        return strtolower(sprintf('%s_%s', $this->propertyName, spl_object_hash($this)));
     }
 }

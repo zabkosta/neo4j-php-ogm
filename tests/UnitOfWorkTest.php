@@ -3,10 +3,10 @@
 namespace GraphAware\Neo4j\OGM\Tests;
 
 use GraphAware\Neo4j\OGM\EntityManager;
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\Movie;
 
 class UnitOfWorkTest extends \PHPUnit_Framework_TestCase
 {
+    /**
     public function testTraverseRelationshipEntities_makeSureAllRelationsAreVisited()
     {
         $fooRelationMetadata = $this->getMockBuilder(DummyRelationMetadata::class)
@@ -61,4 +61,6 @@ class DummyRelationMetadata {
     {
         return null;
     }
+     *
+     **/
 }

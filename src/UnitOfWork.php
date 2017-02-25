@@ -14,8 +14,10 @@ namespace GraphAware\Neo4j\OGM;
 use Doctrine\Common\Collections\AbstractLazyCollection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use GraphAware\Common\Type\Node;
 use GraphAware\Neo4j\Client\Stack;
 use GraphAware\Neo4j\OGM\Exception\OGMInvalidArgumentException;
+use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
 use GraphAware\Neo4j\OGM\Persister\FlushOperationProcessor;
@@ -93,6 +95,8 @@ class UnitOfWork
     private $reEntitiesById = [];
 
     private $managedRelationshipEntitiesMap = [];
+
+    private $originalEntityData = [];
 
     public function __construct(EntityManager $manager)
     {
@@ -934,5 +938,26 @@ class UnitOfWork
         }
 
         return null;
+    }
+
+    public function createEntity(Node $node, $className, $id)
+    {
+        /** todo receive a data of object instead of node object */
+
+        $classMetadata = $this->entityManager->getClassMetadataFor($className);
+        $entity = $this->newInstance($classMetadata, $node);
+        $oid = spl_object_hash($entity);
+        $this->originalEntityData[$oid] = $node->values();
+        $classMetadata->setId($entity, $id);
+        $this->addManaged($entity);
+
+        return $entity;
+    }
+
+    private function newInstance(NodeEntityMetadata $class, Node $node)
+    {
+        $proxyFactory = $this->entityManager->getProxyFactory($class);
+        /** @todo make possible to instantiate proxy without the node object */
+        return $proxyFactory->fromNode($node);
     }
 }

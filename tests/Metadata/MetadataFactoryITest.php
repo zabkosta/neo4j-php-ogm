@@ -17,7 +17,7 @@ use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\Factory\Annotation\AnnotationGraphEntityMetadataFactory;
 use GraphAware\Neo4j\OGM\Metadata\GraphEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
-use GraphAware\Neo4j\OGM\Tests\Integration\Model\Person;
+use GraphAware\Neo4j\OGM\Tests\Metadata\Factory\Fixtures\Person;
 
 /**
  * Class MetadataFactoryITest.
