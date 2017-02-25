@@ -61,4 +61,29 @@ class MovieDatasetTest extends IntegrationTestCase
         $this->em->flush();
         $this->assertGraphExist('(m:Movie {title: "Cast Away 2"})');
     }
+
+    /**
+     * @see https://github.com/graphaware/neo4j-php-ogm/issues/56
+     */
+    public function testActorCanBeAddedToMovie()
+    {
+        $person = new Person('Johnny Depp');
+        $this->em->persist($person);
+        $movie = new Movie('Pirates Of The Caribbean');
+        $this->em->persist($movie);
+        $this->em->flush();
+        $this->em->clear();
+
+        $johnny = $this->em->getRepository(Person::class)->findOneBy(['name' => 'Johnny Depp']);
+        $this->assertInstanceOf(Person::class, $johnny);
+
+        /** @var Movie $pirates */
+        $pirates = $this->em->getRepository(Movie::class)->findOneBy(['title' => 'Pirates Of The Caribbean']);
+        $this->assertInstanceOf(Movie::class, $pirates);
+
+        $pirates->getActors()->add($johnny);
+        $this->em->flush();
+        $this->assertGraphExist('(m:Movie {title:"Pirates Of The Caribbean"})<-[:ACTED_IN]-(p:Person {name:"Johnny Depp"})');
+        $this->assertCount(1, $this->em->getRepository(Person::class)->findBy(['name' => 'Johnny Depp']));
+    }
 }

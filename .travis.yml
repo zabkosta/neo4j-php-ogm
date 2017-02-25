@@ -2,7 +2,7 @@ language: php
 sudo: false
 php:
     - 5.6
-    - 7.0.16
+    - 7.0.12
     - 7.1
 
 env:
