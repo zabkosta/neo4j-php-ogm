@@ -14,10 +14,12 @@ namespace GraphAware\Neo4j\OGM;
 use Doctrine\Common\Collections\AbstractLazyCollection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use GraphAware\Common\Result\ResultCollection;
 use GraphAware\Common\Type\Node;
 use GraphAware\Neo4j\Client\Stack;
 use GraphAware\Neo4j\OGM\Exception\OGMInvalidArgumentException;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
+use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 use GraphAware\Neo4j\OGM\Persister\EntityPersister;
 use GraphAware\Neo4j\OGM\Persister\FlushOperationProcessor;
@@ -108,6 +110,9 @@ class UnitOfWork
 
     public function persist($entity)
     {
+        if (!$this->isNodeEntity($entity)) {
+            return;
+        }
         $visited = [];
 
         $this->doPersist($entity, $visited);
@@ -256,7 +261,15 @@ class UnitOfWork
             $statement = $this->getRelationshipEntityPersister(get_class($o))->getDeleteQuery($o);
             $reStack->push($statement->text(), $statement->parameters());
         }
-        $tx->runStack($reStack);
+
+        $results = $tx->runStack($reStack);
+        foreach ($results as $result) {
+            foreach ($result->records() as $record) {
+                $gid = $record->get('id');
+                $oid = $record->get('oid');
+                $this->hydrateRelationshipEntityId($oid, $gid);
+            }
+        }
 
         $updateNodeStack = Stack::create('update_nodes');
         foreach ($this->nodesScheduledForUpdate as $entity) {
@@ -595,7 +608,17 @@ class UnitOfWork
     public function scheduleDelete($entity)
     {
         $oid = spl_object_hash($entity);
-        $this->nodesScheduledForDelete[] = $entity;
+        if ($this->isNodeEntity($entity)) {
+            $this->nodesScheduledForDelete[] = $entity;
+            return;
+        }
+
+        if ($this->isRelationshipEntity($entity)) {
+            $this->relEntitesScheduledForDelete[] = $entity;
+            return;
+        }
+
+        throw new \RuntimeException(sprintf('Neither Node entity or Relationship entity detected'));
     }
 
     /**
@@ -645,6 +668,14 @@ class UnitOfWork
         $p = $refl0->getProperty('id');
         $p->setAccessible(true);
         $p->setValue($this->nodesScheduledForCreate[$oid], $gid);
+    }
+
+    public function hydrateRelationshipEntityId($oid, $gid)
+    {
+        $refl0 = new \ReflectionObject($this->relEntitiesScheduledForCreate[$oid][0]);
+        $p = $refl0->getProperty('id');
+        $p->setAccessible(true);
+        $p->setValue($this->relEntitiesScheduledForCreate[$oid][0], $gid);
     }
 
     /**
@@ -959,5 +990,19 @@ class UnitOfWork
         $proxyFactory = $this->entityManager->getProxyFactory($class);
         /** @todo make possible to instantiate proxy without the node object */
         return $proxyFactory->fromNode($node);
+    }
+
+    private function isNodeEntity($entity)
+    {
+        $meta = $this->entityManager->getClassMetadataFor(get_class($entity));
+
+        return $meta instanceof NodeEntityMetadata;
+    }
+
+    private function isRelationshipEntity($entity)
+    {
+        $meta = $this->entityManager->getClassMetadataFor(get_class($entity));
+
+        return $meta instanceof RelationshipEntityMetadata;
     }
 }

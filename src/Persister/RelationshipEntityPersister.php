@@ -59,7 +59,8 @@ class RelationshipEntityPersister
         if (!empty($parameters['fields'])) {
             $query .= 'SET r += {fields} ';
         }
-        $query .= 'RETURN id(r) as id';
+        $query .= 'RETURN id(r) AS id, {oid} AS oid';
+        $parameters['oid'] = spl_object_hash($entity);
 
         return Statement::create($query, $parameters);
     }
