@@ -22,6 +22,12 @@ class BasicEntityPersister
         $this->_em = $em;
     }
 
+    /**
+     * @param array $criteria
+     * @param array|null $oderBy
+     *
+     * @return object[]|array|null
+     */
     public function load(array $criteria, array $oderBy = null)
     {
         $stmt = $this->getMatchCypher($criteria);
@@ -37,6 +43,29 @@ class BasicEntityPersister
         return count($entities) === 1 ? $entities[0] : null;
     }
 
+    /**
+     * @param $id
+     *
+     * @return object|null
+     */
+    public function loadOneById($id)
+    {
+        $stmt = $this->getMatchOneByIdCypher($id);
+        $result = $this->_em->getDatabaseDriver()->run($stmt->text(), $stmt->parameters());
+        $hydrator = $this->_em->getEntityHydrator($this->_className);
+        $entities = $hydrator->hydrateAll($result);
+
+        return count($entities) === 1 ? $entities[0] : null;
+    }
+
+    /**
+     * @param array $criteria
+     * @param array|null $orderBy
+     * @param int|null $limit
+     * @param int|null $offset
+     *
+     * @return array|object[]
+     */
     public function loadAll(array $criteria = [], array $orderBy = null, $limit = null, $offset = null)
     {
         $stmt = $this->getMatchCypher($criteria, $orderBy, $limit, $offset);
@@ -133,6 +162,15 @@ class BasicEntityPersister
         $cypher .= 'RETURN collect('.$targetAlias.') AS '.$targetAlias;
 
         $params = ['id' => $sourceEntityId];
+
+        return Statement::create($cypher, $params);
+    }
+
+    private function getMatchOneByIdCypher($id)
+    {
+        $identifier = $this->_classMetadata->getEntityAlias();
+        $cypher = 'MATCH ('.$identifier.') WHERE id('.$identifier.') = {id} RETURN '.$identifier;
+        $params = ['id' => (int) $id];
 
         return Statement::create($cypher, $params);
     }

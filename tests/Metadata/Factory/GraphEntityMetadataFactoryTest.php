@@ -18,6 +18,12 @@ use GraphAware\Neo4j\OGM\Tests\Metadata\Factory\Fixtures\MovieRepository;
 use GraphAware\Neo4j\OGM\Tests\Metadata\Factory\Fixtures\Person;
 use GraphAware\Neo4j\OGM\Tests\Metadata\Factory\Fixtures\Rating;
 
+/**
+ * Class GraphEntityMetadataFactoryTest
+ * @package GraphAware\Neo4j\OGM\Tests\Metadata\Factory
+ *
+ * @group xml-mapping
+ */
 class GraphEntityMetadataFactoryTest extends \PHPUnit_Framework_TestCase
 {
     /**

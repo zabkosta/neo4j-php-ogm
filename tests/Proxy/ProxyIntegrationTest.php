@@ -7,6 +7,12 @@ use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Proxy\Model\Group;
 use GraphAware\Neo4j\OGM\Tests\Proxy\Model\User;
 
+/**
+ * Class ProxyIntegrationTest
+ * @package GraphAware\Neo4j\OGM\Tests\Proxy
+ *
+ * @group proxy-it
+ */
 class ProxyIntegrationTest extends IntegrationTestCase
 {
     public function setUp()
@@ -16,25 +22,34 @@ class ProxyIntegrationTest extends IntegrationTestCase
         $this->createGraph();
     }
 
+    /**
+     * @group proxy-it-1
+     */
     public function testProxyIsCreated()
     {
         /** @var User $user */
-        $user = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
+        $user = $this->em->getRepository(User::class)->findOneBy(['login' => 'ikwattro']);
         $this->assertInstanceOf(EntityProxy::class, $user);
         $profile = $user->getProfile();
         $userRef = $profile->getUser();
         $this->assertEquals(spl_object_hash($user), spl_object_hash($userRef));
     }
 
+    /**
+     * @group proxy-it-1
+     */
     public function testFetchRelationsAreNotReInitialized()
     {
         /** @var User $user */
-        $user = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
+        $user = $this->em->getRepository(User::class)->findOneBy(['login' => 'ikwattro']);
         $account = $user->getAccount();
         $userRef = $account->getUser();
         $this->assertEquals(spl_object_hash($user), spl_object_hash($userRef));
     }
 
+    /**
+     * @group proxy-it-1
+     */
     public function testProxyInDepthTwo()
     {
         $this->clearDb();
@@ -49,7 +64,7 @@ class ProxyIntegrationTest extends IntegrationTestCase
         $this->em->clear();
 
         /** @var User $ikwattro */
-        $ikwattro = $this->em->getRepository(User::class)->findOneBy('login', 'ikwattro');
+        $ikwattro = $this->em->getRepository(User::class)->findOneBy(['login' => 'ikwattro']);
         $group = $ikwattro->getAccount()->getGroup();
         foreach ($group->getAccounts() as $account) {
             if ($account->getUser()->getLogin() === 'ikwattro') {

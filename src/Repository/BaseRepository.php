@@ -115,11 +115,29 @@ class BaseRepository
         return $persister->loadAll($criteria, $orderBy, $limit, $offset);
     }
 
+    /**
+     * @param array $criteria
+     * @param array|null $orderBy
+     *
+     * @return object|null
+     */
     public function findOneBy(array $criteria, array $orderBy = null)
     {
         $persister = $this->entityManager->getEntityPersister($this->className);
 
         return $persister->load($criteria);
+    }
+
+    /**
+     * @param int $id
+     *
+     * @return object|null
+     */
+    public function findOneById($id)
+    {
+        $persister = $this->entityManager->getEntityPersister($this->className);
+
+        return $persister->loadOneById($id);
     }
 
     /**

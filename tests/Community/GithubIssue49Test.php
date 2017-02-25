@@ -10,8 +10,10 @@ use GraphAware\Neo4j\OGM\UnitOfWork;
 
 /**
  * @author Tobias Nyholm <tobias.nyholm@gmail.com>
+ *
+ * @group issue-49
  */
-class GithubIssue49 extends IntegrationTestCase
+class GithubIssue49Test extends IntegrationTestCase
 {
     /**
      * When the items are new we want to make sure to cascade persist to all relations.

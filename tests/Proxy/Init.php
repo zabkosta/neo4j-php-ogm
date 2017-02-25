@@ -37,7 +37,6 @@ class Init
      * @var Profile
      *
      * @OGM\Relationship(type="HAS_PROFILE", direction="OUTGOING", targetEntity="Profile", mappedBy="init")
-     * @OGM\Fetch()
      */
     protected $profile;
 

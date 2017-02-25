@@ -35,4 +35,14 @@ class Person
      * @var Movie[]
      */
     private $movies;
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+
 }

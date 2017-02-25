@@ -7,8 +7,17 @@ use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Util\NodeProxy;
 use GraphAware\Neo4j\OGM\Proxy\EntityProxy;
 
+/**
+ * Class ProxyFactoryTest
+ * @package GraphAware\Neo4j\OGM\Tests\Proxy
+ *
+ * @group proxy-factory
+ */
 class ProxyFactoryTest extends IntegrationTestCase
 {
+    /**
+     * @group proxy-f1
+     */
     public function testProxyCreation()
     {
         $cm = $this->em->getClassMetadata(Init::class);
@@ -18,8 +27,6 @@ class ProxyFactoryTest extends IntegrationTestCase
 
         $this->assertInstanceOf(Init::class, $o);
         $this->assertInstanceOf(EntityProxy::class, $o);
-        $this->assertInstanceOf(Related::class, $o->getRelation());
-        $this->assertNotNull($o->getRelation()->getId());
     }
 
     public function testProxyIsReturnedFromRepository()
