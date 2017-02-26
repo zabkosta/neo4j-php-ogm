@@ -59,7 +59,7 @@ $this->em->flush();
 
 // Retrieving from the database
 
-$john = $this->em->getRepository(User::class)->findOneBy('name', 'John Doe');
+$john = $this->em->getRepository(User::class)->findOneBy(['name' => 'John Doe']);
 echo $john->getAge();
 
 // Updating
