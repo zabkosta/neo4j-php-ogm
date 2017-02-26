@@ -156,6 +156,7 @@ class BasicEntityPersister
             foreach ($orderBy as $property => $order) {
                 $cypher .= $i === 0 ? 'ORDER BY ' : ', ';
                 $cypher .= sprintf('%s.%s %s', $identifier, $property, $order);
+                ++$i;
             }
         }
 
