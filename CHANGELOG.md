@@ -1,3 +1,7 @@
+1.0-RC1 (Not Released yet)
+
+- 
+
 1.0.0-beta22
 
 - Refactored Proxisation of Relationships ([#67](https://github.com/graphaware/neo4j-php-ogm/pull/67))
