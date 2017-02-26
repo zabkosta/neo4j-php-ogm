@@ -18,7 +18,7 @@ class OrderByFinderTest extends IntegrationTestCase
     public function testEntitiesAreOrderedWithFinderMethod()
     {
         for ($i = 1000; $i >= 1; --$i) {
-            $user = new User(sprintf('User %d', $i));
+            $user = new User($i);
             $this->em->persist($user);
         }
         $this->em->flush();
@@ -29,8 +29,8 @@ class OrderByFinderTest extends IntegrationTestCase
         $this->assertCount(1000, $users);
 
         for ($i = 1; $i <= 1000; ++$i) {
-            $u = $users[$i];
-            $this->assertEquals(sprintf('User %d', $i), $u->getLogin());
+            $u = $users[$i-1];
+            $this->assertEquals($i, $u->getLogin());
         }
     }
 }

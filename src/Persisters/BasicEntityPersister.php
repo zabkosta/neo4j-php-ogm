@@ -132,7 +132,7 @@ class BasicEntityPersister
      *
      * @return Statement
      */
-    public function getMatchCypher(array $criteria = [], $limit = null, $offset = null, $orderBy = null)
+    public function getMatchCypher(array $criteria = [], $orderBy = null, $limit = null, $offset = null)
     {
         $identifier = $this->_classMetadata->getEntityAlias();
         $classLabel = $this->_classMetadata->getLabel();
@@ -149,6 +149,15 @@ class BasicEntityPersister
         }
 
         $cypher .= 'RETURN '.$identifier;
+
+        if (is_array($orderBy) && count($orderBy) > 0) {
+            $cypher .= PHP_EOL;
+            $i = 0;
+            foreach ($orderBy as $property => $order) {
+                $cypher .= $i === 0 ? 'ORDER BY ' : ', ';
+                $cypher .= sprintf('%s.%s %s', $identifier, $property, $order);
+            }
+        }
 
         return Statement::create($cypher, $params);
     }
