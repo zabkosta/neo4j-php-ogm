@@ -13,7 +13,6 @@ require_once __DIR__.'/../Annotations/EndNode.php';
 require_once __DIR__.'/../Annotations/Fetch.php';
 require_once __DIR__.'/../Annotations/GraphId.php';
 require_once __DIR__.'/../Annotations/Label.php';
-require_once __DIR__.'/../Annotations/Lazy.php';
 require_once __DIR__.'/../Annotations/MappedResult.php';
 require_once __DIR__.'/../Annotations/Node.php';
 require_once __DIR__.'/../Annotations/OrderBy.php';
