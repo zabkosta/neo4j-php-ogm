@@ -32,7 +32,7 @@ class BasicEntityPersister
     }
 
     /**
-     * @param array $criteria
+     * @param array      $criteria
      * @param array|null $oderBy
      *
      * @return object[]|array|null
@@ -68,10 +68,10 @@ class BasicEntityPersister
     }
 
     /**
-     * @param array $criteria
+     * @param array      $criteria
      * @param array|null $orderBy
-     * @param int|null $limit
-     * @param int|null $offset
+     * @param int|null   $limit
+     * @param int|null   $offset
      *
      * @return array|object[]
      */
@@ -126,23 +126,24 @@ class BasicEntityPersister
 
     /**
      * @param $criteria
-     * @param null|int $limit
-     * @param null|int $offset
+     * @param null|int   $limit
+     * @param null|int   $offset
      * @param null|array $orderBy
+     *
      * @return Statement
      */
     public function getMatchCypher(array $criteria = [], $limit = null, $offset = null, $orderBy = null)
     {
         $identifier = $this->_classMetadata->getEntityAlias();
         $classLabel = $this->_classMetadata->getLabel();
-        $cypher  = 'MATCH ('.$identifier.':'.$classLabel.') ';
+        $cypher = 'MATCH ('.$identifier.':'.$classLabel.') ';
 
         $filter_cursor = 0;
         $params = [];
 
         foreach ($criteria as $key => $criterion) {
-            $key     = (string) $key;
-            $clause  = $filter_cursor === 0 ? 'WHERE' : 'AND';
+            $key = (string) $key;
+            $clause = $filter_cursor === 0 ? 'WHERE' : 'AND';
             $cypher .= sprintf('%s %s.%s = {%s} ', $clause, $identifier, $key, $key);
             $params[$key] = $criterion;
         }
@@ -165,7 +166,7 @@ class BasicEntityPersister
 
         $relPattern = sprintf('%s-[%s:`%s`]-%s', $isIncoming, $relAlias, $relationshipType, $isOutgoing);
 
-        $cypher  = 'MATCH (n) WHERE id(n) = {id} ';
+        $cypher = 'MATCH (n) WHERE id(n) = {id} ';
         $cypher .= 'MATCH (n)'.$relPattern.'('.$targetAlias.') ';
         $cypher .= 'RETURN '.$targetAlias;
 
@@ -189,7 +190,7 @@ class BasicEntityPersister
 
         $relPattern = sprintf('%s-[%s:`%s`]-%s', $isIncoming, $relAlias, $relationshipType, $isOutgoing);
 
-        $cypher  = 'MATCH (n) WHERE id(n) = {id} ';
+        $cypher = 'MATCH (n) WHERE id(n) = {id} ';
         $cypher .= 'MATCH (n)'.$relPattern.'('.$targetAlias.') ';
         $cypher .= 'RETURN {target: '.$target.'('.$relAlias.'), re: '.$relAlias.'} AS '.$relAlias;
 
@@ -211,12 +212,12 @@ class BasicEntityPersister
 
         $relPattern = sprintf('%s-[%s:`%s`]-%s', $isIncoming, $relAlias, $relationshipType, $isOutgoing);
 
-        $cypher  = 'MATCH (n) WHERE id(n) = {id} ';
+        $cypher = 'MATCH (n) WHERE id(n) = {id} ';
         $cypher .= 'MATCH (n)'.$relPattern.'('.$targetAlias.') ';
-        $cypher .= 'RETURN '.$targetAlias.' AS '.$targetAlias . ' ';
+        $cypher .= 'RETURN '.$targetAlias.' AS '.$targetAlias.' ';
 
         if ($relationshipMeta->hasOrderBy()) {
-            $cypher .= 'ORDER BY '.$targetAlias.'.'.$relationshipMeta->getOrderByPropery() .' '.$relationshipMeta->getOrder();
+            $cypher .= 'ORDER BY '.$targetAlias.'.'.$relationshipMeta->getOrderByPropery().' '.$relationshipMeta->getOrder();
         }
 
         $params = ['id' => $sourceEntityId];

@@ -11,27 +11,12 @@
 
 namespace GraphAware\Neo4j\OGM\Repository;
 
-use GraphAware\Common\Result\Record;
-use GraphAware\Common\Result\Result;
-use GraphAware\Common\Type\Node;
-use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\EntityManager;
-use GraphAware\Neo4j\OGM\Finder\RelationshipsFinder;
-use GraphAware\Neo4j\OGM\Lazy\LazyRelationshipCollection;
-use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
-use GraphAware\Neo4j\OGM\Metadata\QueryResultMapper;
-use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
-use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
-use GraphAware\Neo4j\OGM\Query\Pagination;
-use GraphAware\Neo4j\OGM\Query\QueryResultMapping;
-use GraphAware\Neo4j\OGM\Util\ClassUtils;
-use GraphAware\Neo4j\OGM\Util\ProxyUtils;
 use ProxyManager\Configuration;
 use ProxyManager\Factory\LazyLoadingGhostFactory;
 use ProxyManager\FileLocator\FileLocator;
 use ProxyManager\GeneratorStrategy\FileWriterGeneratorStrategy;
-use ProxyManager\Version;
 
 class BaseRepository
 {
@@ -101,10 +86,10 @@ class BaseRepository
     }
 
     /**
-     * @param array $criteria
+     * @param array      $criteria
      * @param array|null $orderBy
-     * @param null|int $limit
-     * @param null|int $offset
+     * @param null|int   $limit
+     * @param null|int   $offset
      *
      * @return array
      */
@@ -116,7 +101,7 @@ class BaseRepository
     }
 
     /**
-     * @param array $criteria
+     * @param array      $criteria
      * @param array|null $orderBy
      *
      * @return object|null
@@ -153,6 +138,4 @@ class BaseRepository
 
         return $this->loadedReflClasses[$className];
     }
-
-
 }

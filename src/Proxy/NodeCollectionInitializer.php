@@ -11,8 +11,6 @@
 
 namespace GraphAware\Neo4j\OGM\Proxy;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use GraphAware\Common\Result\Result;
 use GraphAware\Common\Type\Node;
 
 class NodeCollectionInitializer extends SingleNodeInitializer

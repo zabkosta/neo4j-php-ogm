@@ -26,7 +26,6 @@ interface EntityManagerInterface extends ObjectManager
      */
     public function getAnnotationDriver();
 
-
     /**
      * @return \GraphAware\Neo4j\OGM\UnitOfWork
      */

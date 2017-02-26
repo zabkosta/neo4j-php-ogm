@@ -28,9 +28,11 @@ class XmlGraphEntityMetadataFactory implements GraphEntityMetadataFactoryInterfa
 
         if (isset($xml->node)) {
             $this->validateEntityClass($xml->node, $className);
+
             return $this->nodeEntityMetadataFactory->buildNodeEntityMetadata($xml->node, $className);
         } elseif (isset($xml->relationship)) {
             $this->validateEntityClass($xml->relationship, $className);
+
             return $this->relationshipEntityMetadataFactory->buildRelationshipEntityMetadata($xml->relationship, $className);
         }
 
@@ -55,16 +57,17 @@ class XmlGraphEntityMetadataFactory implements GraphEntityMetadataFactoryInterfa
     private function getXmlInstance($className)
     {
         $filename = $this->fileLocator->findMappingFile($className);
+
         return new \SimpleXMLElement(file_get_contents($filename));
     }
 
     /**
      * @param \SimpleXMLElement $element
-     * @param string $className
+     * @param string            $className
      */
     private function validateEntityClass(\SimpleXMLElement $element, $className)
     {
-        if (!isset($element['entity']) || (string)$element['entity'] !== $className) {
+        if (!isset($element['entity']) || (string) $element['entity'] !== $className) {
             throw new MappingException(
                 sprintf('Class "%s" OGM XML configuration has invalid or missing "entity" element', $className)
             );

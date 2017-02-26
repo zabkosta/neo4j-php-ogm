@@ -22,7 +22,7 @@ class RelationshipEntityMetadataFactory
 
     /**
      * @param \SimpleXMLElement $node
-     * @param string $className
+     * @param string            $className
      *
      * @return RelationshipEntityMetadata
      */
@@ -40,8 +40,8 @@ class RelationshipEntityMetadataFactory
                 sprintf('Class "%s" OGM XML start-node configuration is missing mandatory attributes', $className)
             );
         }
-        $startNodeKey = (string)$startNode['name'];
-        $startNodeClass = ClassUtils::getFullClassName((string)$startNode['target-entity'], $className);
+        $startNodeKey = (string) $startNode['name'];
+        $startNodeClass = ClassUtils::getFullClassName((string) $startNode['target-entity'], $className);
 
         $endNode = $node->{'end-node'};
         if (!isset($endNode['name']) || !isset($endNode['target-entity'])) {
@@ -49,10 +49,11 @@ class RelationshipEntityMetadataFactory
                 sprintf('Class "%s" OGM XML end-node configuration is missing mandatory attributes', $className)
             );
         }
-        $endNodeKey = (string)$endNode['name'];
-        $endNodeClass = ClassUtils::getFullClassName((string)$endNode['target-entity'], $className);
+        $endNodeKey = (string) $endNode['name'];
+        $endNodeClass = ClassUtils::getFullClassName((string) $endNode['target-entity'], $className);
 
         $reflection = new \ReflectionClass($className);
+
         return new RelationshipEntityMetadata(
             $className,
             $reflection,
@@ -68,7 +69,7 @@ class RelationshipEntityMetadataFactory
 
     /**
      * @param \SimpleXMLElement $node
-     * @param string $className
+     * @param string            $className
      *
      * @return RelationshipEntity
      */
@@ -80,10 +81,10 @@ class RelationshipEntityMetadataFactory
             );
         }
         $entity = new RelationshipEntity();
-        $entity->type = (string)$node['type'];
+        $entity->type = (string) $node['type'];
 
         if (isset($node['direction'])) {
-            $entity->direction = (string)$node['direction'];
+            $entity->direction = (string) $node['direction'];
         }
 
         return $entity;

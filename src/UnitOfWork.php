@@ -14,7 +14,6 @@ namespace GraphAware\Neo4j\OGM;
 use Doctrine\Common\Collections\AbstractLazyCollection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use GraphAware\Common\Result\ResultCollection;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Type\Relationship;
 use GraphAware\Neo4j\Client\Stack;
@@ -653,11 +652,13 @@ class UnitOfWork
         $oid = spl_object_hash($entity);
         if ($this->isNodeEntity($entity)) {
             $this->nodesScheduledForDelete[] = $entity;
+
             return;
         }
 
         if ($this->isRelationshipEntity($entity)) {
             $this->relEntitesScheduledForDelete[] = $entity;
+
             return;
         }
 
@@ -729,21 +730,19 @@ class UnitOfWork
      *
      * @param object $entity
      *
-     * @return object The managed copy of the entity.
+     * @return object The managed copy of the entity
      */
     public function merge($entity)
     {
         // TODO write me
-        trigger_error("Function not implemented.", E_USER_ERROR);
+        trigger_error('Function not implemented.', E_USER_ERROR);
     }
 
     /**
      * Detaches an entity from the persistence management. It's persistence will
      * no longer be managed by Doctrine.
      *
-     * @param object $entity The entity to detach.
-     *
-     * @return void
+     * @param object $entity The entity to detach
      */
     public function detach($entity)
     {
@@ -755,11 +754,9 @@ class UnitOfWork
     /**
      * Executes a detach operation on the given entity.
      *
-     * @param object  $entity
-     * @param array   $visited
-     * @param boolean $noCascade if true, don't cascade detach operation.
-     *
-     * @return void
+     * @param object $entity
+     * @param array  $visited
+     * @param bool   $noCascade if true, don't cascade detach operation
      */
     private function doDetach($entity, array &$visited, $noCascade = false)
     {
@@ -791,7 +788,7 @@ class UnitOfWork
 
         $this->entityStates[$oid] = self::STATE_DETACHED;
 
-        if ( ! $noCascade) {
+        if (!$noCascade) {
             $this->cascadeDetach($entity, $visited);
         }
     }
@@ -801,8 +798,6 @@ class UnitOfWork
      *
      * @param object $entity
      * @param array  $visited
-     *
-     * @return void
      */
     private function cascadeDetach($entity, array &$visited)
     {
@@ -812,14 +807,14 @@ class UnitOfWork
             $value = $relationship->getValue($entity);
 
             switch (true) {
-                case ($value instanceof Collection):
-                case (is_array($value)):
+                case $value instanceof Collection:
+                case is_array($value):
                     foreach ($value as $relatedEntity) {
                         $this->doDetach($relatedEntity, $visited);
                     }
                     break;
 
-                case ($value !== null):
+                case $value !== null:
                     $this->doDetach($value, $visited);
                     break;
 
@@ -833,9 +828,7 @@ class UnitOfWork
      * Refreshes the state of the given entity from the database, overwriting
      * any local, unpersisted changes.
      *
-     * @param object $entity The entity to refresh.
-     *
-     * @return void
+     * @param object $entity The entity to refresh
      */
     public function refresh($entity)
     {
@@ -847,10 +840,8 @@ class UnitOfWork
     /**
      * Executes a refresh operation on an entity.
      *
-     * @param object $entity  The entity to refresh.
-     * @param array  $visited The already visited entities during cascades.
-     *
-     * @return void
+     * @param object $entity  The entity to refresh
+     * @param array  $visited The already visited entities during cascades
      */
     private function doRefresh($entity, array &$visited)
     {
@@ -876,8 +867,6 @@ class UnitOfWork
      *
      * @param object $entity
      * @param array  $visited
-     *
-     * @return void
      */
     private function cascadeRefresh($entity, array &$visited)
     {
@@ -887,14 +876,14 @@ class UnitOfWork
             $value = $relationship->getValue($entity);
 
             switch (true) {
-                case ($value instanceof Collection):
-                case (is_array($value)):
+                case $value instanceof Collection:
+                case is_array($value):
                     foreach ($value as $relatedEntity) {
                         $this->doRefresh($relatedEntity, $visited);
                     }
                     break;
 
-                case ($value !== null):
+                case $value !== null:
                     $this->doRefresh($value, $visited);
                     break;
 
@@ -908,13 +897,11 @@ class UnitOfWork
      * Helper method to initialize a lazy loading proxy or persistent collection.
      *
      * @param object $obj
-     *
-     * @return void
      */
     public function initializeObject($obj)
     {
         // TODO write me
-        trigger_error("Function not implemented.", E_USER_ERROR);
+        trigger_error('Function not implemented.', E_USER_ERROR);
     }
 
     /**
@@ -1020,7 +1007,6 @@ class UnitOfWork
     public function createEntity(Node $node, $className, $id)
     {
         /** todo receive a data of object instead of node object */
-
         $classMetadata = $this->entityManager->getClassMetadataFor($className);
         $entity = $this->newInstance($classMetadata, $node);
         $oid = spl_object_hash($entity);

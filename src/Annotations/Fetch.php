@@ -11,11 +11,12 @@
 
 namespace GraphAware\Neo4j\OGM\Annotations;
 
-use Doctrine\Common\Annotations\Annotation\Attribute;
 use Doctrine\Common\Annotations\Annotation\Target;
 
 /**
  * @Annotation
  * @Target({"PROPERTY"})
  */
-class Fetch {}
+class Fetch
+{
+}

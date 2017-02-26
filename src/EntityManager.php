@@ -217,7 +217,7 @@ class EntityManager implements EntityManagerInterface
     {
         return $this->uow->isScheduledForCreate($entity)
         || $this->uow->isManaged($entity)
-        && ! $this->uow->isScheduledForDelete($entity);
+        && !$this->uow->isScheduledForDelete($entity);
     }
 
     /**
@@ -250,7 +250,7 @@ class EntityManager implements EntityManagerInterface
         return $this->uow;
     }
 
-    public function getHydrator($className, $mode='')
+    public function getHydrator($className, $mode = '')
     {
         return new ObjectHydration($className, $this);
     }
@@ -345,15 +345,15 @@ class EntityManager implements EntityManagerInterface
     {
         return $this->proxyDirectory;
     }
-    
+
     public function getAnnotationDriver()
     {
         // TODO: Implement getAnnotationDriver() method.
     }
 
-
     /**
      * @param NodeEntityMetadata $entityMetadata
+     *
      * @return ProxyFactory
      */
     public function getProxyFactory(NodeEntityMetadata $entityMetadata)
@@ -367,6 +367,7 @@ class EntityManager implements EntityManagerInterface
 
     /**
      * @param $className
+     *
      * @return EntityHydrator
      */
     public function getEntityHydrator($className)

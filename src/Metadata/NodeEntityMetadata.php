@@ -172,6 +172,7 @@ final class NodeEntityMetadata extends GraphEntityMetadata
 
     /**
      * @param bool $andRelationshipEntities
+     *
      * @return RelationshipMetadata[]
      */
     public function getFetchRelationships($andRelationshipEntities = false)

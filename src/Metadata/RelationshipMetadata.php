@@ -207,8 +207,9 @@ final class RelationshipMetadata
         if (!$this->isCollection()) {
             throw new \LogicException(sprintf('The property mapping this relationship is not of collection type in "%s"', $this->className));
         }
-        if(is_array($this->getValue($object)) && !empty($this->getValue($object))) {
+        if (is_array($this->getValue($object)) && !empty($this->getValue($object))) {
             $this->setValue($object, new ArrayCollection($this->getValue($object)));
+
             return;
         }
         if ($this->getValue($object) instanceof ArrayCollection || $this->getValue($object) instanceof LazyRelationshipCollection) {

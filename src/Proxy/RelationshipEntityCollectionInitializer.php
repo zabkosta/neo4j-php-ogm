@@ -20,5 +20,4 @@ class RelationshipEntityCollectionInitializer extends RelationshipEntityInitiali
         $persister = $this->em->getEntityPersister($this->metadata->getClassName());
         $persister->getRelationshipEntityCollection($this->relationshipMetadata->getPropertyName(), $baseInstance);
     }
-
 }
