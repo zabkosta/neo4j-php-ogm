@@ -62,6 +62,7 @@ final class RelationshipMetadata
      * @param \GraphAware\Neo4j\OGM\Annotations\Relationship $relationshipAnnotation
      * @param bool                                           $isLazy
      * @param OrderBy                                        $orderBy
+     * @param mixed                                          $isFetch
      */
     public function __construct($className, \ReflectionProperty $reflectionProperty, Relationship $relationshipAnnotation, $isLazy = false, $isFetch = false, OrderBy $orderBy = null)
     {
@@ -288,6 +289,6 @@ final class RelationshipMetadata
      */
     public function getAlias()
     {
-        return strtolower(str_replace("\\", "_", $this->className).'_'.$this->propertyName);
+        return strtolower(str_replace('\\', '_', $this->className).'_'.$this->propertyName);
     }
 }
