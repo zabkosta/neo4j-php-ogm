@@ -152,8 +152,9 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     }
 
     /**
+     * @param mixed $andRelEntities
+     *
      * @return RelationshipMetadata[]
-     * @param  mixed                  $andRelEntities
      */
     public function getLazyRelationships($andRelEntities = false)
     {
@@ -202,8 +203,9 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     }
 
     /**
+     * @param mixed $andLazy
+     *
      * @return RelationshipMetadata[]
-     * @param  mixed                  $andLazy
      */
     public function getSimpleRelationships($andLazy = true)
     {
