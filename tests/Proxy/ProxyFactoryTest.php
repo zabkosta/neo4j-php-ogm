@@ -1,12 +1,21 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Tests\Proxy;
 
+use GraphAware\Neo4j\OGM\Proxy\EntityProxy;
 use GraphAware\Neo4j\OGM\Proxy\ProxyFactory;
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Tests\Proxy\Model\PHP7\User;
 use GraphAware\Neo4j\OGM\Tests\Util\NodeProxy;
-use GraphAware\Neo4j\OGM\Proxy\EntityProxy;
 
 /**
  * Class ProxyFactoryTest.
@@ -38,13 +47,13 @@ class ProxyFactoryTest extends IntegrationTestCase
         $this->assertInstanceOf(Init::class, $init);
         $this->assertInstanceOf(EntityProxy::class, $init);
         $this->assertNotNull($init->getId());
-        $this->assertEquals('Ale', $init->getName());
+        $this->assertSame('Ale', $init->getName());
         $this->assertInstanceOf(Related::class, $init->getRelation());
-        $this->assertEquals('Chris', $init->getRelation()->getName());
+        $this->assertSame('Chris', $init->getRelation()->getName());
         $this->assertInstanceOf(Profile::class, $init->getProfile());
-        $this->assertEquals('php@graphaware.com', $init->getProfile()->getEmail());
+        $this->assertSame('php@graphaware.com', $init->getProfile()->getEmail());
         $this->assertInstanceOf(Init::class, $init->getRelation()->getInit());
-        $this->assertEquals(spl_object_hash($init), spl_object_hash($init->getRelation()->getInit()));
+        $this->assertSame(spl_object_hash($init), spl_object_hash($init->getRelation()->getInit()));
     }
 
     /**

@@ -16,16 +16,6 @@ use GraphAware\Neo4j\OGM\Util\ClassUtils;
 final class NodeEntityMetadata extends GraphEntityMetadata
 {
     /**
-     * @var \GraphAware\Neo4j\OGM\Metadata\NodeAnnotationMetadata
-     */
-    private $nodeAnnotationMetadata;
-
-    /**
-     * @var string
-     */
-    private $customRepository;
-
-    /**
      * @var LabeledPropertyMetadata[]
      */
     protected $labeledPropertiesMetadata = [];
@@ -34,6 +24,15 @@ final class NodeEntityMetadata extends GraphEntityMetadata
      * @var RelationshipMetadata[]
      */
     protected $relationships = [];
+    /**
+     * @var \GraphAware\Neo4j\OGM\Metadata\NodeAnnotationMetadata
+     */
+    private $nodeAnnotationMetadata;
+
+    /**
+     * @var string
+     */
+    private $customRepository;
 
     /**
      * NodeEntityMetadata constructor.
@@ -153,6 +152,8 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     }
 
     /**
+     * @param mixed $andRelEntities
+     *
      * @return RelationshipMetadata[]
      */
     public function getLazyRelationships($andRelEntities = false)
@@ -202,6 +203,8 @@ final class NodeEntityMetadata extends GraphEntityMetadata
     }
 
     /**
+     * @param mixed $andLazy
+     *
      * @return RelationshipMetadata[]
      */
     public function getSimpleRelationships($andLazy = true)
@@ -288,9 +291,9 @@ final class NodeEntityMetadata extends GraphEntityMetadata
             if ($relationship->getPropertyName() === $assocName) {
                 if ($relationship->isRelationshipEntity()) {
                     return $relationship->getRelationshipEntityClass();
-                } else {
-                    return $relationship->getTargetEntity();
                 }
+
+                return $relationship->getTargetEntity();
             }
         }
 

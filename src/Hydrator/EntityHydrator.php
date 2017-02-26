@@ -11,10 +11,10 @@
 
 namespace GraphAware\Neo4j\OGM\Hydrator;
 
-use GraphAware\Common\Type\Relationship;
 use GraphAware\Common\Result\Record;
 use GraphAware\Common\Result\Result;
 use GraphAware\Common\Type\Node;
+use GraphAware\Common\Type\Relationship;
 use GraphAware\Neo4j\OGM\Common\Collection;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
@@ -57,6 +57,7 @@ class EntityHydrator
     /**
      * @param Result $dbResult
      * @param object $sourceEntity
+     * @param mixed  $alias
      */
     public function hydrateSimpleRelationship($alias, Result $dbResult, $sourceEntity)
     {
@@ -180,21 +181,6 @@ class EntityHydrator
         }
     }
 
-    private function guessOtherClassName($alias)
-    {
-        $relationshipMetadata = $this->_classMetadata->getRelationship($alias);
-        /** @var RelationshipEntityMetadata $relationshipEntityMetadata */
-        $relationshipEntityMetadata = $this->_em->getClassMetadataFor($relationshipMetadata->getRelationshipEntityClass());
-        $inversedSide = $relationshipEntityMetadata->getOtherClassNameForOwningClass($this->_classMetadata->getClassName());
-        /* @todo will not work for Direction.BOTH */
-        return $inversedSide;
-    }
-
-    private function initRelationshipCollection($alias, $sourceEntity)
-    {
-        $this->_classMetadata->getRelationship($alias)->initializeCollection($sourceEntity);
-    }
-
     protected function hydrateRecord(Record $record, array &$result, $collection = false)
     {
         $cqlAliasMap = $this->getAliases();
@@ -264,5 +250,20 @@ class EntityHydrator
     protected function getAliases()
     {
         return [$this->_classMetadata->getEntityAlias() => $this->_classMetadata->getClassName()];
+    }
+
+    private function guessOtherClassName($alias)
+    {
+        $relationshipMetadata = $this->_classMetadata->getRelationship($alias);
+        /** @var RelationshipEntityMetadata $relationshipEntityMetadata */
+        $relationshipEntityMetadata = $this->_em->getClassMetadataFor($relationshipMetadata->getRelationshipEntityClass());
+        $inversedSide = $relationshipEntityMetadata->getOtherClassNameForOwningClass($this->_classMetadata->getClassName());
+        /* @todo will not work for Direction.BOTH */
+        return $inversedSide;
+    }
+
+    private function initRelationshipCollection($alias, $sourceEntity)
+    {
+        $this->_classMetadata->getRelationship($alias)->initializeCollection($sourceEntity);
     }
 }

@@ -31,23 +31,6 @@ class IntegrationTestCase extends \PHPUnit_Framework_TestCase
         $this->client = $this->em->getDatabaseDriver();
     }
 
-    private function createEntityManager()
-    {
-        $uri = isset($_ENV['NEO4J_USER'])
-            ? sprintf(
-                '%s://%s:%s@%s:%s',
-                getenv('NEO4J_SCHEMA'),
-                getenv('NEO4J_USER'),
-                getenv('NEO4J_PASSWORD'),
-                getenv('NEO4J_HOST'),
-                getenv('NEO4J_PORT')
-            ) : 'http://localhost:7474';
-        $this->em = EntityManager::create(
-            $uri,
-            __DIR__.'/../../_var/cache'
-        );
-    }
-
     public function clearDb()
     {
         $this->client->run('MATCH (n) DETACH DELETE n');
@@ -83,12 +66,12 @@ class IntegrationTestCase extends \PHPUnit_Framework_TestCase
 
     protected function assertNodesCount($count)
     {
-        $this->assertEquals($count, $this->client->run('MATCH (n) RETURN count(n) AS c')->firstRecord()->get('c'));
+        $this->assertSame($count, $this->client->run('MATCH (n) RETURN count(n) AS c')->firstRecord()->get('c'));
     }
 
     protected function assertRelationshipsCount($count)
     {
-        $this->assertEquals($count, $this->client->run('MATCH (n)-[r]->(o) RETURN count(r) AS c')->firstRecord()->get('c'));
+        $this->assertSame($count, $this->client->run('MATCH (n)-[r]->(o) RETURN count(r) AS c')->firstRecord()->get('c'));
     }
 
     protected function playMovies()
@@ -600,5 +583,22 @@ MATCH (a)-[:ACTED_IN]->(m)<-[:DIRECTED]-(d) RETURN a,m,d LIMIT 10
 
 ;';
         $this->client->run($query);
+    }
+
+    private function createEntityManager()
+    {
+        $uri = isset($_ENV['NEO4J_USER'])
+            ? sprintf(
+                '%s://%s:%s@%s:%s',
+                getenv('NEO4J_SCHEMA'),
+                getenv('NEO4J_USER'),
+                getenv('NEO4J_PASSWORD'),
+                getenv('NEO4J_HOST'),
+                getenv('NEO4J_PORT')
+            ) : 'http://localhost:7474';
+        $this->em = EntityManager::create(
+            $uri,
+            __DIR__.'/../../_var/cache'
+        );
     }
 }

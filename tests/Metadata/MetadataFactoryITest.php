@@ -67,6 +67,6 @@ class MetadataFactoryITest extends \PHPUnit_Framework_TestCase
         /** @var Person $o */
         $o = $entityMetadata->newInstance();
         $entityMetadata->getPropertyMetadata('name')->setValue($o, 'John');
-        $this->assertEquals('John', $o->getName());
+        $this->assertSame('John', $o->getName());
     }
 }

@@ -40,6 +40,8 @@ final class RelationshipEntityMetadata extends GraphEntityMetadata
      * @param string                                               $startNodeClass
      * @param string                                               $endNodeClass
      * @param array                                                $entityPropertiesMetadata
+     * @param mixed                                                $startNodeKey
+     * @param mixed                                                $endNodeKey
      */
     public function __construct($class, \ReflectionClass $reflectionClass, RelationshipEntity $annotation, EntityIdMetadata $entityIdMetadata, $startNodeClass, $startNodeKey, $endNodeClass, $endNodeKey, array $entityPropertiesMetadata)
     {

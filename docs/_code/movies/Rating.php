@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Movies;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
@@ -11,33 +20,38 @@ class Rating
 {
     /**
      * @OGM\GraphId()
+     *
      * @var int
      */
     protected $id;
 
     /**
      * @OGM\StartNode(targetEntity="User")
+     *
      * @var User
      */
     protected $user;
 
     /**
      * @OGM\EndNode(targetEntity="Movie")
+     *
      * @var Movie
      */
     protected $movie;
 
     /**
      * @OGM\Property(type="float")
+     *
      * @var float
      */
     protected $score;
 
     /**
      * Rating constructor.
-     * @param \Movies\User $user
+     *
+     * @param \Movies\User  $user
      * @param \Movies\Movie $movie
-     * @param float $score
+     * @param float         $score
      */
     public function __construct(User $user, Movie $movie, $score)
     {

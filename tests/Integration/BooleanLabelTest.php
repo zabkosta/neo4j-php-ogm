@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\BooleanLabel\BlogPost;
@@ -74,7 +83,7 @@ class BooleanLabelTest extends IntegrationTestCase
         $this->em->flush();
         $this->assertGraphExist('(b:BlogPost:Published {title:"Learn X"})');
         $result = $this->client->run('MATCH (n:BlogPost) RETURN count(n) AS c');
-        $this->assertEquals(1, $result->firstRecord()->get('c'));
+        $this->assertSame(1, $result->firstRecord()->get('c'));
     }
 
     public function testLabelCanBeAddedAfterLoadAndCommit()
@@ -93,7 +102,7 @@ class BooleanLabelTest extends IntegrationTestCase
         $this->assertGraphExist('(b:BlogPost:Published {title:"Learn X"})');
         $this->em->flush();
         $result = $this->client->run('MATCH (n:BlogPost) RETURN count(n) AS c');
-        $this->assertEquals(1, $result->firstRecord()->get('c'));
+        $this->assertSame(1, $result->firstRecord()->get('c'));
     }
 
     public function testLabelCanBeRemovedAfterCreateAndCommit()
@@ -111,7 +120,7 @@ class BooleanLabelTest extends IntegrationTestCase
         $this->em->flush();
         $this->assertGraphNotExist('(b:BlogPost:Published {title:"Learn X"})');
         $result = $this->client->run('MATCH (n:BlogPost) RETURN count(n) AS c');
-        $this->assertEquals(1, $result->firstRecord()->get('c'));
+        $this->assertSame(1, $result->firstRecord()->get('c'));
     }
 
     public function testLabelCanBeRemovedAfterLoadAndCommit()
@@ -132,6 +141,6 @@ class BooleanLabelTest extends IntegrationTestCase
         $this->assertGraphExist('(b:BlogPost {title:"Learn X"})');
         $this->em->flush();
         $result = $this->client->run('MATCH (n:BlogPost) RETURN count(n) AS c');
-        $this->assertEquals(1, $result->firstRecord()->get('c'));
+        $this->assertSame(1, $result->firstRecord()->get('c'));
     }
 }

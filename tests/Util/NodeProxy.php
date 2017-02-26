@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Tests\Util;
 
 use GraphAware\Common\Type\Node;
@@ -11,6 +20,11 @@ class NodeProxy implements Node
     public function __construct($id = null)
     {
         $this->id = $id;
+    }
+
+    public function __get($name)
+    {
+        // TODO: Implement __get() method.
     }
 
     public function identity()
@@ -31,11 +45,6 @@ class NodeProxy implements Node
     public function get($key)
     {
         // TODO: Implement get() method.
-    }
-
-    public function __get($name)
-    {
-        // TODO: Implement __get() method.
     }
 
     public function hasValue($key)

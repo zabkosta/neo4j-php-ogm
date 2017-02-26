@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Movies;
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -12,18 +21,21 @@ class User
 {
     /**
      * @OGM\GraphId()
+     *
      * @var int
      */
     protected $id;
 
     /**
      * @OGM\Property(type="string")
+     *
      * @var string
      */
     protected $login;
 
     /**
      * @OGM\Relationship(relationshipEntity="Rating", type="RATED", direction="OUTGOING", collection=true)
+     *
      * @var Rating[]|ArrayCollection
      */
     protected $ratings;
@@ -63,7 +75,7 @@ class User
 
     /**
      * @param \Movies\Movie $movie
-     * @param float $score
+     * @param float         $score
      */
     public function rateMovie(Movie $movie, $score)
     {

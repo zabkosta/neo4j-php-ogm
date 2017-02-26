@@ -11,26 +11,15 @@
 
 namespace GraphAware\Neo4j\OGM\Repository;
 
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\Common\Collections\Expr\Comparison;
+use Doctrine\Common\Collections\Selectable;
+use Doctrine\Common\Persistence\ObjectRepository;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
-use ProxyManager\Configuration;
-use ProxyManager\Factory\LazyLoadingGhostFactory;
-use ProxyManager\FileLocator\FileLocator;
-use ProxyManager\GeneratorStrategy\FileWriterGeneratorStrategy;
 
-class BaseRepository
+class BaseRepository implements ObjectRepository, Selectable
 {
-    const FILTER_LIMIT = 'limit';
-
-    const FILTER_ORDER = 'order';
-
-    const ORDER_ASC = 'ASC';
-
-    const ORDER_DESC = 'DESC';
-
-    private static $PAGINATION_FIRST_RESULT_KEY = 'first';
-    private static $PAGINATION_LIMIT_RESULTS_KEY = 'max';
-
     /**
      * @var \GraphAware\Neo4j\OGM\Metadata\ClassMetadata
      */
@@ -47,18 +36,6 @@ class BaseRepository
     protected $className;
 
     /**
-     * @var \ReflectionClass
-     */
-    protected $reflectionClass;
-
-    /**
-     * @var \ReflectionClass[]
-     */
-    protected $loadedReflClasses = [];
-
-    protected $lazyLoadingFactory;
-
-    /**
      * @param \GraphAware\Neo4j\OGM\Metadata\ClassMetadata $classMetadata
      * @param \GraphAware\Neo4j\OGM\EntityManager          $manager
      * @param string                                       $className
@@ -68,13 +45,16 @@ class BaseRepository
         $this->classMetadata = $classMetadata;
         $this->entityManager = $manager;
         $this->className = $className;
-        $config = new Configuration();
-        $dir = sys_get_temp_dir();
-        $config->setGeneratorStrategy(new FileWriterGeneratorStrategy(new FileLocator($dir)));
-        $config->setProxiesTargetDir($dir);
-        spl_autoload_register($config->getProxyAutoloader());
+    }
 
-        $this->lazyLoadingFactory = new LazyLoadingGhostFactory($config);
+    /**
+     * @param int $id
+     *
+     * @return null|object
+     */
+    public function find($id)
+    {
+        return $this->findOneById($id);
     }
 
     /**
@@ -126,16 +106,32 @@ class BaseRepository
     }
 
     /**
-     * @param $className
+     * @param Criteria $criteria
      *
-     * @return \ReflectionClass
+     * @return array
      */
-    private function getReflectionClass($className)
+    public function matching(Criteria $criteria)
     {
-        if (!array_key_exists($className, $this->loadedReflClasses)) {
-            $this->loadedReflClasses[$className] = new \ReflectionClass($className);
+        $clause = [];
+        /** @var Comparison $whereClause */
+        $whereClause = $criteria->getWhereExpression();
+        if (null !== $whereClause) {
+            if (Comparison::EQ !== $whereClause->getOperator()) {
+                throw new \InvalidArgumentException(sprintf('Support for Selectable is limited to the EQUALS "=" operator, 
+                 % given', $whereClause->getOperator()));
+            }
+
+            $clause = [$whereClause->getField() => $whereClause->getValue()->getValue()];
         }
 
-        return $this->loadedReflClasses[$className];
+        return $this->findBy($clause, $criteria->getOrderings(), $criteria->getMaxResults(), $criteria->getFirstResult());
+    }
+
+    /**
+     * @return string
+     */
+    public function getClassName()
+    {
+        return $this->className;
     }
 }

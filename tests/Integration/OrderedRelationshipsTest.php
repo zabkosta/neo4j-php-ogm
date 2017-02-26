@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\OrderedRelationships\Click;
@@ -27,7 +36,7 @@ class OrderedRelationshipsTest extends IntegrationTestCase
         $it = $this->em->getRepository(Item::class)->findAll()[0];
 
         for ($i = 1; $i <= 100; ++$i) {
-            $this->assertEquals($i, $it->getClicks()[$i - 1]->getTime());
+            $this->assertSame($i, $it->getClicks()[$i - 1]->getTime());
         }
     }
 }

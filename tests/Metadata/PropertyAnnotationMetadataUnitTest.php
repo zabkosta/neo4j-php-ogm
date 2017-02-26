@@ -23,7 +23,7 @@ class PropertyAnnotationMetadataUnitTest extends \PHPUnit_Framework_TestCase
     public function testInit()
     {
         $metadata = new PropertyAnnotationMetadata('string');
-        $this->assertEquals('string', $metadata->getType());
+        $this->assertSame('string', $metadata->getType());
     }
 
     public function testIsNullableByDefault()
@@ -47,6 +47,6 @@ class PropertyAnnotationMetadataUnitTest extends \PHPUnit_Framework_TestCase
     public function testCustomKeyCanBePassed()
     {
         $metadata = new PropertyAnnotationMetadata('string', 'dob');
-        $this->assertEquals('dob', $metadata->getKey());
+        $this->assertSame('dob', $metadata->getKey());
     }
 }

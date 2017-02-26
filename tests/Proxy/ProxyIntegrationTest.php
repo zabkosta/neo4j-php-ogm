@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Tests\Proxy;
 
 use GraphAware\Neo4j\OGM\Proxy\EntityProxy;
@@ -31,7 +40,7 @@ class ProxyIntegrationTest extends IntegrationTestCase
         $this->assertInstanceOf(EntityProxy::class, $user);
         $profile = $user->getProfile();
         $userRef = $profile->getUser();
-        $this->assertEquals(spl_object_hash($user), spl_object_hash($userRef));
+        $this->assertSame(spl_object_hash($user), spl_object_hash($userRef));
     }
 
     /**
@@ -43,7 +52,7 @@ class ProxyIntegrationTest extends IntegrationTestCase
         $user = $this->em->getRepository(User::class)->findOneBy(['login' => 'ikwattro']);
         $account = $user->getAccount();
         $userRef = $account->getUser();
-        $this->assertEquals(spl_object_hash($user), spl_object_hash($userRef));
+        $this->assertSame(spl_object_hash($user), spl_object_hash($userRef));
     }
 
     /**
@@ -67,7 +76,7 @@ class ProxyIntegrationTest extends IntegrationTestCase
         $group = $ikwattro->getAccount()->getGroup();
         foreach ($group->getAccounts() as $account) {
             if ($account->getUser()->getLogin() === 'ikwattro') {
-                $this->assertEquals(spl_object_hash($account->getUser()), spl_object_hash($ikwattro));
+                $this->assertSame(spl_object_hash($account->getUser()), spl_object_hash($ikwattro));
             }
         }
     }

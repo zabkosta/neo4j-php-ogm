@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\SimpleRelationshipEntity\Guest;
@@ -88,7 +97,7 @@ class SimpleRelationshipEntityTest extends IntegrationTestCase
         $john = $this->em->getRepository(Guest::class)->findOneBy(['name' => 'john']);
         /** @var Hotel $crowne */
         $crowne = $this->em->getRepository(Hotel::class)->findOneBy(['name' => 'Crowne']);
-        $this->assertEquals(spl_object_hash($john), spl_object_hash($crowne->getRating()->getGuest()));
+        $this->assertSame(spl_object_hash($john), spl_object_hash($crowne->getRating()->getGuest()));
         $this->em->remove($crowne->getRating());
         $john->setRating(null);
         $crowne->setRating(null);
@@ -107,8 +116,8 @@ class SimpleRelationshipEntityTest extends IntegrationTestCase
         $this->assertInstanceOf(Guest::class, $guest);
         $this->assertInstanceOf(Rating::class, $guest->getRating());
         $this->assertInstanceOf(Hotel::class, $guest->getRating()->getHotel());
-        $this->assertEquals(3.5, $guest->getRating()->getScore());
-        $this->assertEquals(spl_object_hash($guest), spl_object_hash($guest->getRating()->getHotel()->getRating()->getGuest()));
+        $this->assertSame(3.5, $guest->getRating()->getScore());
+        $this->assertSame(spl_object_hash($guest), spl_object_hash($guest->getRating()->getHotel()->getRating()->getGuest()));
     }
 
     /**

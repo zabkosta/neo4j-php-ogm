@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\SingleEntity\User;
@@ -17,8 +26,8 @@ class SingleEntityIntegrationTest extends IntegrationTestCase
         $this->em->flush();
 
         $result = $this->client->run('MATCH (n:User {login : {login} }) RETURN n', ['login' => 'jexp']);
-        $this->assertEquals(1, $result->size());
-        $this->assertEquals('jexp', $result->firstRecord()->get('n')->value('login'));
+        $this->assertSame(1, $result->size());
+        $this->assertSame('jexp', $result->firstRecord()->get('n')->value('login'));
     }
 
     public function testSingleEntityFindAll()
@@ -50,6 +59,6 @@ class SingleEntityIntegrationTest extends IntegrationTestCase
         $this->em->flush();
 
         $result = $this->client->run('MATCH (n:User) WHERE n.login = "jexp2" RETURN n');
-        $this->assertEquals(1, $result->size());
+        $this->assertSame(1, $result->size());
     }
 }
