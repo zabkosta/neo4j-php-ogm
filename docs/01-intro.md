@@ -802,3 +802,16 @@ class Movie
 ```
 
 This will order players based on their name property.
+
+## Removing entities
+
+The EntityManager offers a `remove()` method to be used for removing entities from the graph.
+
+Node objects as well as RelationshipEntity objects can be passed to this method.
+
+```php
+$guest->setRating(null);
+$hotel->setRating(null);
+$this->em->remove($rating);
+$this->em->flush();
+```
