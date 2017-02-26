@@ -33,13 +33,13 @@ class BasicEntityPersister
 
     /**
      * @param array      $criteria
-     * @param array|null $oderBy
+     * @param array|null $orderBy
      *
      * @return object[]|array|null
      */
-    public function load(array $criteria, array $oderBy = null)
+    public function load(array $criteria, array $orderBy = null)
     {
-        $stmt = $this->getMatchCypher($criteria);
+        $stmt = $this->getMatchCypher($criteria, $orderBy);
         $result = $this->_em->getDatabaseDriver()->run($stmt->text(), $stmt->parameters());
 
         if ($result->size() > 1) {
