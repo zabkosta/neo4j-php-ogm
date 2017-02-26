@@ -1,5 +1,6 @@
 1.0-RC1 (Not Released yet)
 
+- BaseRepository now implements Doctrine's `ObjectRepository` and `Selectable` ([#87](https://github.com/graphaware/neo4j-php-ogm/pull/87))
 - Added `SKIP` and `LIMIT` to via the `findBy` Repository method ([#86](https://github.com/graphaware/neo4j-php-ogm/pull/86))
 
 1.0.0-beta22
