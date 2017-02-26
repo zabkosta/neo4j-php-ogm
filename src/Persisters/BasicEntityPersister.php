@@ -33,13 +33,13 @@ class BasicEntityPersister
 
     /**
      * @param array      $criteria
-     * @param array|null $oderBy
+     * @param array|null $orderBy
      *
      * @return object[]|array|null
      */
-    public function load(array $criteria, array $oderBy = null)
+    public function load(array $criteria, array $orderBy = null)
     {
-        $stmt = $this->getMatchCypher($criteria);
+        $stmt = $this->getMatchCypher($criteria, $orderBy);
         $result = $this->_em->getDatabaseDriver()->run($stmt->text(), $stmt->parameters());
 
         if ($result->size() > 1) {
@@ -126,13 +126,13 @@ class BasicEntityPersister
 
     /**
      * @param $criteria
+     * @param null|array $orderBy
      * @param null|int   $limit
      * @param null|int   $offset
-     * @param null|array $orderBy
      *
      * @return Statement
      */
-    public function getMatchCypher(array $criteria = [], $limit = null, $offset = null, $orderBy = null)
+    public function getMatchCypher(array $criteria = [], $orderBy = null, $limit = null, $offset = null)
     {
         $identifier = $this->_classMetadata->getEntityAlias();
         $classLabel = $this->_classMetadata->getLabel();
@@ -149,6 +149,16 @@ class BasicEntityPersister
         }
 
         $cypher .= 'RETURN '.$identifier;
+
+        if (is_array($orderBy) && count($orderBy) > 0) {
+            $cypher .= PHP_EOL;
+            $i = 0;
+            foreach ($orderBy as $property => $order) {
+                $cypher .= $i === 0 ? 'ORDER BY ' : ', ';
+                $cypher .= sprintf('%s.%s %s', $identifier, $property, $order);
+                ++$i;
+            }
+        }
 
         return Statement::create($cypher, $params);
     }

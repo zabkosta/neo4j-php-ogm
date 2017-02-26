@@ -193,7 +193,6 @@ abstract class GraphEntityMetadata implements ClassMetadata
      */
     public function getEntityAlias()
     {
-        /* @todo find another fixed string for query caching */
-        return strtolower(sprintf('%s_%s', str_replace('\\', '_', $this->className), spl_object_hash($this)));
+        return strtolower(str_replace('\\', '_', $this->className));
     }
 }
