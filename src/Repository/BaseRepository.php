@@ -33,18 +33,6 @@ class BaseRepository implements ObjectRepository
     protected $className;
 
     /**
-     * @var \ReflectionClass
-     */
-    protected $reflectionClass;
-
-    /**
-     * @var \ReflectionClass[]
-     */
-    protected $loadedReflClasses = [];
-
-    protected $lazyLoadingFactory;
-
-    /**
      * @param \GraphAware\Neo4j\OGM\Metadata\ClassMetadata $classMetadata
      * @param \GraphAware\Neo4j\OGM\EntityManager          $manager
      * @param string                                       $className
