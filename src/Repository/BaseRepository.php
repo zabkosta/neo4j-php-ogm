@@ -11,11 +11,15 @@
 
 namespace GraphAware\Neo4j\OGM\Repository;
 
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\Common\Collections\Expr\Comparison;
+use Doctrine\Common\Collections\Selectable;
 use Doctrine\Common\Persistence\ObjectRepository;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 
-class BaseRepository implements ObjectRepository
+class BaseRepository implements ObjectRepository, Selectable
 {
     /**
      * @var \GraphAware\Neo4j\OGM\Metadata\ClassMetadata
@@ -101,6 +105,28 @@ class BaseRepository implements ObjectRepository
         $persister = $this->entityManager->getEntityPersister($this->className);
 
         return $persister->loadOneById($id);
+    }
+
+    /**
+     * @param Criteria $criteria
+     *
+     * @return array
+     */
+    public function matching(Criteria $criteria)
+    {
+        $clause = [];
+        /** @var Comparison $whereClause */
+        $whereClause = $criteria->getWhereExpression();
+        if (null !== $whereClause) {
+            if (Comparison::EQ !== $whereClause->getOperator()) {
+                throw new \InvalidArgumentException(sprintf('Support for Selectable is limited to the EQUALS "=" operator, 
+                 % given', $whereClause->getOperator()));
+            }
+
+            $clause = [$whereClause->getField() => $whereClause->getValue()->getValue()];
+        }
+
+        return $this->findBy($clause, $criteria->getOrderings(), $criteria->getMaxResults(), $criteria->getFirstResult());
     }
 
 
