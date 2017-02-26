@@ -126,9 +126,9 @@ class BasicEntityPersister
 
     /**
      * @param $criteria
+     * @param null|array $orderBy
      * @param null|int   $limit
      * @param null|int   $offset
-     * @param null|array $orderBy
      *
      * @return Statement
      */
