@@ -215,6 +215,7 @@ class EntityHydrator
                 // create the entity
                 $entity = $this->_em->getUnitOfWork()->createEntity($node, $entityName, $id);
                 $this->hydrateProperties($entity, $node);
+                $this->hydrateLabels($entity, $node);
 
                 $result[] = $entity;
             }
@@ -234,6 +235,7 @@ class EntityHydrator
         // create the entity
         $entity = $this->_em->getUnitOfWork()->createEntity($node, $cm, $id);
         $this->hydrateProperties($entity, $node);
+        $this->hydrateLabels($entity, $node);
 
         return $entity;
     }
@@ -244,6 +246,17 @@ class EntityHydrator
             if ($this->_classMetadata->hasField($key)) {
                 $propertyMeta = $this->_classMetadata->getPropertyMetadata($key);
                 $propertyMeta->setValue($object, $node->get($key));
+            }
+        }
+    }
+
+    protected function hydrateLabels($object, Node $node)
+    {
+        foreach ($this->_classMetadata->getLabeledProperties() as $labeledProperty) {
+            if ($node->hasLabel($labeledProperty->getLabelName())) {
+                $labeledProperty->setLabel($object, true);
+            } else {
+                $labeledProperty->setLabel($object, false);
             }
         }
     }
