@@ -114,4 +114,25 @@ class BooleanLabelTest extends IntegrationTestCase
         $result = $this->client->run('MATCH (n:BlogPost) RETURN count(n) AS c');
         $this->assertEquals(1, $result->firstRecord()->get('c'));
     }
+
+    public function testLabelCanBeRemovedAfterLoadAndCommit()
+    {
+        $blogpost = new BlogPost('Learn X');
+        $blogpost->setPublished(true);
+        $this->persist($blogpost);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var BlogPost $post */
+        $post = $this->em->getRepository(BlogPost::class)->findAll()[0];
+        $this->assertTrue($post->getPublished());
+
+        $post->setPublished(false);
+        $this->em->flush();
+        $this->assertGraphNotExist('(b:BlogPost:Published {title:"Learn X"})');
+        $this->assertGraphExist('(b:BlogPost {title:"Learn X"})');
+        $this->em->flush();
+        $result = $this->client->run('MATCH (n:BlogPost) RETURN count(n) AS c');
+        $this->assertEquals(1, $result->firstRecord()->get('c'));
+    }
 }
