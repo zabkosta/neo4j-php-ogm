@@ -63,10 +63,11 @@ class ProxyFactory
         return $object;
     }
 
-    private function getInitializerFor(RelationshipMetadata $relationship) {
+    private function getInitializerFor(RelationshipMetadata $relationship)
+    {
         if (!$relationship->isCollection()) {
             $initializer = new SingleNodeInitializer($this->em, $relationship, $this->classMetadata);
-        } else if ($relationship->isCollection()) {
+        } elseif ($relationship->isCollection()) {
             $initializer = new NodeCollectionInitializer($this->em, $relationship, $this->classMetadata);
         }
 
@@ -128,7 +129,6 @@ PROXY;
         }
 
         return $this->newProxyInstance($proxyClass);
-
     }
 
     protected function getMethodProxies()
@@ -148,7 +148,7 @@ PROXY;
                 if (null !== $reflMethod) {
                     if ($reflMethod->hasReturnType()) {
                         $rt = $reflMethod->getReturnType();
-                        $getter .= ': ' . $rt;
+                        $getter .= ': '.$rt;
                     }
                 }
             }
@@ -162,7 +162,6 @@ public function $getter
 }
 
 METHOD;
-
         }
 
         return $proxies;
@@ -190,6 +189,4 @@ METHOD;
             @mkdir($this->em->getProxyDirectory());
         }
     }
-
-
 }

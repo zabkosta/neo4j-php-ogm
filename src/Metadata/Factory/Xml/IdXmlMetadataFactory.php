@@ -10,8 +10,8 @@ class IdXmlMetadataFactory
 {
     /**
      * @param \SimpleXMLElement $node
-     * @param string $className
-     * @param \ReflectionClass $reflection
+     * @param string            $className
+     * @param \ReflectionClass  $reflection
      *
      * @return EntityIdMetadata
      */
@@ -24,8 +24,8 @@ class IdXmlMetadataFactory
         }
 
         return new EntityIdMetadata(
-            (string)$node->id['name'],
-            $reflection->getProperty((string)$node->id['name']),
+            (string) $node->id['name'],
+            $reflection->getProperty((string) $node->id['name']),
             new IdAnnotationMetadata()
         );
     }

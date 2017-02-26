@@ -2,21 +2,18 @@
 
 namespace GraphAware\Neo4j\OGM\Metadata\Factory\Xml;
 
-use GraphAware\Neo4j\OGM\Annotations\Label;
 use GraphAware\Neo4j\OGM\Annotations\OrderBy;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
-use GraphAware\Neo4j\OGM\Metadata\EntityPropertyMetadata;
-use GraphAware\Neo4j\OGM\Metadata\LabeledPropertyMetadata;
-use GraphAware\Neo4j\OGM\Metadata\PropertyAnnotationMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
 
 class RelationshipXmlMetadataFactory
 {
     /**
      * @param \SimpleXMLElement $node
-     * @param string $className
-     * @param \ReflectionClass $reflection
+     * @param string            $className
+     * @param \ReflectionClass  $reflection
+     *
      * @return array
      */
     public function buildRelationshipsMetadata(\SimpleXMLElement $node, $className, \ReflectionClass $reflection)
@@ -31,8 +28,8 @@ class RelationshipXmlMetadataFactory
 
     /**
      * @param \SimpleXMLElement $relationshipNode
-     * @param string $className
-     * @param \ReflectionClass $reflection
+     * @param string            $className
+     * @param \ReflectionClass  $reflection
      *
      * @return RelationshipMetadata
      */
@@ -54,23 +51,23 @@ class RelationshipXmlMetadataFactory
         }
         $relationship = new Relationship();
 
-        $relationship->type = (string)$relationshipNode['type'];
-        $relationship->direction = (string)$relationshipNode['direction'];
-        $relationship->targetEntity = (string)$relationshipNode['target-entity'];
+        $relationship->type = (string) $relationshipNode['type'];
+        $relationship->direction = (string) $relationshipNode['direction'];
+        $relationship->targetEntity = (string) $relationshipNode['target-entity'];
 
         $relationship->relationshipEntity = isset($relationshipNode['relationship-entity'])
-            ? (string)$relationshipNode['relationship-entity']
+            ? (string) $relationshipNode['relationship-entity']
             : null
         ;
         $relationship->mappedBy = isset($relationshipNode['mapped-by'])
-            ? (string)$relationshipNode['mapped-by']
+            ? (string) $relationshipNode['mapped-by']
             : null
         ;
         if (isset($relationshipNode['collection'])) {
-            if ((string)$relationshipNode['collection'] === 'true') {
+            if ((string) $relationshipNode['collection'] === 'true') {
                 $relationship->collection = true;
             }
-            if ((string)$relationshipNode['collection'] === 'false') {
+            if ((string) $relationshipNode['collection'] === 'false') {
                 $relationship->collection = false;
             }
         }
@@ -85,13 +82,13 @@ class RelationshipXmlMetadataFactory
                 ));
             }
             $orderBy = new OrderBy();
-            $orderBy->order = (string)$orderNode['order'];
-            $orderBy->property = (string)$orderNode['property'];
+            $orderBy->order = (string) $orderNode['order'];
+            $orderBy->property = (string) $orderNode['property'];
         }
 
         return new RelationshipMetadata(
             $className,
-            $reflection->getProperty((string)$relationshipNode['name']),
+            $reflection->getProperty((string) $relationshipNode['name']),
             $relationship,
             isset($relationshipNode->lazy),
             $orderBy

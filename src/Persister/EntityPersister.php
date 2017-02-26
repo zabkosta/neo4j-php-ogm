@@ -109,16 +109,14 @@ class EntityPersister
     /**
      * Refreshes a managed entity.
      *
-     * @param int  $id
-     * @param object $entity The entity to refresh.
-     *
-     * @return void
+     * @param int    $id
+     * @param object $entity The entity to refresh
      */
     public function refresh($id, $entity)
     {
         $label = $this->classMetadata->getLabel();
         $query = sprintf('MATCH (n:%s) WHERE id(n) = {%s} RETURN n', $label, 'id');
-        $result = $this->entityManager->getDatabaseDriver()->run($query, ['id'=>$id]);
+        $result = $this->entityManager->getDatabaseDriver()->run($query, ['id' => $id]);
 
         $this->entityManager->getHydrator()->hydrateResultSet($result->getRecord());
     }

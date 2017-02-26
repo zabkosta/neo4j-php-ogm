@@ -12,8 +12,9 @@ class PropertyXmlMetadataFactory
 {
     /**
      * @param \SimpleXMLElement $node
-     * @param string $className
-     * @param \ReflectionClass $reflection
+     * @param string            $className
+     * @param \ReflectionClass  $reflection
+     *
      * @return array
      */
     public function buildPropertiesMetadata(\SimpleXMLElement $node, $className, \ReflectionClass $reflection)
@@ -25,13 +26,15 @@ class PropertyXmlMetadataFactory
                 $properties[] = $this->buildLabeledPropertyMetadata($propertyNode, $className, $reflection);
             }
         }
+
         return $properties;
     }
 
     /**
      * @param \SimpleXMLElement $propertyNode
-     * @param string $className
-     * @param \ReflectionClass $reflection
+     * @param string            $className
+     * @param \ReflectionClass  $reflection
+     *
      * @return EntityPropertyMetadata
      */
     private function buildPropertyMetadata(\SimpleXMLElement $propertyNode, $className, \ReflectionClass $reflection)
@@ -41,13 +44,13 @@ class PropertyXmlMetadataFactory
                 sprintf('Class "%s" OGM XML property configuration is missing "name" or "type" attribute', $className)
             );
         }
-        $name = (string)$propertyNode['name'];
+        $name = (string) $propertyNode['name'];
         $nullable = true;
         if (isset($propertyNode['nullable'])) {
-            if ((string)$propertyNode['nullable'] === "true") {
+            if ((string) $propertyNode['nullable'] === 'true') {
                 $nullable = true;
             }
-            if ((string)$propertyNode['nullable'] === "false") {
+            if ((string) $propertyNode['nullable'] === 'false') {
                 $nullable = false;
             }
         }
@@ -56,8 +59,8 @@ class PropertyXmlMetadataFactory
             $name,
             $reflection->getProperty($name),
             new PropertyAnnotationMetadata(
-                (string)$propertyNode['type'],
-                isset($propertyNode['key']) ? (string)$propertyNode['key'] : null,
+                (string) $propertyNode['type'],
+                isset($propertyNode['key']) ? (string) $propertyNode['key'] : null,
                 $nullable
             )
         );
@@ -65,8 +68,9 @@ class PropertyXmlMetadataFactory
 
     /**
      * @param \SimpleXMLElement $propertyNode
-     * @param string $className
-     * @param \ReflectionClass $reflection
+     * @param string            $className
+     * @param \ReflectionClass  $reflection
+     *
      * @return LabeledPropertyMetadata
      */
     private function buildLabeledPropertyMetadata(
@@ -80,9 +84,9 @@ class PropertyXmlMetadataFactory
             );
         }
 
-        $name = (string)$propertyNode['name'];
+        $name = (string) $propertyNode['name'];
         $label = new Label();
-        $label->name = (string)$propertyNode->label['name'];
+        $label->name = (string) $propertyNode->label['name'];
 
         return new LabeledPropertyMetadata(
             $name,

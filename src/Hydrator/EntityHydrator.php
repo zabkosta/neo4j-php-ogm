@@ -40,6 +40,7 @@ class EntityHydrator
 
     /**
      * @param Result $dbResult
+     *
      * @return array
      */
     public function hydrateAll(Result $dbResult)
@@ -179,7 +180,6 @@ class EntityHydrator
         }
     }
 
-
     private function guessOtherClassName($alias)
     {
         $relationshipMetadata = $this->_classMetadata->getRelationship($alias);
@@ -265,5 +265,4 @@ class EntityHydrator
     {
         return [$this->_classMetadata->getEntityAlias() => $this->_classMetadata->getClassName()];
     }
-
 }

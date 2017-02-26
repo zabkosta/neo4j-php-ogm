@@ -11,7 +11,6 @@
 
 namespace GraphAware\Neo4j\OGM\Proxy;
 
-use GraphAware\Common\Result\Result;
 use GraphAware\Common\Type\Node;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;

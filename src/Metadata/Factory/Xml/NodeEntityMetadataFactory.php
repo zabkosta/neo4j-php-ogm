@@ -24,7 +24,7 @@ class NodeEntityMetadataFactory
 
     /**
      * @param \SimpleXMLElement $node
-     * @param string $className
+     * @param string            $className
      *
      * @return NodeEntityMetadata
      */
@@ -44,7 +44,7 @@ class NodeEntityMetadataFactory
 
     /**
      * @param \SimpleXMLElement $node
-     * @param string $className
+     * @param string            $className
      *
      * @return NodeAnnotationMetadata
      */
@@ -57,8 +57,8 @@ class NodeEntityMetadataFactory
         }
 
         return new NodeAnnotationMetadata(
-            (string)$node['label'],
-            isset($node['repository-class']) ? (string)$node['repository-class'] : null
+            (string) $node['label'],
+            isset($node['repository-class']) ? (string) $node['repository-class'] : null
         );
     }
 }
