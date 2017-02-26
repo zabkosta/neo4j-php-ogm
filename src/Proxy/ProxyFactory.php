@@ -138,13 +138,27 @@ PROXY;
             if ($relationship->isFetch()) {
                 continue;
             }
+            $g = 'get'.ucfirst($relationship->getPropertyName());
             $getter = 'get'.ucfirst($relationship->getPropertyName()).'()';
+            $returnStr = $getter;
+
+            if (PHP_VERSION_ID > 70000) {
+                $reflClass = new \ReflectionClass($this->classMetadata->getClassName());
+                $reflMethod = $reflClass->getMethod($g);
+                if (null !== $reflMethod) {
+                    if ($reflMethod->hasReturnType()) {
+                        $rt = $reflMethod->getReturnType();
+                        $getter .= ': ' . $rt;
+                    }
+                }
+            }
+
             $propertyName = $relationship->getPropertyName();
             $proxies .= <<<METHOD
 public function $getter
 {
     self::__initializeProperty('$propertyName');
-    return parent::$getter;
+    return parent::$returnStr;
 }
 
 METHOD;

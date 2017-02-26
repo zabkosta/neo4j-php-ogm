@@ -50,6 +50,8 @@ class ProxyFactoryTest extends IntegrationTestCase
 
     /**
      * @requires PHP 7.0
+     *
+     * @group proxy-php7
      */
     public function testPhp7ProxyCreation()
     {
