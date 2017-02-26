@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\RelationshipCollection\Building;
@@ -25,7 +34,7 @@ class EntityWithSimpleRelationshipCollectionTest extends IntegrationTestCase
         $this->em->flush();
 
         $result = $this->client->run('MATCH (n:Building) RETURN n');
-        $this->assertEquals(1, $result->size());
+        $this->assertSame(1, $result->size());
     }
 
     public function testBuildingWithFloorsCanBeCreated()
@@ -37,7 +46,7 @@ class EntityWithSimpleRelationshipCollectionTest extends IntegrationTestCase
         $this->em->flush();
 
         $result = $this->client->run('MATCH (n:Building)-[:HAS_FLOOR]->(f:Floor {level: 1}) RETURN n, f');
-        $this->assertEquals(1, $result->size());
+        $this->assertSame(1, $result->size());
     }
 
     public function testBuildingWithFloorsCanBeLoaded()
@@ -57,7 +66,7 @@ class EntityWithSimpleRelationshipCollectionTest extends IntegrationTestCase
         $this->assertCount(1, $floors);
         /** @var Floor $floor */
         $floor = $floors[0];
-        $this->assertEquals(spl_object_hash($b), spl_object_hash($floor->getBuilding()));
+        $this->assertSame(spl_object_hash($b), spl_object_hash($floor->getBuilding()));
     }
 
     public function testBuildingWithFloorsCanAddFloorWithoutClear()
@@ -72,7 +81,7 @@ class EntityWithSimpleRelationshipCollectionTest extends IntegrationTestCase
         $this->em->flush();
 
         $result = $this->client->run('MATCH (n:Building)-[:HAS_FLOOR]->(f:Floor) RETURN n, f');
-        $this->assertEquals(2, $result->size());
+        $this->assertSame(2, $result->size());
     }
 
     public function testBuildingWithFloorsCanAddFloorWithClear()
@@ -92,7 +101,7 @@ class EntityWithSimpleRelationshipCollectionTest extends IntegrationTestCase
         $this->em->flush();
 
         $result = $this->client->run('MATCH (n:Building)-[:HAS_FLOOR]->(f:Floor) RETURN n, f');
-        $this->assertEquals(2, $result->size());
+        $this->assertSame(2, $result->size());
     }
 
     public function testBuildingCanBeRetrievedFromFloor()
@@ -119,7 +128,7 @@ class EntityWithSimpleRelationshipCollectionTest extends IntegrationTestCase
         $this->em->flush();
 
         $result = $this->client->run('MATCH (n:Building)-[:HAS_FLOOR]->(f:Floor {level: 5}) RETURN n, f');
-        $this->assertEquals(1, $result->size());
+        $this->assertSame(1, $result->size());
     }
 
     public function testFloorLevelCanBeChangedWithClear()
@@ -141,6 +150,6 @@ class EntityWithSimpleRelationshipCollectionTest extends IntegrationTestCase
         $this->em->flush();
 
         $result = $this->client->run('MATCH (n:Building)-[:HAS_FLOOR]->(f:Floor {level: 5}) RETURN n, f');
-        $this->assertEquals(1, $result->size());
+        $this->assertSame(1, $result->size());
     }
 }

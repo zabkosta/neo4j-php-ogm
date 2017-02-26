@@ -11,7 +11,6 @@
 
 namespace GraphAware\Neo4j\OGM\Repository;
 
-use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Common\Collections\Expr\Comparison;
 use Doctrine\Common\Collections\Selectable;
@@ -57,7 +56,6 @@ class BaseRepository implements ObjectRepository, Selectable
     {
         return $this->findOneById($id);
     }
-
 
     /**
      * @return array
@@ -128,7 +126,6 @@ class BaseRepository implements ObjectRepository, Selectable
 
         return $this->findBy($clause, $criteria->getOrderings(), $criteria->getMaxResults(), $criteria->getFirstResult());
     }
-
 
     /**
      * @return string

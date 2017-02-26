@@ -283,8 +283,7 @@ class UnitOfWork
                 $oid = $record->get('oid');
                 $this->relationshipEntityStates[$record->get('oid')] = self::STATE_DELETED;
                 $id = $this->reEntityIds[$oid];
-                unset($this->reEntityIds[$oid]);
-                unset($this->reEntitiesById[$id]);
+                unset($this->reEntityIds[$oid], $this->reEntitiesById[$id]);
             }
         }
 
@@ -338,13 +337,6 @@ class UnitOfWork
             = [];
     }
 
-    private function manageEntityReference($oid)
-    {
-        $id = $this->entityIds[$oid];
-        $entity = $this->entitiesById[$id];
-        $this->entityStateReferences[$id] = clone $entity;
-    }
-
     public function detectEntityChanges()
     {
         $managed = [];
@@ -361,26 +353,6 @@ class UnitOfWork
             $this->doPersist($entityA, $visited);
             $entityB = $this->entityStateReferences[$id];
             $this->computeChanges($entityA, $entityB);
-        }
-    }
-
-    private function computeChanges($entityA, $entityB)
-    {
-        $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entityA));
-        $propertyFields = array_merge($classMetadata->getPropertiesMetadata(), $classMetadata->getLabeledProperties());
-        foreach ($propertyFields as $field => $meta) {
-            // force proxy to initialize (only needed with proxy manager 1.x
-            $reflClass = new \ReflectionClass($classMetadata->getClassName());
-            foreach ($reflClass->getMethods() as $method) {
-                if ($method->getNumberOfRequiredParameters() === 0 && $method->getName() === 'getId') {
-                    $entityA->getId();
-                }
-            }
-            $p1 = $meta->getValue($entityA);
-            $p2 = $meta->getValue($entityB);
-            if ($p1 !== $p2) {
-                $this->nodesScheduledForUpdate[spl_object_hash($entityA)] = $entityA;
-            }
         }
     }
 
@@ -415,33 +387,6 @@ class UnitOfWork
         }
     }
 
-    private function computeRelationshipEntityPropertiesChanges()
-    {
-        foreach ($this->relationshipEntityStates as $oid => $state) {
-            if ($state === self::STATE_MANAGED) {
-                $e = $this->reEntitiesById[$this->reEntityIds[$oid]];
-                $cm = $this->entityManager->getClassMetadataFor(get_class($e));
-                $newValues = $cm->getPropertyValuesArray($e);
-                if (!array_key_exists($oid, $this->reOriginalData)) {
-                }
-                $originalValues = $this->reOriginalData[$oid];
-                if (count(array_diff($originalValues, $newValues)) > 0) {
-                    $this->relEntitesScheduledForUpdate[$oid] = $e;
-                }
-            }
-        }
-    }
-
-    private function computeRelationshipEntityChanges($entityA, $entityB)
-    {
-        $classMetadata = $this->entityManager->getRelationshipEntityMetadata(get_class($entityA));
-        foreach ($classMetadata->getPropertiesMetadata() as $meta) {
-            if ($meta->getValue($entityA) !== $meta->getValue($entityB)) {
-                $this->relEntitesScheduledForUpdate[spl_object_hash($entityA)] = $entityA;
-            }
-        }
-    }
-
     public function addManagedRelationshipEntity($entity, $pointOfView, $field)
     {
         $id = $this->entityManager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($entity);
@@ -457,13 +402,6 @@ class UnitOfWork
         $this->reOriginalData[$oid] = $this->getOriginalRelationshipEntityData($entity);
     }
 
-    private function getOriginalRelationshipEntityData($entity)
-    {
-        $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entity));
-
-        return $classMetadata->getPropertyValuesArray($entity);
-    }
-
     public function getRelationshipEntityById($id)
     {
         if (array_key_exists($id, $this->reEntitiesById)) {
@@ -471,27 +409,6 @@ class UnitOfWork
         }
 
         return null;
-    }
-
-    private function checkRelationshipEntityDeletions($entity)
-    {
-        $oid = spl_object_hash($entity);
-        $id = $this->entityManager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($entity);
-        foreach ($this->managedRelationshipEntitiesMap[$oid] as $pov => $field) {
-            $e = $this->entitiesById[$this->entityIds[$pov]];
-            $entityMetadata = $this->entityManager->getClassMetadataFor(get_class($e));
-            $values = $entityMetadata->getRelationship($field)->getValue($e);
-            $shouldBeDeleted = true;
-            foreach ($values as $v) {
-                $id2 = $this->entityManager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($v);
-                if ($id2 === $id) {
-                    $shouldBeDeleted = false;
-                }
-            }
-            if ($shouldBeDeleted) {
-                $this->relEntitesScheduledForDelete[] = $entity;
-            }
-        }
     }
 
     public function detectRelationshipReferenceChanges()
@@ -634,19 +551,6 @@ class UnitOfWork
         return isset($this->entityIds[spl_object_hash($entity)]);
     }
 
-    private function removeManaged($entity)
-    {
-        $oid = spl_object_hash($entity);
-        unset($this->entityIds[$oid]);
-
-        $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entity));
-        $id = $classMetadata->getIdValue($entity);
-        if (null === $id) {
-            throw new \LogicException('Entity marked as not managed but could not find identity');
-        }
-        unset($this->entitiesById[$id]);
-    }
-
     public function scheduleDelete($entity)
     {
         $oid = spl_object_hash($entity);
@@ -752,79 +656,6 @@ class UnitOfWork
     }
 
     /**
-     * Executes a detach operation on the given entity.
-     *
-     * @param object $entity
-     * @param array  $visited
-     * @param bool   $noCascade if true, don't cascade detach operation
-     */
-    private function doDetach($entity, array &$visited, $noCascade = false)
-    {
-        $oid = spl_object_hash($entity);
-
-        if (isset($visited[$oid])) {
-            return; // Prevent infinite recursion
-        }
-
-        $visited[$oid] = $entity; // mark visited
-
-        switch ($this->getEntityState($entity, self::STATE_DETACHED)) {
-            case self::STATE_MANAGED:
-                if ($this->isManaged($entity)) {
-                    $this->removeManaged($entity);
-                }
-
-                unset(
-                    $this->nodesScheduledForCreate[$oid],
-                    $this->nodesScheduledForUpdate[$oid],
-                    $this->nodesScheduledForDelete[$oid],
-                    $this->entityStates[$oid]
-                );
-                break;
-            case self::STATE_NEW:
-            case self::STATE_DETACHED:
-                return;
-        }
-
-        $this->entityStates[$oid] = self::STATE_DETACHED;
-
-        if (!$noCascade) {
-            $this->cascadeDetach($entity, $visited);
-        }
-    }
-
-    /**
-     * Cascades a detach operation to associated entities.
-     *
-     * @param object $entity
-     * @param array  $visited
-     */
-    private function cascadeDetach($entity, array &$visited)
-    {
-        $class = $this->entityManager->getClassMetadata(get_class($entity));
-
-        foreach ($class->getRelationships() as $relationship) {
-            $value = $relationship->getValue($entity);
-
-            switch (true) {
-                case $value instanceof Collection:
-                case is_array($value):
-                    foreach ($value as $relatedEntity) {
-                        $this->doDetach($relatedEntity, $visited);
-                    }
-                    break;
-
-                case $value !== null:
-                    $this->doDetach($value, $visited);
-                    break;
-
-                default:
-                    // Do nothing
-            }
-        }
-    }
-
-    /**
      * Refreshes the state of the given entity from the database, overwriting
      * any local, unpersisted changes.
      *
@@ -835,62 +666,6 @@ class UnitOfWork
         $visited = [];
 
         $this->doRefresh($entity, $visited);
-    }
-
-    /**
-     * Executes a refresh operation on an entity.
-     *
-     * @param object $entity  The entity to refresh
-     * @param array  $visited The already visited entities during cascades
-     */
-    private function doRefresh($entity, array &$visited)
-    {
-        $oid = spl_object_hash($entity);
-
-        if (isset($visited[$oid])) {
-            return; // Prevent infinite recursion
-        }
-
-        $visited[$oid] = $entity; // mark visited
-
-        if ($this->getEntityState($entity) !== self::STATE_MANAGED) {
-            throw OGMInvalidArgumentException::entityNotManaged($entity);
-        }
-
-        $this->getPersister(get_class($entity))->refresh($this->entityIds[$oid], $entity);
-
-        $this->cascadeRefresh($entity, $visited);
-    }
-
-    /**
-     * Cascades a refresh operation to associated entities.
-     *
-     * @param object $entity
-     * @param array  $visited
-     */
-    private function cascadeRefresh($entity, array &$visited)
-    {
-        $class = $this->entityManager->getClassMetadata(get_class($entity));
-
-        foreach ($class->getRelationships() as $relationship) {
-            $value = $relationship->getValue($entity);
-
-            switch (true) {
-                case $value instanceof Collection:
-                case is_array($value):
-                    foreach ($value as $relatedEntity) {
-                        $this->doRefresh($relatedEntity, $visited);
-                    }
-                    break;
-
-                case $value !== null:
-                    $this->doRefresh($value, $visited);
-                    break;
-
-                default:
-                    // Do nothing
-            }
-        }
     }
 
     /**
@@ -1027,6 +802,226 @@ class UnitOfWork
         $this->addManagedRelationshipEntity($o, $sourceEntity, $field);
 
         return $o;
+    }
+
+    private function manageEntityReference($oid)
+    {
+        $id = $this->entityIds[$oid];
+        $entity = $this->entitiesById[$id];
+        $this->entityStateReferences[$id] = clone $entity;
+    }
+
+    private function computeChanges($entityA, $entityB)
+    {
+        $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entityA));
+        $propertyFields = array_merge($classMetadata->getPropertiesMetadata(), $classMetadata->getLabeledProperties());
+        foreach ($propertyFields as $field => $meta) {
+            // force proxy to initialize (only needed with proxy manager 1.x
+            $reflClass = new \ReflectionClass($classMetadata->getClassName());
+            foreach ($reflClass->getMethods() as $method) {
+                if ($method->getNumberOfRequiredParameters() === 0 && $method->getName() === 'getId') {
+                    $entityA->getId();
+                }
+            }
+            $p1 = $meta->getValue($entityA);
+            $p2 = $meta->getValue($entityB);
+            if ($p1 !== $p2) {
+                $this->nodesScheduledForUpdate[spl_object_hash($entityA)] = $entityA;
+            }
+        }
+    }
+
+    private function computeRelationshipEntityPropertiesChanges()
+    {
+        foreach ($this->relationshipEntityStates as $oid => $state) {
+            if ($state === self::STATE_MANAGED) {
+                $e = $this->reEntitiesById[$this->reEntityIds[$oid]];
+                $cm = $this->entityManager->getClassMetadataFor(get_class($e));
+                $newValues = $cm->getPropertyValuesArray($e);
+                if (!array_key_exists($oid, $this->reOriginalData)) {
+                }
+                $originalValues = $this->reOriginalData[$oid];
+                if (count(array_diff($originalValues, $newValues)) > 0) {
+                    $this->relEntitesScheduledForUpdate[$oid] = $e;
+                }
+            }
+        }
+    }
+
+    private function computeRelationshipEntityChanges($entityA, $entityB)
+    {
+        $classMetadata = $this->entityManager->getRelationshipEntityMetadata(get_class($entityA));
+        foreach ($classMetadata->getPropertiesMetadata() as $meta) {
+            if ($meta->getValue($entityA) !== $meta->getValue($entityB)) {
+                $this->relEntitesScheduledForUpdate[spl_object_hash($entityA)] = $entityA;
+            }
+        }
+    }
+
+    private function getOriginalRelationshipEntityData($entity)
+    {
+        $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entity));
+
+        return $classMetadata->getPropertyValuesArray($entity);
+    }
+
+    private function checkRelationshipEntityDeletions($entity)
+    {
+        $oid = spl_object_hash($entity);
+        $id = $this->entityManager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($entity);
+        foreach ($this->managedRelationshipEntitiesMap[$oid] as $pov => $field) {
+            $e = $this->entitiesById[$this->entityIds[$pov]];
+            $entityMetadata = $this->entityManager->getClassMetadataFor(get_class($e));
+            $values = $entityMetadata->getRelationship($field)->getValue($e);
+            $shouldBeDeleted = true;
+            foreach ($values as $v) {
+                $id2 = $this->entityManager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($v);
+                if ($id2 === $id) {
+                    $shouldBeDeleted = false;
+                }
+            }
+            if ($shouldBeDeleted) {
+                $this->relEntitesScheduledForDelete[] = $entity;
+            }
+        }
+    }
+
+    private function removeManaged($entity)
+    {
+        $oid = spl_object_hash($entity);
+        unset($this->entityIds[$oid]);
+
+        $classMetadata = $this->entityManager->getClassMetadataFor(get_class($entity));
+        $id = $classMetadata->getIdValue($entity);
+        if (null === $id) {
+            throw new \LogicException('Entity marked as not managed but could not find identity');
+        }
+        unset($this->entitiesById[$id]);
+    }
+
+    /**
+     * Executes a detach operation on the given entity.
+     *
+     * @param object $entity
+     * @param array  $visited
+     * @param bool   $noCascade if true, don't cascade detach operation
+     */
+    private function doDetach($entity, array &$visited, $noCascade = false)
+    {
+        $oid = spl_object_hash($entity);
+
+        if (isset($visited[$oid])) {
+            return; // Prevent infinite recursion
+        }
+
+        $visited[$oid] = $entity; // mark visited
+
+        switch ($this->getEntityState($entity, self::STATE_DETACHED)) {
+            case self::STATE_MANAGED:
+                if ($this->isManaged($entity)) {
+                    $this->removeManaged($entity);
+                }
+
+                unset(
+                    $this->nodesScheduledForCreate[$oid],
+                    $this->nodesScheduledForUpdate[$oid],
+                    $this->nodesScheduledForDelete[$oid],
+                    $this->entityStates[$oid]
+                );
+                break;
+            case self::STATE_NEW:
+            case self::STATE_DETACHED:
+                return;
+        }
+
+        $this->entityStates[$oid] = self::STATE_DETACHED;
+
+        if (!$noCascade) {
+            $this->cascadeDetach($entity, $visited);
+        }
+    }
+
+    /**
+     * Cascades a detach operation to associated entities.
+     *
+     * @param object $entity
+     * @param array  $visited
+     */
+    private function cascadeDetach($entity, array &$visited)
+    {
+        $class = $this->entityManager->getClassMetadata(get_class($entity));
+
+        foreach ($class->getRelationships() as $relationship) {
+            $value = $relationship->getValue($entity);
+
+            switch (true) {
+                case $value instanceof Collection:
+                case is_array($value):
+                    foreach ($value as $relatedEntity) {
+                        $this->doDetach($relatedEntity, $visited);
+                    }
+                    break;
+                case $value !== null:
+                    $this->doDetach($value, $visited);
+                    break;
+                default:
+                    // Do nothing
+            }
+        }
+    }
+
+    /**
+     * Executes a refresh operation on an entity.
+     *
+     * @param object $entity  The entity to refresh
+     * @param array  $visited The already visited entities during cascades
+     */
+    private function doRefresh($entity, array &$visited)
+    {
+        $oid = spl_object_hash($entity);
+
+        if (isset($visited[$oid])) {
+            return; // Prevent infinite recursion
+        }
+
+        $visited[$oid] = $entity; // mark visited
+
+        if ($this->getEntityState($entity) !== self::STATE_MANAGED) {
+            throw OGMInvalidArgumentException::entityNotManaged($entity);
+        }
+
+        $this->getPersister(get_class($entity))->refresh($this->entityIds[$oid], $entity);
+
+        $this->cascadeRefresh($entity, $visited);
+    }
+
+    /**
+     * Cascades a refresh operation to associated entities.
+     *
+     * @param object $entity
+     * @param array  $visited
+     */
+    private function cascadeRefresh($entity, array &$visited)
+    {
+        $class = $this->entityManager->getClassMetadata(get_class($entity));
+
+        foreach ($class->getRelationships() as $relationship) {
+            $value = $relationship->getValue($entity);
+
+            switch (true) {
+                case $value instanceof Collection:
+                case is_array($value):
+                    foreach ($value as $relatedEntity) {
+                        $this->doRefresh($relatedEntity, $visited);
+                    }
+                    break;
+                case $value !== null:
+                    $this->doRefresh($value, $visited);
+                    break;
+                default:
+                    // Do nothing
+            }
+        }
     }
 
     private function newInstance(NodeEntityMetadata $class, Node $node)

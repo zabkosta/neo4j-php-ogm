@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\MoviesDemo\Movie;
@@ -28,7 +37,7 @@ class MovieDatasetTest extends IntegrationTestCase
 
         foreach ($tom->getMovies() as $movie) {
             $this->assertTrue($movie->getActors()->contains($tom));
-            $this->assertEquals(spl_object_hash($tom), spl_object_hash($movie->getActor('Tom Hanks')));
+            $this->assertSame(spl_object_hash($tom), spl_object_hash($movie->getActor('Tom Hanks')));
         }
     }
 

@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Movies;
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -12,30 +21,34 @@ class Person
 {
     /**
      * @OGM\GraphId()
+     *
      * @var int
      */
     protected $id;
 
     /**
      * @OGM\Property(type="string")
+     *
      * @var string
      */
     protected $name;
 
     /**
      * @OGM\Property(type="int")
+     *
      * @var int
      */
     protected $born;
 
     /**
      * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Movie", collection=true, mappedBy="actors")
+     *
      * @var ArrayCollection|Movie[]
      */
     protected $movies;
 
     /**
-     * @param string $name
+     * @param string   $name
      * @param int|null $born
      */
     public function __construct($name, $born = null)

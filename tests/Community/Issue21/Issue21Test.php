@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Tests\Community\Issue21;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
@@ -39,7 +48,7 @@ class Issue21Test extends IntegrationTestCase
         $this->em->flush();
         $this->assertNodesCount(2);
         $this->assertRelationshipsCount(1);
-        $this->assertEquals(spl_object_hash($user), spl_object_hash($user->getSponsoredChildren()[0]->getSponsoredBy()));
+        $this->assertSame(spl_object_hash($user), spl_object_hash($user->getSponsoredChildren()[0]->getSponsoredBy()));
     }
 
     public function testUserCanAddChildAfterCommit()

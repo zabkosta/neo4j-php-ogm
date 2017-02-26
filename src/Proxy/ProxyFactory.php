@@ -37,19 +37,19 @@ class ProxyFactory
         $object->__setNode($node);
         $initializers = [];
         foreach ($this->classMetadata->getSimpleRelationships() as $relationship) {
-            if (!in_array($relationship->getPropertyName(), $mappedByProperties)) {
+            if (!in_array($relationship->getPropertyName(), $mappedByProperties, true)) {
                 $initializer = $this->getInitializerFor($relationship);
                 $initializers[$relationship->getPropertyName()] = $initializer;
             }
         }
         foreach ($this->classMetadata->getRelationshipEntities() as $relationshipEntity) {
             if (!$relationshipEntity->isCollection()) {
-                if (!in_array($relationshipEntity->getPropertyName(), $mappedByProperties)) {
+                if (!in_array($relationshipEntity->getPropertyName(), $mappedByProperties, true)) {
                     $initializer = new RelationshipEntityInitializer($this->em, $relationshipEntity, $this->classMetadata);
                     $initializers[$relationshipEntity->getPropertyName()] = $initializer;
                 }
             } else {
-                if (!in_array($relationshipEntity->getPropertyName(), $mappedByProperties)) {
+                if (!in_array($relationshipEntity->getPropertyName(), $mappedByProperties, true)) {
                     $initializer = new RelationshipEntityCollectionInitializer($this->em, $relationshipEntity, $this->classMetadata);
                     $initializers[$relationshipEntity->getPropertyName()] = $initializer;
                 }
@@ -61,17 +61,6 @@ class ProxyFactory
         }
 
         return $object;
-    }
-
-    private function getInitializerFor(RelationshipMetadata $relationship)
-    {
-        if (!$relationship->isCollection()) {
-            $initializer = new SingleNodeInitializer($this->em, $relationship, $this->classMetadata);
-        } elseif ($relationship->isCollection()) {
-            $initializer = new NodeCollectionInitializer($this->em, $relationship, $this->classMetadata);
-        }
-
-        return $initializer;
     }
 
     protected function createProxy()
@@ -170,6 +159,17 @@ METHOD;
     protected function getProxyClass()
     {
         return 'neo4j_ogm_proxy_'.str_replace('\\', '_', $this->classMetadata->getClassName());
+    }
+
+    private function getInitializerFor(RelationshipMetadata $relationship)
+    {
+        if (!$relationship->isCollection()) {
+            $initializer = new SingleNodeInitializer($this->em, $relationship, $this->classMetadata);
+        } elseif ($relationship->isCollection()) {
+            $initializer = new NodeCollectionInitializer($this->em, $relationship, $this->classMetadata);
+        }
+
+        return $initializer;
     }
 
     private function newProxyInstance($proxyClass)

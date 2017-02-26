@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the GraphAware Neo4j PHP OGM package.
+ *
+ * (c) GraphAware Ltd <info@graphaware.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\Base\User;
@@ -30,7 +39,7 @@ class RepositoryFinderFilterTest extends IntegrationTestCase
 
         for ($i = 1; $i <= 1000; ++$i) {
             $u = $users[$i - 1];
-            $this->assertEquals($i, $u->getLogin());
+            $this->assertSame($i, $u->getLogin());
         }
     }
 
@@ -60,7 +69,7 @@ class RepositoryFinderFilterTest extends IntegrationTestCase
 
         $users = $this->em->getRepository(User::class)->findBy([], ['login' => 'ASC'], 10, 100);
         $this->assertCount(10, $users);
-        $this->assertEquals(101, $users[0]->getLogin());
-        $this->assertEquals(110, $users[9]->getLogin());
+        $this->assertSame(101, $users[0]->getLogin());
+        $this->assertSame(110, $users[9]->getLogin());
     }
 }
