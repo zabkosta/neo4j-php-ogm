@@ -1,3 +1,13 @@
+1.0.0-beta22
+
+- Refactored Proxisation of Relationships ([#67](https://github.com/graphaware/neo4j-php-ogm/pull/67))
+- BC: criteria arguments are passed as array (#67)
+- BC: `@Lazy` relationship has been removed
+- BC: Direct property access do not trigger lazy loading (`$this->actors` should become `$this->getActors()`
+- Fix circular reference : ([#68](https://github.com/graphaware/neo4j-php-ogm/pull/68))
+- Fix proxy generation for php7 return types ([#76](https://github.com/graphaware/neo4j-php-ogm/pull/76))
+- Added the possibility to add order by via the findBy method ([#84](https://github.com/graphaware/neo4j-php-ogm/pull/84))
+
 1.0.0-beta19
 
 - ClassMetadata implements DoctrineCommon ClassMetadata
