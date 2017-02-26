@@ -30,7 +30,6 @@ class Person
 
     /**
      * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", targetEntity="Movie", collection=true, mappedBy="actors")
-     * @OGM\Lazy()
      * @OGM\OrderBy(property="name", order="DESC")
      * @var Movie[]
      */
