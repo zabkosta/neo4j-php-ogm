@@ -17,7 +17,6 @@ use Doctrine\Common\EventManager;
 use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\Client\ClientInterface;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
-use GraphAware\Neo4j\OGM\Hydration\ObjectHydration;
 use GraphAware\Neo4j\OGM\Hydrator\EntityHydrator;
 use GraphAware\Neo4j\OGM\Metadata\Factory\Annotation\AnnotationGraphEntityMetadataFactory;
 use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactoryInterface;
@@ -28,6 +27,7 @@ use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Persisters\BasicEntityPersister;
 use GraphAware\Neo4j\OGM\Proxy\ProxyFactory;
 use GraphAware\Neo4j\OGM\Repository\BaseRepository;
+use GraphAware\Neo4j\OGM\Hydration\ObjectHydration;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 class EntityManager implements EntityManagerInterface
@@ -87,24 +87,6 @@ class EntityManager implements EntityManagerInterface
      */
     protected $entityPersisters = [];
 
-    public function __construct(
-        ClientInterface $databaseDriver,
-        $cacheDirectory = null,
-        EventManager $eventManager = null,
-        GraphEntityMetadataFactoryInterface $metadataFactory = null
-    ) {
-        $this->eventManager = $eventManager ?: new EventManager();
-        $this->uow = new UnitOfWork($this);
-        $this->databaseDriver = $databaseDriver;
-
-        if ($metadataFactory === null) {
-            $reader = new FileCacheReader(new AnnotationReader(), $cacheDirectory, $debug = true);
-            $metadataFactory = new AnnotationGraphEntityMetadataFactory($reader);
-        }
-        $this->metadataFactory = $metadataFactory;
-        $this->proxyDirectory = $cacheDirectory;
-    }
-
     /**
      * @param string            $host
      * @param string|null       $cacheDir
@@ -134,6 +116,24 @@ class EntityManager implements EntityManagerInterface
             ->build();
 
         return new self($client);
+    }
+
+    public function __construct(
+        ClientInterface $databaseDriver,
+        $cacheDirectory = null,
+        EventManager $eventManager = null,
+        GraphEntityMetadataFactoryInterface $metadataFactory = null
+    ) {
+        $this->eventManager = $eventManager ?: new EventManager();
+        $this->uow = new UnitOfWork($this);
+        $this->databaseDriver = $databaseDriver;
+
+        if ($metadataFactory === null) {
+            $reader = new FileCacheReader(new AnnotationReader(), $cacheDirectory, $debug = true);
+            $metadataFactory = new AnnotationGraphEntityMetadataFactory($reader);
+        }
+        $this->metadataFactory = $metadataFactory;
+        $this->proxyDirectory = $cacheDirectory;
     }
 
     /**

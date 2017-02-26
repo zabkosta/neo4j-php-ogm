@@ -31,6 +31,17 @@ class ResultMapping
     /**
      * @param string $rootEntity
      * @param string $rootIdentifier
+     *
+     * @return \GraphAware\Neo4j\OGM\Query\ResultMapping
+     */
+    public static function build($rootEntity, $rootIdentifier)
+    {
+        return new self($rootEntity, $rootIdentifier);
+    }
+
+    /**
+     * @param string $rootEntity
+     * @param string $rootIdentifier
      */
     public function __construct($rootEntity, $rootIdentifier)
     {
@@ -42,20 +53,8 @@ class ResultMapping
     }
 
     /**
-     * @param string $rootEntity
-     * @param string $rootIdentifier
-     *
-     * @return \GraphAware\Neo4j\OGM\Query\ResultMapping
-     */
-    public static function build($rootEntity, $rootIdentifier)
-    {
-        return new self($rootEntity, $rootIdentifier);
-    }
-
-    /**
      * @param string $identifier
      * @param string $class
-     * @param mixed  $property
      *
      * @return $this
      */

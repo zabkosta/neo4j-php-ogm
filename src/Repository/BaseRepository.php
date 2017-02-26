@@ -28,6 +28,9 @@ class BaseRepository
 
     const ORDER_DESC = 'DESC';
 
+    private static $PAGINATION_FIRST_RESULT_KEY = 'first';
+    private static $PAGINATION_LIMIT_RESULTS_KEY = 'max';
+
     /**
      * @var \GraphAware\Neo4j\OGM\Metadata\ClassMetadata
      */
@@ -54,9 +57,6 @@ class BaseRepository
     protected $loadedReflClasses = [];
 
     protected $lazyLoadingFactory;
-
-    private static $PAGINATION_FIRST_RESULT_KEY = 'first';
-    private static $PAGINATION_LIMIT_RESULTS_KEY = 'max';
 
     /**
      * @param \GraphAware\Neo4j\OGM\Metadata\ClassMetadata $classMetadata
