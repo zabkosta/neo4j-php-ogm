@@ -9,8 +9,7 @@ use GraphAware\Neo4j\OGM\Tests\Util\NodeProxy;
 use GraphAware\Neo4j\OGM\Proxy\EntityProxy;
 
 /**
- * Class ProxyFactoryTest
- * @package GraphAware\Neo4j\OGM\Tests\Proxy
+ * Class ProxyFactoryTest.
  *
  * @group proxy-factory
  */
@@ -63,7 +62,6 @@ class ProxyFactoryTest extends IntegrationTestCase
         $this->assertInstanceOf(User::class, $o);
         $this->assertInstanceOf(EntityProxy::class, $o);
     }
-
 
     private function createSmallGraph()
     {

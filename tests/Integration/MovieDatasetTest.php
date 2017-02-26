@@ -6,8 +6,7 @@ use GraphAware\Neo4j\OGM\Tests\Integration\Models\MoviesDemo\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\MoviesDemo\Person;
 
 /**
- * Class MovieDatasetTest
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class MovieDatasetTest.
  *
  * @group movies-it
  */

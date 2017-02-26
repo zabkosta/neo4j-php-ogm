@@ -7,8 +7,7 @@ use GraphAware\Neo4j\OGM\Tests\Integration\Models\OneToManyRE\House;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\OneToManyRE\Owner;
 
 /**
- * Class OneToManyRelationshipEntityTest
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class OneToManyRelationshipEntityTest.
  *
  * @group rel-entity-o2m
  */

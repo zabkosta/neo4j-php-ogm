@@ -8,7 +8,6 @@ use GraphAware\Neo4j\OGM\Annotations as OGM;
  * @OGM\Node(label="Init")
  *
  * Class Init
- * @package GraphAware\Neo4j\OGM\Tests\Proxy
  */
 class Init
 {
@@ -76,5 +75,4 @@ class Init
     {
         return $this->profile;
     }
-
 }

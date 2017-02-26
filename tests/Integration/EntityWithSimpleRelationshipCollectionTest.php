@@ -4,11 +4,9 @@ namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\RelationshipCollection\Building;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\RelationshipCollection\Floor;
-use Symfony\Component\Yaml\Tests\B;
 
 /**
- * Class EntityWithSimpleRelationshipCollectionTest
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class EntityWithSimpleRelationshipCollectionTest.
  *
  * @group entity-simple-relcollection
  */
