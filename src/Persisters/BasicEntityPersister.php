@@ -160,6 +160,16 @@ class BasicEntityPersister
             }
         }
 
+        if (is_int($offset) && is_int($limit)) {
+            $cypher .= PHP_EOL;
+            $cypher .= sprintf('SKIP %d', $offset);
+        }
+
+        if (is_int($limit)) {
+            $cypher .= PHP_EOL;
+            $cypher .= sprintf('LIMIT %d', $limit);
+        }
+
         return Statement::create($cypher, $params);
     }
 
