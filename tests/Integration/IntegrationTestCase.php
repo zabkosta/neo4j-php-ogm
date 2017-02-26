@@ -81,6 +81,16 @@ class IntegrationTestCase extends \PHPUnit_Framework_TestCase
         return $this->client->run('MATCH '.$q.' RETURN *');
     }
 
+    protected function assertNodesCount($count)
+    {
+        $this->assertEquals($count, $this->client->run('MATCH (n) RETURN count(n) AS c')->firstRecord()->get('c'));
+    }
+
+    protected function assertRelationshipsCount($count)
+    {
+        $this->assertEquals($count, $this->client->run('MATCH (n)-[r]->(o) RETURN count(r) AS c')->firstRecord()->get('c'));
+    }
+
     protected function playMovies()
     {
         $this->clearDb();
