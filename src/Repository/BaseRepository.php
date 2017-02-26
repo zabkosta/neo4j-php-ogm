@@ -11,26 +11,12 @@
 
 namespace GraphAware\Neo4j\OGM\Repository;
 
+use Doctrine\Common\Persistence\ObjectRepository;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
-use ProxyManager\Configuration;
-use ProxyManager\Factory\LazyLoadingGhostFactory;
-use ProxyManager\FileLocator\FileLocator;
-use ProxyManager\GeneratorStrategy\FileWriterGeneratorStrategy;
 
-class BaseRepository
+class BaseRepository implements ObjectRepository
 {
-    const FILTER_LIMIT = 'limit';
-
-    const FILTER_ORDER = 'order';
-
-    const ORDER_ASC = 'ASC';
-
-    const ORDER_DESC = 'DESC';
-
-    private static $PAGINATION_FIRST_RESULT_KEY = 'first';
-    private static $PAGINATION_LIMIT_RESULTS_KEY = 'max';
-
     /**
      * @var \GraphAware\Neo4j\OGM\Metadata\ClassMetadata
      */
@@ -68,14 +54,18 @@ class BaseRepository
         $this->classMetadata = $classMetadata;
         $this->entityManager = $manager;
         $this->className = $className;
-        $config = new Configuration();
-        $dir = sys_get_temp_dir();
-        $config->setGeneratorStrategy(new FileWriterGeneratorStrategy(new FileLocator($dir)));
-        $config->setProxiesTargetDir($dir);
-        spl_autoload_register($config->getProxyAutoloader());
-
-        $this->lazyLoadingFactory = new LazyLoadingGhostFactory($config);
     }
+
+    /**
+     * @param int          $id
+     *
+     * @return null|object
+     */
+    public function find($id)
+    {
+        return $this->findOneById($id);
+    }
+
 
     /**
      * @return array
@@ -125,17 +115,12 @@ class BaseRepository
         return $persister->loadOneById($id);
     }
 
-    /**
-     * @param $className
-     *
-     * @return \ReflectionClass
-     */
-    private function getReflectionClass($className)
-    {
-        if (!array_key_exists($className, $this->loadedReflClasses)) {
-            $this->loadedReflClasses[$className] = new \ReflectionClass($className);
-        }
 
-        return $this->loadedReflClasses[$className];
+    /**
+     * @return string
+     */
+    public function getClassName()
+    {
+        return $this->className;
     }
 }
