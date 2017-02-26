@@ -29,7 +29,7 @@ class OrderByFinderTest extends IntegrationTestCase
         $this->assertCount(1000, $users);
 
         for ($i = 1; $i <= 1000; ++$i) {
-            $u = $users[$i-1];
+            $u = $users[$i - 1];
             $this->assertEquals($i, $u->getLogin());
         }
     }

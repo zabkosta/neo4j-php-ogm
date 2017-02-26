@@ -288,6 +288,6 @@ final class RelationshipMetadata
      */
     public function getAlias()
     {
-        return strtolower(str_replace("\\", "_", $this->className).'_'.$this->propertyName);
+        return strtolower(str_replace('\\', '_', $this->className).'_'.$this->propertyName);
     }
 }
