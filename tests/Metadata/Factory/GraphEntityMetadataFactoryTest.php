@@ -19,8 +19,7 @@ use GraphAware\Neo4j\OGM\Tests\Metadata\Factory\Fixtures\Person;
 use GraphAware\Neo4j\OGM\Tests\Metadata\Factory\Fixtures\Rating;
 
 /**
- * Class GraphEntityMetadataFactoryTest
- * @package GraphAware\Neo4j\OGM\Tests\Metadata\Factory
+ * Class GraphEntityMetadataFactoryTest.
  *
  * @group xml-mapping
  */
@@ -41,7 +40,7 @@ class GraphEntityMetadataFactoryTest extends \PHPUnit_Framework_TestCase
         $this->annotationMetadataFactory = new AnnotationGraphEntityMetadataFactory(new AnnotationReader());
         $this->xmlMetadataFactory = new XmlGraphEntityMetadataFactory(
             new SymfonyFileLocator(
-                [ __DIR__ . '/Fixtures/graphaware' => 'GraphAware\\Neo4j\\OGM\\Tests\\Metadata\\Factory\\Fixtures' ],
+                [__DIR__.'/Fixtures/graphaware' => 'GraphAware\\Neo4j\\OGM\\Tests\\Metadata\\Factory\\Fixtures'],
                 '.ogm.xml'
             ),
             new NodeEntityMetadataFactory(
@@ -73,14 +72,14 @@ class GraphEntityMetadataFactoryTest extends \PHPUnit_Framework_TestCase
 
     public function testMappingValidAccordingToSchema()
     {
-        $filesIterator = new \GlobIterator(__DIR__ . '/Fixtures/graphaware/*.ogm.xml');
+        $filesIterator = new \GlobIterator(__DIR__.'/Fixtures/graphaware/*.ogm.xml');
 
         $previous = libxml_use_internal_errors(true);
         foreach ($filesIterator as $fileInfo) {
             $dom = new \DOMDocument();
             $dom->loadXML(file_get_contents($fileInfo->getPathName()));
 
-            if(!$dom->schemaValidate(getenv('basedir') . 'graphaware-mapping.xsd')) {
+            if (!$dom->schemaValidate(getenv('basedir').'graphaware-mapping.xsd')) {
                 $this->fail(sprintf(
                     'Mapping file "%s" is not valid according to schema: %s',
                     $fileInfo->getFileName(),

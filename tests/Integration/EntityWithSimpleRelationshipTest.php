@@ -8,8 +8,7 @@ use GraphAware\Neo4j\OGM\Tests\Integration\Models\EntityWithSimpleRelationship\M
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\EntityWithSimpleRelationship\Person;
 
 /**
- * Class EntityWithSimpleRelationshipTest
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class EntityWithSimpleRelationshipTest.
  *
  * @group entity-simple-rel
  */

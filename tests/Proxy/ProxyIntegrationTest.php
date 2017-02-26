@@ -8,8 +8,7 @@ use GraphAware\Neo4j\OGM\Tests\Proxy\Model\Group;
 use GraphAware\Neo4j\OGM\Tests\Proxy\Model\User;
 
 /**
- * Class ProxyIntegrationTest
- * @package GraphAware\Neo4j\OGM\Tests\Proxy
+ * Class ProxyIntegrationTest.
  *
  * @group proxy-it
  */

@@ -6,8 +6,7 @@ use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
 
 /**
- * Class TestUser
- * @package GraphAware\Neo4j\OGM\Tests\Integration\Community\Issue21
+ * Class TestUser.
  *
  * @OGM\Node(label="TestUser")
  */

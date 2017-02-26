@@ -7,8 +7,7 @@ use GraphAware\Neo4j\OGM\Tests\Integration\Models\SimpleRelationshipEntity\Hotel
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\SimpleRelationshipEntity\Rating;
 
 /**
- * Class SimpleRelationshipEntityTest
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class SimpleRelationshipEntityTest.
  *
  * @group simple-re
  */

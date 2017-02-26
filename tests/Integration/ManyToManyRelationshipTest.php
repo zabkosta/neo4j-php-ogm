@@ -6,8 +6,7 @@ use GraphAware\Neo4j\OGM\Tests\Integration\Models\ManyToManyRelationship\Group;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\ManyToManyRelationship\User;
 
 /**
- * Class ManyToManyRelationshipTest
- * @package GraphAware\Neo4j\OGM\Tests\Integration
+ * Class ManyToManyRelationshipTest.
  *
  * @group many-to-many-rel
  */
@@ -47,7 +46,7 @@ class ManyToManyRelationshipTest extends IntegrationTestCase
         $entities = $this->em->getRepository(User::class)->findAll();
         /** @var User $jim */
         $jim = $entities[0];
-        $this->assertEquals("jim", $jim->getLogin());
+        $this->assertEquals('jim', $jim->getLogin());
         $this->assertCount(2, $jim->getGroups());
         $oid = spl_object_hash($jim);
         foreach ($jim->getGroups() as $group) {
@@ -114,5 +113,4 @@ class ManyToManyRelationshipTest extends IntegrationTestCase
         $result = $this->client->run('MATCH (n:User {login:"jim"})-[:IN_GROUP]->(g:Group {name:"newname"}) RETURN n, g');
         $this->assertEquals(2, $result->size());
     }
-
 }

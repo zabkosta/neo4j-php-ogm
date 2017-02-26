@@ -5,8 +5,7 @@ namespace GraphAware\Neo4j\OGM\Tests\Integration\Models\OneToManyRE;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
- * Class Acquisition
- * @package GraphAware\Neo4j\OGM\Tests\Integration\Models\OneToManyRE
+ * Class Acquisition.
  *
  * @OGM\RelationshipEntity(type="ACQUIRED")
  */
@@ -42,9 +41,10 @@ class Acquisition
 
     /**
      * Acquisition constructor.
+     *
      * @param Owner $owner
      * @param House $house
-     * @param int $year
+     * @param int   $year
      */
     public function __construct(Owner $owner, House $house, $year)
     {
@@ -52,7 +52,6 @@ class Acquisition
         $this->house = $house;
         $this->year = $year;
     }
-
 
     /**
      * @return int

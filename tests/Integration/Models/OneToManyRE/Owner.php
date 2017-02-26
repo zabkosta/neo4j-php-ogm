@@ -6,8 +6,7 @@ use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
 
 /**
- * Class Owner
- * @package GraphAware\Neo4j\OGM\Tests\Integration\Models\OneToManyRE
+ * Class Owner.
  *
  * @OGM\Node(label="Owner")
  */

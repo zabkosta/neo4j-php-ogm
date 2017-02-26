@@ -6,8 +6,7 @@ use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
 
 /**
- * Class Movie
- * @package GraphAware\Neo4j\OGM\Tests\Integration\Models\MoviesDemo
+ * Class Movie.
  *
  * @OGM\Node(label="Movie")
  */
@@ -101,8 +100,6 @@ class Movie
     {
         $this->title = $title;
     }
-
-
 
     /**
      * @param string $tagline

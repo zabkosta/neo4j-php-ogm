@@ -6,15 +6,13 @@ use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
 
 /**
- * Class Item
- * @package GraphAware\Neo4j\OGM\Tests\Integration\Models\OrderedRelationships
+ * Class Item.
  *
  * @OGM\Node(label="Item")
  */
 class Item
 {
     /**
-     *
      * @OGM\GraphId()
      *
      * @var int

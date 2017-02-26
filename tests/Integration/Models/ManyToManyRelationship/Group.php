@@ -6,8 +6,7 @@ use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
 
 /**
- * Class Group
- * @package GraphAware\Neo4j\OGM\Tests\Integration\Models\ManyToManyRelationship
+ * Class Group.
  *
  * @OGM\Node(label="Group")
  */
@@ -21,7 +20,6 @@ class Group
     protected $id;
 
     /**
-     *
      * @OGM\Property()
      *
      * @var string
