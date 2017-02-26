@@ -3,6 +3,7 @@
 ## Object Graph Mapper for Neo4j in PHP
 
 [![Build Status](https://travis-ci.org/graphaware/neo4j-php-ogm.svg?branch=master)](https://travis-ci.org/graphaware/neo4j-php-ogm)
+[![StyleCI](https://styleci.io/repos/52896142/shield?branch=master)](https://styleci.io/repos/52896142)
 [![Latest Stable Version](https://poser.pugx.org/graphaware/neo4j-php-ogm/v/stable.svg)](https://packagist.org/packages/graphaware/neo4j-php-ogm)
 [![Latest Unstable Version](https://poser.pugx.org/graphaware/neo4j-php-ogm/v/unstable)](https://packagist.org/packages/graphaware/neo4j-php-ogm)
 [![Total Downloads](https://poser.pugx.org/graphaware/neo4j-php-ogm/downloads)](https://packagist.org/packages/graphaware/neo4j-php-ogm)
