@@ -57,7 +57,7 @@ class BaseRepository implements ObjectRepository
     }
 
     /**
-     * @param int          $id
+     * @param int $id
      *
      * @return null|object
      */
