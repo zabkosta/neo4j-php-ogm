@@ -16,7 +16,6 @@ use GraphAware\Neo4j\OGM\Annotations\OrderBy;
 use GraphAware\Neo4j\OGM\Annotations\Relationship;
 use GraphAware\Neo4j\OGM\Common\Collection;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
-use GraphAware\Neo4j\OGM\Lazy\LazyRelationshipCollection;
 use GraphAware\Neo4j\OGM\Util\ClassUtils;
 
 final class RelationshipMetadata
@@ -213,7 +212,7 @@ final class RelationshipMetadata
 
             return;
         }
-        if ($this->getValue($object) instanceof ArrayCollection || $this->getValue($object) instanceof LazyRelationshipCollection) {
+        if ($this->getValue($object) instanceof ArrayCollection) {
             return;
         }
         $this->setValue($object, new Collection());

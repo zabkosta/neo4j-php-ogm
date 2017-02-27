@@ -553,7 +553,6 @@ class UnitOfWork
 
     public function scheduleDelete($entity)
     {
-        $oid = spl_object_hash($entity);
         if ($this->isNodeEntity($entity)) {
             $this->nodesScheduledForDelete[] = $entity;
 

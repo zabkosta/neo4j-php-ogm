@@ -34,10 +34,10 @@ class EntityPropertyMetadata
     private $isAccessible;
 
     /**
-     * EntityPropertyMetadata constructor.
      *
-     * @param string                                                    $propertyName
-     * @param \GraphAware\Neo4j\OGM\Metadata\PropertyAnnotationMetadata $propertyAnnotationMetadata
+     * @param string                     $propertyName
+     * @param \ReflectionProperty        $reflectionProperty
+     * @param PropertyAnnotationMetadata $propertyAnnotationMetadata
      */
     public function __construct($propertyName, \ReflectionProperty $reflectionProperty, PropertyAnnotationMetadata $propertyAnnotationMetadata)
     {

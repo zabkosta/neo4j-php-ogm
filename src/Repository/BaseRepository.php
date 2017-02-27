@@ -36,9 +36,10 @@ class BaseRepository implements ObjectRepository, Selectable
     protected $className;
 
     /**
-     * @param \GraphAware\Neo4j\OGM\Metadata\ClassMetadata $classMetadata
-     * @param \GraphAware\Neo4j\OGM\EntityManager          $manager
-     * @param string                                       $className
+     *
+     * @param NodeEntityMetadata $classMetadata
+     * @param EntityManager      $manager
+     * @param string             $className
      */
     public function __construct(NodeEntityMetadata $classMetadata, EntityManager $manager, $className)
     {
