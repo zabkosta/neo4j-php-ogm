@@ -349,6 +349,7 @@ class EntityManager implements EntityManagerInterface
     public function getAnnotationDriver()
     {
         // TODO: Implement getAnnotationDriver() method.
+        trigger_error('The EntityManager::getAnnotationDriver is not yet implemented', E_USER_ERROR);
     }
 
     /**
