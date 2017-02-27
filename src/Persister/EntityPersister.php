@@ -118,7 +118,10 @@ class EntityPersister
         $query = sprintf('MATCH (n:%s) WHERE id(n) = {%s} RETURN n', $label, 'id');
         $result = $this->entityManager->getDatabaseDriver()->run($query, ['id' => $id]);
 
-        $this->entityManager->getHydrator()->hydrateResultSet($result->getRecord());
+        if ($result->size() > 0) {
+            $node = $result->firstRecord()->nodeValue('n');
+            $this->entityManager->getEntityHydrator($this->className)->refresh($node, $entity);
+        }
     }
 
     public function getDeleteQuery($object)

@@ -226,6 +226,17 @@ class EntityHydrator
         return $entity;
     }
 
+    /**
+     * @param Node $node
+     * @param object $entity
+     */
+    public function refresh(Node $node, $entity)
+    {
+        $this->hydrateProperties($entity, $node);
+        $this->hydrateLabels($entity, $node);
+
+    }
+
     protected function hydrateProperties($object, Node $node)
     {
         foreach ($node->keys() as $key) {
