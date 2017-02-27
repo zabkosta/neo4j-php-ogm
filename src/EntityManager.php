@@ -17,7 +17,6 @@ use Doctrine\Common\EventManager;
 use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\Client\ClientInterface;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
-use GraphAware\Neo4j\OGM\Hydration\ObjectHydration;
 use GraphAware\Neo4j\OGM\Hydrator\EntityHydrator;
 use GraphAware\Neo4j\OGM\Metadata\Factory\Annotation\AnnotationGraphEntityMetadataFactory;
 use GraphAware\Neo4j\OGM\Metadata\Factory\GraphEntityMetadataFactoryInterface;
@@ -120,20 +119,6 @@ class EntityManager implements EntityManagerInterface
             ->build();
 
         return new self($client, $cache, $eventManager);
-    }
-
-    /**
-     * @param string $host
-     *
-     * @return \GraphAware\Neo4j\OGM\EntityManager
-     */
-    public static function buildWithHost($host)
-    {
-        $client = ClientBuilder::create()
-            ->addConnection('default', $host)
-            ->build();
-
-        return new self($client);
     }
 
     /**
@@ -248,11 +233,6 @@ class EntityManager implements EntityManagerInterface
     public function getUnitOfWork()
     {
         return $this->uow;
-    }
-
-    public function getHydrator($className, $mode = '')
-    {
-        return new ObjectHydration($className, $this);
     }
 
     /**

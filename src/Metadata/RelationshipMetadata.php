@@ -244,23 +244,6 @@ final class RelationshipMetadata
         }
     }
 
-    public function addToCollectionAdvanced($object, $value, NodeEntityMetadata $valueMetadata)
-    {
-        if (!$this->isCollection()) {
-            throw new \LogicException(sprintf('The property mapping of this relationship is not of collection type in "%s"', $this->className));
-        }
-
-        /** @var Collection $coll */
-        $coll = $this->getValue($object);
-        foreach ($coll->toArray() as $el) {
-            $eid = $valueMetadata->getIdValue($valueMetadata);
-            $vid = $valueMetadata->getIdValue($valueMetadata);
-            if ($eid !== $vid) {
-                $coll->add($value);
-            }
-        }
-    }
-
     /**
      * @param $object
      *
