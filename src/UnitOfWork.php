@@ -864,27 +864,6 @@ class UnitOfWork
         return $classMetadata->getPropertyValuesArray($entity);
     }
 
-    private function checkRelationshipEntityDeletions($entity)
-    {
-        $oid = spl_object_hash($entity);
-        $id = $this->entityManager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($entity);
-        foreach ($this->managedRelationshipEntitiesMap[$oid] as $pov => $field) {
-            $e = $this->entitiesById[$this->entityIds[$pov]];
-            $entityMetadata = $this->entityManager->getClassMetadataFor(get_class($e));
-            $values = $entityMetadata->getRelationship($field)->getValue($e);
-            $shouldBeDeleted = true;
-            foreach ($values as $v) {
-                $id2 = $this->entityManager->getRelationshipEntityMetadata(get_class($entity))->getIdValue($v);
-                if ($id2 === $id) {
-                    $shouldBeDeleted = false;
-                }
-            }
-            if ($shouldBeDeleted) {
-                $this->relEntitesScheduledForDelete[] = $entity;
-            }
-        }
-    }
-
     private function removeManaged($entity)
     {
         $oid = spl_object_hash($entity);
