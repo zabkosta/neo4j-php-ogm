@@ -1,7 +1,12 @@
-1.0.0-RC1 (Not Released yet)
+1.0.0-RC2 (not released yet)
+
+
+
+1.0.0-RC1 (2017-02-27)
 
 - BaseRepository now implements Doctrine's `ObjectRepository` and `Selectable` ([#87](https://github.com/graphaware/neo4j-php-ogm/pull/87))
 - Added `SKIP` and `LIMIT` to via the `findBy` Repository method ([#86](https://github.com/graphaware/neo4j-php-ogm/pull/86))
+- BC : `EntityManager::buildWithHost()` has been removed ([#98](https://github.com/graphaware/neo4j-php-ogm/pull/98))
 
 1.0.0-beta22
 
