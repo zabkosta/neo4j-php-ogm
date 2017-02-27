@@ -34,8 +34,6 @@ class ClassUtils
             throw new \RuntimeException(sprintf('The class "%s" could not be found', $class));
         }
 
-        $reflClass = new \ReflectionClass($class);
-
         return $class;
     }
 }
