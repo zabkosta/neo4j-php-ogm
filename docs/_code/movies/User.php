@@ -79,6 +79,6 @@ class User
      */
     public function rateMovie(Movie $movie, $score)
     {
-        $this->ratings->add(new Rating($this, $movie, $score));
+        $this->getRatings()->add(new Rating($this, $movie, $score));
     }
 }

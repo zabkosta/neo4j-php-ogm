@@ -103,7 +103,7 @@ class Person
      */
     public function addMovie(Movie $movie)
     {
-        if (!$this->movies->contains($movie)) {
+        if (!$this->getMovies()->contains($movie)) {
             $this->movies->add($movie);
         }
     }
@@ -113,7 +113,7 @@ class Person
      */
     public function removeMovie(Movie $movie)
     {
-        if ($this->movies->contains($movie)) {
+        if ($this->getMovies()->contains($movie)) {
             $this->movies->removeElement($movie);
         }
     }

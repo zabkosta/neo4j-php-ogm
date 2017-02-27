@@ -126,7 +126,7 @@ class Movie
      */
     public function addActor(Person $person)
     {
-        if (!$this->actors->contains($person)) {
+        if (!$this->getActors()->contains($person)) {
             $this->actors->add($person);
         }
     }
@@ -136,7 +136,7 @@ class Movie
      */
     public function removeActor(Person $person)
     {
-        if ($this->actors->contains($person)) {
+        if ($this->getActors()->contains($person)) {
             $this->actors->removeElement($person);
         }
     }
