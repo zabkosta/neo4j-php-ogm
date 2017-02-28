@@ -40,6 +40,14 @@ class User
     protected $profile;
 
     /**
+     * @var Profile
+     * An entity without getter
+     *
+     * @OGM\Relationship(type="HAS_PUBLIC_PROFILE", direction="OUTGOING", targetEntity="Profile")
+     */
+    protected $publicProfile;
+
+    /**
      * User constructor.
      *
      * @param string $login
