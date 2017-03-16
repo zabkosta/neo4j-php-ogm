@@ -146,6 +146,7 @@ class BasicEntityPersister
             $clause = $filter_cursor === 0 ? 'WHERE' : 'AND';
             $cypher .= sprintf('%s %s.%s = {%s} ', $clause, $identifier, $key, $key);
             $params[$key] = $criterion;
+            ++$filter_cursor;
         }
 
         $cypher .= 'RETURN '.$identifier;
