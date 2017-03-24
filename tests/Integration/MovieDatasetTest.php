@@ -178,4 +178,19 @@ class MovieDatasetTest extends IntegrationTestCase
         $this->em->flush();
         $this->assertGraphNotExist('(p:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m:Movie {title:"Cast Away"})');
     }
+
+    public function testRelationshipReferenceCanBeRemovedAfterNewCreation()
+    {
+        /** @var Person $person */
+        $person = $this->em->getRepository(Person::class)->findOneBy(['name' => 'Tom Hanks']);
+        $movie = new Movie('Super Movie');
+        $person->getMovies()->add($movie);
+        $movie->getActors()->add($person);
+        $this->em->flush();
+        $this->assertGraphExist('(p:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m:Movie {title:"Super Movie"})');
+        $person->getMovies()->removeElement($movie);
+        $movie->getActors()->removeElement($person);
+        $this->em->flush();
+        $this->assertGraphNotExist('(p:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m:Movie {title:"Super Movie"})');
+    }
 }
