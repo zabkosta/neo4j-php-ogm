@@ -3,9 +3,13 @@
 The Neo4j PHP OGM documentation is comprised of a getting start guide, tutorials and cookbooks that cover the different
 parts of the Object Graph Mapper.
 
-## Getting started
+## Overview
 
-* **What is Graph Database** : [Introduction to Neo4j](intro/what_is_neo4j.md)
+* **What is Graph Database** : [Introduction to Neo4j](overview/what_is_neo4j.md)
+
+* **What is an OGM**: [Introduction to the Neo4j-PHP-OGM](overview/what_is_an_ogm.md)
+
+## Getting started
 
 * **Tutorial**: [Getting started with the OGM](01-intro.md)
 
