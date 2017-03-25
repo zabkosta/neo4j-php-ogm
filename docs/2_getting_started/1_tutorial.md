@@ -256,6 +256,8 @@ The next step is to create a script for fetching all persons :
 ```php
 <?php
 
+// list-persons.php
+
 require_once 'bootstrap.php';
 
 $personsRepository = $entityManager->getRepository(\Demo\Person::class);
@@ -277,3 +279,62 @@ $/demo-ogm-movies> php list-persons.php
 - Joel Silver
 ...
 ```
+
+You can also create a script to find a person by its name :
+
+```php
+<?php
+
+// show-person.php
+
+require_once 'bootstrap.php';
+
+$name = $argv[1];
+
+$personsRepository = $entityManager->getRepository(\Demo\Person::class);
+$person = $personsRepository->findOneBy(['name' => $name]);
+
+if ($person === null) {
+    echo 'Person not found' . PHP_EOL;
+    exit(1);
+}
+
+echo sprintf("- %s is born in %d\n", $person->getName(), $person->getBorn());
+```
+
+```bash
+$/demo-ogm-movies> php show-person.php "Al Pacino"
+- Al Pacino is born in 1940
+```
+
+Updating a person's born year demonstrates the functionality of the UnitOfWork pattern. We only need to find the person 
+entity and all its changed properties will be reflected onto the database :
+
+```php
+<?php
+
+require_once 'bootstrap.php';
+
+$name = $argv[1];
+$newBornYear = (int) $argv[2];
+
+$personsRepository = $entityManager->getRepository(\Demo\Person::class);
+/** @var \Demo\Person $person */
+$person = $personsRepository->findOneBy(['name' => $name]);
+
+if ($person === null) {
+    echo 'Person not found' . PHP_EOL;
+    exit(1);
+}
+
+$person->setBorn($newBornYear);
+$entityManager->flush();
+```
+
+Using the cypher-shell we can validate that the changes were persisted : 
+```bash
+neo4j> MATCH (n:Person {name:"Al Pacino"}) RETURN n;
+n
+(:Person {born: 1942, name: "Al Pacino"})
+```
+
