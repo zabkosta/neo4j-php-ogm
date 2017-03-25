@@ -5,9 +5,9 @@ parts of the Object Graph Mapper.
 
 ## Overview
 
-* **What is Graph Database** : [Introduction to Neo4j](overview/what_is_neo4j.md)
+* **What is Graph Database** : [Introduction to Neo4j](1_overview/what_is_neo4j.md)
 
-* **What is an OGM**: [Introduction to the Neo4j-PHP-OGM](overview/what_is_an_ogm.md)
+* **What is an OGM**: [Introduction to the Neo4j-PHP-OGM](1_overview/what_is_an_ogm.md)
 
 ## Getting started
 
