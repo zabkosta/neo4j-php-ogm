@@ -15,7 +15,7 @@ This getting started guide is based on the Neo4j movies example you can load by 
 Require the OGM via composer :
 
 ```bash
-composer require graphaware/neo4j-php-ogm:^1.0@beta
+composer require graphaware/neo4j-php-ogm:@rc
 ```
 
 ### Domain identification
