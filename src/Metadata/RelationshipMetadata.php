@@ -230,6 +230,10 @@ final class RelationshipMetadata
 
         /** @var Collection $coll */
         $coll = $this->getValue($object);
+        if (null === $coll) {
+            $coll = new Collection();
+            $this->setValue($object, $coll);
+        }
         $toAdd = true;
         $oid2 = spl_object_hash($value);
         foreach ($coll->toArray() as $el) {
