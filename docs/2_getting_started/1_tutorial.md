@@ -92,6 +92,8 @@ Let's start with the first entity, the Person. Create a `src/Person.php` class t
 ```php
 <?php
 
+namespace Demo;
+
 // src/Person.php
 
 class Person
@@ -154,5 +156,75 @@ class Person
 ```
 
 
+The next step is to apply the metadata that will define how your entities, their properties and references should be mapped to the
+database. Metadata for entities is defined using docblock annotations :
 
+```php
+<?php
+
+namespace Demo;
+
+use GraphAware\Neo4j\OGM\Annotations as OGM;
+
+// src/Person.php
+
+/**
+ *
+ * @OGM\Node(label="Person")
+ */
+class Person
+{
+    /**
+     * @var int
+     * 
+     * @OGM\GraphId()
+     */
+    protected $id;
+
+    /**
+     * @var string
+     * 
+     * @OGM\Property(type="string")
+     */
+    protected $name;
+
+    /**
+     * @var int
+     * 
+     * @OGM\Property(type="int")
+     */
+    protected $born;
+    
+    // other code
+```
+
+The top-level `Node` definition tag defines that the entity represents a node in the database. The `Person#name` and `Person#born`
+are defined as `property` attributes. The `id` represents the internal neo4j identifier.
+
+Now let's create a new script that will create a new person into our database :
+
+```php
+<?php
+
+use Demo\Person;
+
+require_once 'bootstrap.php';
+
+$newPersonName = $argv[1];
+$newPersonBorn = $argv[2];
+
+$person = new Person();
+$person->setName($newPersonName);
+$person->setBorn($newPersonBorn);
+
+$entityManager->persist($person);
+$entityManager->flush();
+
+echo sprintf('Created Person with ID "%d"', $person->getId());
+```
+
+```bash
+$/demo-ogm-movies> php create-person.php Michael 40
+Created Person with ID "2004"
+```
 
