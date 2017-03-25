@@ -2,6 +2,7 @@
 
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
+use GraphAware\Neo4j\OGM\Exception\Result\NonUniqueResultException;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\Tree\Level;
 
 /**
@@ -17,7 +18,7 @@ class QueryTest extends IntegrationTestCase
         $this->createTree();
     }
 
-    public function testCreateQueryReturnsEntities()
+    public function testCreateQueryReturnsPlainCollectionEntities()
     {
         $q = $this->em->createQuery('MATCH (n:Level) WHERE n.code = {code} MATCH (n)-[:PARENT_LEVEL*0..]->(level) RETURN level');
         $q->addEntityMapping('level', Level::class);
@@ -29,6 +30,49 @@ class QueryTest extends IntegrationTestCase
         $this->assertEquals('root', $levels[3]->getCode());
         $this->assertCount(2, $levels[3]->getChildren());
     }
+
+    public function testCreateQueryReturnsMixedResultWhenMoreThanOneAlias()
+    {
+        $q = $this->em->createQuery('MATCH (root:Level {code:"root"}) MATCH (n:Level {code:"l3a"})-[:PARENT_LEVEL*0..]->(level)
+        RETURN root, level');
+        $q->addEntityMapping('root', Level::class);
+        $q->addEntityMapping('level', Level::class);
+
+        $result = $q->getResult();
+
+        $this->assertArrayHasKey('root', $result);
+        $this->assertArrayHasKey('level', $result);
+
+        $this->assertCount(4, $result['level']);
+        $this->assertCount(4, $result['root']);
+    }
+
+    public function testNonUniqueExceptionIsThrown()
+    {
+        $q = $this->em->createQuery('MATCH (level:Level) RETURN level');
+        $q->addEntityMapping('level', Level::class);
+
+        $this->setExpectedException(NonUniqueResultException::class);
+        $result = $q->getOneResult();
+    }
+
+    public function testTooMuchResultsThrowException()
+    {
+        $q = $this->em->createQuery('MATCH (level:Level) RETURN level');
+        $q->addEntityMapping('level', Level::class);
+
+        $this->setExpectedException(NonUniqueResultException::class);
+        $result = $q->getOneOrNullResult();
+    }
+
+    public function testNullIsReturnedWithGetOneOrNull()
+    {
+        $q = $this->em->createQuery('MATCH (level:Level) WHERE level.code = "NONE" RETURN level');
+        $q->addEntityMapping('level', Level::class);
+
+        $this->assertNull($q->getOneOrNullResult());
+    }
+    
 
     private function createTree()
     {

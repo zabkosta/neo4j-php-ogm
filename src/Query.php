@@ -12,6 +12,8 @@
 namespace GraphAware\Neo4j\OGM;
 
 use GraphAware\Common\Result\Result;
+use GraphAware\Neo4j\OGM\Exception\Result\NonUniqueResultException;
+use GraphAware\Neo4j\OGM\Exception\Result\NoResultException;
 
 class Query
 {
@@ -75,8 +77,18 @@ class Query
      */
     public function getOneOrNullResult()
     {
-        /** @todo add getOneOrNullResult feature */
-        return null;
+        $result = $this->execute();
+
+        if (empty($result)) {
+            return null;
+        }
+
+        if (count($result) > 1) {
+            throw new NonUniqueResultException(sprintf('Expected 1 or null result, got %d', count($result)));
+        }
+
+
+        return $result[0];
     }
 
     /**
@@ -84,8 +96,17 @@ class Query
      */
     public function getOneResult()
     {
-        /** @todo add getOneResult feature */
-        return null;
+        $result = $this->execute();
+
+        if (count($result) > 1) {
+            throw new NonUniqueResultException(sprintf('Expected 1 or null result, got %d', count($result)));
+        }
+
+        if (empty($result)) {
+            throw new NoResultException();
+        }
+
+        return $result[0];
     }
 
     /**
@@ -99,14 +120,13 @@ class Query
 
         $result = $this->em->getDatabaseDriver()->run($stmt, $parameters);
         if ($result->size() === 0) {
-            return null;
+            return [];
         }
 
         $cqlResult = $this->handleResult($result);
 
         if (count($this->mappings) === 1) {
             $k = array_keys($this->mappings)[0];
-            var_dump($k);
             return $cqlResult[$k];
         }
 
