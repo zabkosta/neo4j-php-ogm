@@ -1,6 +1,7 @@
 1.0.0-RC2 (not released yet)
 
 - Fixed a regression where entities in a hydrated collection were re-added when loading the inverse side ([#108](https://github.com/graphaware/neo4j-php-ogm/pull/108))
+- Fixed a case where the hydrator could replace a collection by a single entity during the inversed hydration ([#109](https://github.com/graphaware/neo4j-php-ogm/pull/109))
 
 1.0.0-RC1 (2017-02-27)
 
