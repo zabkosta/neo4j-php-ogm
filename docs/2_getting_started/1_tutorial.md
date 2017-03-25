@@ -211,7 +211,7 @@ use Demo\Person;
 require_once 'bootstrap.php';
 
 $newPersonName = $argv[1];
-$newPersonBorn = $argv[2];
+$newPersonBorn = (int) $argv[2];
 
 $person = new Person();
 $person->setName($newPersonName);
@@ -228,3 +228,52 @@ $/demo-ogm-movies> php create-person.php Michael 40
 Created Person with ID "2004"
 ```
 
+If you inspect the database by using the Neo4j browser or the `cypher-shell`, you can see that a Person node has been created :
+
+```bash
+$/neo4j-ogm-demo> ./bin/cypher-shell
+Connected to Neo4j 3.1.0 at bolt://localhost:7687.
+Type :help for a list of available commands or :exit to exit the shell.
+Note that Cypher queries must end with a semicolon.
+neo4j> MATCH (n:Person) WHERE id(n) = 2004 RETURN n;
+n
+(:Person {born: 40, name: "Michael"})
+neo4j>
+```
+
+What is happening under the hood ? Using the `Person` object seems pretty familiar to nowaydays OOP developments. The interesting part 
+is the usage of the EntityManager.
+
+To notify the EntityManager that a new entity should be persisted in the database, you have to call the `persist()` method and then call `flush()` 
+in order to initiate the transaction against the database.
+
+As in Doctrine, the Neo4j PHP OGM follows the UnitOfWork pattern which detects all entities that were fetched and have changed during the lifetime 
+of the request.
+
+
+The next step is to create a script for fetching all persons :
+
+```php
+<?php
+
+require_once 'bootstrap.php';
+
+$personsRepository = $entityManager->getRepository(\Demo\Person::class);
+$persons = $personsRepository->findAll();
+
+foreach ($persons as $person) {
+    echo sprintf("- %s\n", $person->getName());
+}
+```
+
+```bash
+$/demo-ogm-movies> php list-persons.php
+- Keanu Reeves
+- Carrie-Anne Moss
+- Laurence Fishburne
+- Hugo Weaving
+- Lilly Wachowski
+- Lana Wachowski
+- Joel Silver
+...
+```
