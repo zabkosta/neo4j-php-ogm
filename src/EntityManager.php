@@ -364,4 +364,19 @@ class EntityManager implements EntityManagerInterface
     {
         return new BasicEntityPersister($className, $this->getClassMetadataFor($className), $this);
     }
+
+    /**
+     * @param string $cql
+     * @return Query
+     */
+    public function createQuery($cql = '')
+    {
+        $query = new Query($this);
+
+        if (!empty($cql)) {
+            $query->setCQL($cql);
+        }
+
+        return $query;
+    }
 }

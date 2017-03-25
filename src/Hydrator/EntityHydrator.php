@@ -187,7 +187,7 @@ class EntityHydrator
         }
     }
 
-    protected function hydrateRecord(Record $record, array &$result, $collection = false)
+    public function hydrateRecord(Record $record, array &$result, $collection = false)
     {
         $cqlAliasMap = $this->getAliases();
 
@@ -214,7 +214,7 @@ class EntityHydrator
         }
     }
 
-    protected function hydrateNode(Node $node, $class = null)
+    public function hydrateNode(Node $node, $class = null)
     {
         $cm = null === $class ? $this->_classMetadata->getClassName() : $class;
         $id = $node->identity();
