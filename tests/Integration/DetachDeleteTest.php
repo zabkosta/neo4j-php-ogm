@@ -36,6 +36,7 @@ class DetachDeleteTest extends IntegrationTestCase
             $exceptionMessage = $e->getMessage();
         }
         $this->assertNotNull($exceptionMessage);
+        echo $exceptionMessage . PHP_EOL;
         $this->assertTrue(strpos($exceptionMessage, 'Cannot delete node') !== false);
     }
 

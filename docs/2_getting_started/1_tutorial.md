@@ -658,6 +658,41 @@ Not keeping a consistent object graph may lead to undesired effects that are not
 
 ### Removing entities
 
+In order to remove entities, you can make use of the `EntityManager::remove` method. This method takes the entity's object instance to remove
+as argument.
+
+```bash
+$/demo-ogm-movies> php create-person.php Jim 45
+Created Person with ID "65"⏎
+```
+
+```php
+<?php
+
+// remove-actor.php
+
+require_once 'bootstrap.php';
+
+$name = $argv[1];
+
+$personsRepo = $entityManager->getRepository(\Demo\Person::class);
+$person = $personsRepo->findOneBy(['name' => $name]);
+
+if (null === $person) {
+    echo sprintf('The person with name "%s" was not found', $name);
+    exit(1);
+}
+
+$entityManager->remove($person);
+$entityManager->flush();
+```
+
+```bash
+$/demo-ogm-movies> php remove-actor.php "Jim"
+$/demo-ogm-movies> php show-person.php "Jim"
+Person not found
+```
+
 ### Removing relationships
 
 Removing relationship references is done by removing the object reference on both entities. Keeping a consistent object graph play a 
