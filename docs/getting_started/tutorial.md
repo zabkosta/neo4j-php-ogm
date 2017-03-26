@@ -6,6 +6,8 @@ This quick start guide covers the basics of working with the PHP OGM. At the end
 * Map PHP objects to Neo4j nodes and relationships
 * Use the `EntityManager` to save, load and delete objects in the database
 
+The code for this tutorial is available on this repository : https://github.com/graphaware/neo4j-php-ogm-tutorial
+
 ### What is the Neo4j PHP OGM ?
 
 The Neo4j PHP OGM is an **object graph mapper** for PHP5.6+ that provides persistence for PHP objects.
