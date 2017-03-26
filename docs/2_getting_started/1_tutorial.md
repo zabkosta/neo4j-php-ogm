@@ -695,7 +695,81 @@ Person not found
 
 I have chosen to create a new person first delibaretely. As you might have noticed this person is new and don't have any 
 relationships. If you would try to do this with Tom Hanks for example the database would abort the transaction because nodes 
-with 
+with still relationships cannot be deleted, you would need to delete them in the same transaction.
+
+The OGM offers 2 possible solutions for this use case :
+
+* You can force delete the node by passing `true` as the second argument on the `EntityManager::remove()` method
+* You can de-reference all relationships and those will be deleted during the `flush()` lifecycle
+
+If you choose the first possibility, be careful to keep consistency in your object graph.
+ 
+The updated `remove-actor.php` script covers both solutions by chosing the deletion mode on the command line :
+
+```php
+<?php
+
+// remove-actor.php
+
+require_once 'bootstrap.php';
+
+$name = $argv[1];
+$mode = isset($argv[2]) && 'force' === $argv[2] ? 'force' : 'soft';
+
+echo sprintf("Deletion mode is %s\n", strtoupper($mode));
+
+$personsRepo = $entityManager->getRepository(\Demo\Person::class);
+/** @var \Demo\Person $person */
+$person = $personsRepo->findOneBy(['name' => $name]);
+
+if (null === $person) {
+    echo sprintf('The person with name "%s" was not found', $name);
+    exit(1);
+}
+
+if ('force' === $mode) {
+    $entityManager->remove($person, true);
+} elseif ('soft' == $mode) {
+    foreach ($person->getMovies() as $movie) {
+        $movie->getActors()->removeElement($person);
+    }
+    $person->getMovies()->clear();
+    $entityManager->remove($person);
+}
+
+$entityManager->flush();
+```
+
+```bash
+$/demo-ogm-movies> php show-person.php "Al Pacino"
+- Al Pacino is born in 1940
+  The movies in which he acted are :
+    -- The Devil's Advocate
+$/demo-ogm-movies> php remove-actor.php "Al Pacino"
+Deletion mode is SOFT
+$/demo-ogm-movies> php show-person.php "Al Pacino"
+Person not found
+```
+
+```bash
+$/demo-ogm-movies> php show-person.php "Tom Cruise"
+- Tom Cruise is born in 1962
+  The movies in which he acted are :
+    -- Jerry Maguire
+    -- Top Gun
+    -- A Few Good Men
+$/demo-ogm-movies> php remove-actor.php "Tom cruise"
+Deletion mode is FORCE
+$/demo-ogm-movies> php show-person.php "Tom Cruise"
+Person not found
+```
+
+Using the force method will result in the following Cypher query : 
+
+```
+MATCH (n) WHERE id(n) = {id} DETACH DELETE n
+```
+
 
 ### Removing relationships
 
