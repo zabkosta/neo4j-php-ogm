@@ -64,6 +64,8 @@ class UnitOfWork
 
     private $nodesScheduledForDelete = [];
 
+    private $nodesSchduledForDetachDelete = [];
+
     private $relationshipsScheduledForCreated = [];
 
     private $relationshipsScheduledForDelete = [];
@@ -241,7 +243,6 @@ class UnitOfWork
             );
             $relStack->push($statement->text(), $statement->parameters());
         }
-//        var_dump($relStack);
 
         if (count($this->relationshipsScheduledForDelete) > 0) {
             foreach ($this->relationshipsScheduledForDelete as $toDelete) {
@@ -249,6 +250,7 @@ class UnitOfWork
                 $relStack->push($statement->text(), $statement->parameters());
             }
         }
+
         $tx->runStack($relStack);
         $reStack = Stack::create('rel_entity_create');
         foreach ($this->relEntitiesScheduledForCreate as $oid => $info) {
@@ -299,7 +301,11 @@ class UnitOfWork
         $deleteNodeStack = Stack::create('delete_nodes');
         $possiblyDeleted = [];
         foreach ($this->nodesScheduledForDelete as $entity) {
-            $statement = $this->getPersister(get_class($entity))->getDeleteQuery($entity);
+            if (in_array(spl_object_hash($entity), $this->nodesSchduledForDetachDelete)) {
+                $statement = $this->getPersister(get_class($entity))->getDetachDeleteQuery($entity);
+            } else {
+                $statement = $this->getPersister(get_class($entity))->getDeleteQuery($entity);
+            }
             $deleteNodeStack->push($statement->text(), $statement->parameters());
             $possiblyDeleted[] = spl_object_hash($entity);
         }
@@ -330,6 +336,7 @@ class UnitOfWork
         $this->nodesScheduledForCreate
             = $this->nodesScheduledForUpdate
             = $this->nodesScheduledForDelete
+            = $this->nodesSchduledForDetachDelete
             = $this->relationshipsScheduledForCreated
             = $this->relationshipsScheduledForDelete
             = $this->relEntitesScheduledForUpdate
@@ -559,10 +566,13 @@ class UnitOfWork
         return isset($this->entityIds[spl_object_hash($entity)]);
     }
 
-    public function scheduleDelete($entity)
+    public function scheduleDelete($entity, $detachRelationships = false)
     {
         if ($this->isNodeEntity($entity)) {
             $this->nodesScheduledForDelete[] = $entity;
+            if ($detachRelationships) {
+                $this->nodesSchduledForDetachDelete[] = spl_object_hash($entity);
+            }
 
             return;
         }
