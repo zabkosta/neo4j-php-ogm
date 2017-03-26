@@ -338,3 +338,83 @@ n
 (:Person {born: 1942, name: "Al Pacino"})
 ```
 
+### Continuing with the Movie entity
+
+So far so good, let's continue by adding the `Movie` entity. The steps are the same as for the example above :
+
+```php
+<?php
+
+// src/Movie.php
+
+namespace Demo;
+
+use GraphAware\Neo4j\OGM\Annotations as OGM;
+
+/**
+ *
+ * @OGM\Node(label="Movie")
+ */
+class Movie
+{
+    /**
+     * @var int
+     *
+     * @OGM\GraphId()
+     */
+    protected $id;
+
+    /**
+     * @var string
+     *
+     * @OGM\Property(type="string")
+     */
+    protected $title;
+
+    /**
+     * @var string
+     *
+     * @OGM\Property(type="string")
+     */
+    protected $tagline;
+
+    /**
+     * @var int
+     *
+     * @OGM\Property(type="int")
+     */
+    protected $released;
+    
+    // Getters and Setters
+```
+
+Let's create also the first script that will list some movies with a limit :
+
+```php
+<?php
+
+// list-movies.php
+
+require_once 'bootstrap.php';
+
+$limit = isset($argv[1]) ? (int) $argv[1] : 10;
+
+/** @var \Demo\Movie[] $movies */
+$movies = $entityManager->getRepository(\Demo\Movie::class)->findBy([], null, $limit);
+
+foreach ($movies as $movie) {
+    echo sprintf("- %s\n", $movie->getTitle());
+}
+```
+
+```bash
+$/demo-ogm-movies> php list-movies.php 7
+- The Matrix
+- The Matrix Reloaded
+- The Matrix Revolutions
+- The Devil's Advocate
+- A Few Good Men
+- Top Gun
+- Jerry Maguire
+```
+
