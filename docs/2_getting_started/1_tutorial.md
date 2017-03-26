@@ -581,3 +581,65 @@ $/demo-ogm-movies> php show-person.php "Tom Hanks"
     -- Sleepless in Seattle
     -- You've Got Mail
 ```
+
+Let's now go further and create a script that will create an `ACTED_IN` relationship between Emil Eifrem and The Matrix Revolutions movie :
+ 
+```bash
+$/demo-ogm-movies> php show-person.php "Emil Eifrem"
+- Emil Eifrem is born in 1978
+  The movies in which he acted are :
+    -- The Matrix
+```
+
+```php
+<?php
+
+// add-acted-in.php
+
+require_once 'bootstrap.php';
+
+$actor = $argv[1];
+$title = $argv[2];
+
+$personsRepo = $entityManager->getRepository(\Demo\Person::class);
+$moviesRepo = $entityManager->getRepository(\Demo\Movie::class);
+
+/** @var \Demo\Person $person */
+$person = $personsRepo->findOneBy(['name' => $actor]);
+
+/** @var \Demo\Movie $movie */
+$movie = $moviesRepo->findOneBy(['title' => $title]);
+
+$person->getMovies()->add($movie);
+$movie->getActors()->add($person);
+$entityManager->flush();
+```
+
+```bash
+$/demo-ogm-movies> php add-acted-in.php "Emil Eifrem" "The Matrix Revolutions"
+```
+
+```bash
+$/demo-ogm-movies> php show-person.php "Emil Eifrem"
+- Emil Eifrem is born in 1978
+  The movies in which he acted are :
+    -- The Matrix Revolutions
+    -- The Matrix
+```
+
+You can also check the result with the cypher-shell :
+
+```bash
+neo4j> MATCH (n:Person {name:"Emil Eifrem"})-[:ACTED_IN]->(movie) RETURN movie.title;
+movie.title
+"The Matrix Revolutions"
+"The Matrix"
+neo4j>
+```
+
+You can have noticed that we referenced the relationship on both the person and the movie. This is up to the 
+user to keep a consistent object graph, the OGM will never modify your objects except for loading initial state (for example retrieving the 
+object from the graph) or for setting the neo4j internal id when persisting new entities.
+
+You can think that there is no database and that if you don't set the person on the movie entity, you would have then an inconsitent graph
+as the movie instance will not be aware of the new person act.
