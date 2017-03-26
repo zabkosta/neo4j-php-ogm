@@ -693,6 +693,10 @@ $/demo-ogm-movies> php show-person.php "Jim"
 Person not found
 ```
 
+I have chosen to create a new person first delibaretely. As you might have noticed this person is new and don't have any 
+relationships. If you would try to do this with Tom Hanks for example the database would abort the transaction because nodes 
+with 
+
 ### Removing relationships
 
 Removing relationship references is done by removing the object reference on both entities. Keeping a consistent object graph play a 

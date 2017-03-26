@@ -37,7 +37,7 @@ class DetachDeleteTest extends IntegrationTestCase
         }
         $this->assertNotNull($exceptionMessage);
         echo $exceptionMessage . PHP_EOL;
-        $this->assertTrue(strpos($exceptionMessage, 'Cannot delete node') !== false);
+        $this->assertTrue(strpos($exceptionMessage, 'still has relationships') !== false);
     }
 
     public function testCanDetachDeleteWithEntityManagerRemove()
