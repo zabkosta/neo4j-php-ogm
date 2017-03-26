@@ -196,6 +196,7 @@ class Person
     protected $born;
     
     // other code
+}
 ```
 
 The top-level `Node` definition tag defines that the entity represents a node in the database. The `Person#name` and `Person#born`
@@ -386,6 +387,7 @@ class Movie
     protected $released;
     
     // Getters and Setters
+}
 ```
 
 Let's create also the first script that will list some movies with a limit :
@@ -412,9 +414,170 @@ $/demo-ogm-movies> php list-movies.php 7
 - The Matrix
 - The Matrix Reloaded
 - The Matrix Revolutions
-- The Devil's Advocate
+- The Devil\'s Advocate
 - A Few Good Men
 - Top Gun
 - Jerry Maguire
 ```
 
+### Adding relationships
+
+Our entities can now be persisted and retrieved from the database but we're missing the possibility to manage relationships
+between persons and movies and thus make use of all the potential of our graph.
+
+Let's add the `ACTED_IN` relationship between the person and the movie entities : 
+
+```php
+<?php
+
+namespace Demo;
+
+use GraphAware\Neo4j\OGM\Annotations as OGM;
+use GraphAware\Neo4j\OGM\Common\Collection;
+
+// src/Person.php
+
+/**
+ *
+ * @OGM\Node(label="Person")
+ */
+class Person
+{
+    /**
+     * @var int
+     *
+     * @OGM\GraphId()
+     */
+    protected $id;
+
+    // other code
+
+    /**
+     * @var Movie[]|Collection
+     * 
+     * @OGM\Relationship(type="ACTED_IN", direction="OUTGOING", collection=true, mappedBy="actors", targetEntity="Movie")
+     */
+    protected $movies;
+    
+    public function __construct()
+    {
+        $this->movies = new Collection();
+    }
+
+    // other code
+
+    /**
+     * @return Movie[]|Collection
+     */
+    public function getMovies()
+    {
+        return $this->movies;
+    }
+}
+```
+
+First, we add a property that will hold the `Movie`'s entities references and tag it with the `Relationship` annotation.
+
+The annotation has some attributes : 
+
+* **type** : defines the type of the relationship in the database
+* **direction**: defines the direction of the relationship from the person node
+* **collection**: `true` if the property will reference multiple relationships, false/omitted otherwise
+* **mappedBy**: defines the name of the property referencing the person entity on the movie entity
+* **targetEntity**: the classname of the referenced entity
+
+Let's do the same for the `Movie` entity : 
+
+```php
+<?php
+
+// src/Movie.php
+
+namespace Demo;
+
+use GraphAware\Neo4j\OGM\Annotations as OGM;
+use GraphAware\Neo4j\OGM\Common\Collection;
+
+/**
+ *
+ * @OGM\Node(label="Movie")
+ */
+class Movie
+{
+    /**
+     * @var int
+     *
+     * @OGM\GraphId()
+     */
+    protected $id;
+
+    // other code
+
+    /**
+     * @var Person[]|Collection
+     *
+     * @OGM\Relationship(type="ACTED_IN", direction="INCOMING", collection=true, mappedBy="movies", targetEntity="Person")
+     */
+    protected $actors;
+    
+    public function __construct()
+    {
+        $this->actors = new Collection();
+    }
+
+    // other code
+
+    /**
+     * @return Person[]|Collection
+     */
+    public function getActors()
+    {
+        return $this->actors;
+    }
+}
+```
+
+Now, we can modify our `show-person.php` script to list the movies in which the person acted : 
+
+```php
+<?php
+
+// show-person.php
+
+require_once 'bootstrap.php';
+
+$name = $argv[1];
+
+$personsRepository = $entityManager->getRepository(\Demo\Person::class);
+/** @var \Demo\Person $person */
+$person = $personsRepository->findOneBy(['name' => $name]);
+
+if ($person === null) {
+    echo 'Person not found' . PHP_EOL;
+    exit(1);
+}
+
+echo sprintf("- %s is born in %d\n", $person->getName(), $person->getBorn());
+echo "  The movies in which he acted are : \n";
+foreach ($person->getMovies() as $movie) {
+    echo sprintf("    -- %s\n", $movie->getTitle());
+}
+```
+
+```bash
+$/demo-ogm-movies> php show-person.php "Tom Hanks"
+- Tom Hanks is born in 1956
+  The movies in which he acted are :
+    -- Charlie Wilson's War
+    -- The Polar Express
+    -- A League of Their Own
+    -- Cast Away
+    -- Apollo 13
+    -- The Green Mile
+    -- Cloud Atlas
+    -- The Da Vinci Code
+    -- That Thing You Do
+    -- Joe Versus the Volcano
+    -- Sleepless in Seattle
+    -- You've Got Mail
+```
