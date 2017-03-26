@@ -607,12 +607,22 @@ $moviesRepo = $entityManager->getRepository(\Demo\Movie::class);
 /** @var \Demo\Person $person */
 $person = $personsRepo->findOneBy(['name' => $actor]);
 
+if (null === $person) {
+    echo sprintf('The person with name "%s" was not found', $actor);
+    exit(1);
+}
+
 /** @var \Demo\Movie $movie */
 $movie = $moviesRepo->findOneBy(['title' => $title]);
+
+if (null === $movie) {
+    echo sprintf('The movie with title "%s" was not found', $title);
+}
 
 $person->getMovies()->add($movie);
 $movie->getActors()->add($person);
 $entityManager->flush();
+
 ```
 
 ```bash
@@ -643,3 +653,69 @@ object from the graph) or for setting the neo4j internal id when persisting new 
 
 You can think that there is no database and that if you don't set the person on the movie entity, you would have then an inconsitent graph
 as the movie instance will not be aware of the new person act.
+
+Not keeping a consistent object graph may lead to undesired effects that are not handled and reported to the user in a graceful manner by the OGM.
+
+### Removing entities
+
+### Removing relationships
+
+Removing relationship references is done by removing the object reference on both entities. Keeping a consistent object graph play a 
+fundamental role here to not have relationships re-created automatically.
+
+```bash
+$/demo-ogm-movies> php show-person.php "Emil Eifrem"
+- Emil Eifrem is born in 1978
+  The movies in which he acted are :
+    -- The Matrix Revolutions
+    -- The Matrix
+```
+
+```php
+<?php
+
+// remove-actor-movie.php
+
+require_once 'bootstrap.php';
+
+$name = $argv[1];
+$title = $argv[2];
+
+$actorRepo = $entityManager->getRepository(\Demo\Person::class);
+
+/** @var \Demo\Person $actor */
+$actor = $actorRepo->findOneBy(['name' => $name]);
+
+if (null === $actor) {
+    echo sprintf('Person with name "%s" not found', $name);
+    exit(1);
+}
+
+$movie = null;
+
+foreach ($actor->getMovies() as $m) {
+    if ($m->getTitle() === $title) {
+        $movie = $m;
+    }
+}
+
+if (null === $movie) {
+    echo sprintf('No movie with title "%s" was found on the Person instance', $title);
+    exit(1);
+}
+
+$actor->getMovies()->removeElement($movie);
+$movie->getActors()->removeElement($actor);
+$entityManager->flush();
+```
+
+```bash
+$/demo-ogm-movies> php remove-actor-movie.php "Emil Eifrem" "The Matrix"
+```
+
+```bash
+$/demo-ogm-movies> php show-person.php "Emil Eifrem"
+- Emil Eifrem is born in 1978
+  The movies in which he acted are :
+    -- The Matrix Revolutions
+```
