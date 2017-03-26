@@ -584,6 +584,23 @@ $/demo-ogm-movies> php show-person.php "Tom Hanks"
     -- You've Got Mail
 ```
 
+#### Note on lazy proxies
+
+By default, entities having at least one relationship property will be proxied. A proxy object is an object that extend your 
+actual entity but is aware on how and when to fetch the related entities from the database.
+
+A current regression in 1.0.0-RC2 force the user to call the getters of the properties to initialize the related entities, otherwise 
+the property value will be null :
+
+```php
+$person = $entityManager->getRepository(\Demo\Person::class)->findOneBy(['name'=>'Tom Hanks']);
+
+// if movies property public
+$person->movies; // null
+
+$person->getMovies(); // collecion is initialized and loaded from db
+```
+
 Let's now go further and create a script that will create an `ACTED_IN` relationship between Emil Eifrem and The Matrix Revolutions movie :
  
 ```bash
@@ -834,3 +851,346 @@ $/demo-ogm-movies> php show-person.php "Emil Eifrem"
   The movies in which he acted are :
     -- The Matrix Revolutions
 ```
+
+### Relationship Entities
+
+In Neo4j, relationships are first class citizens. Meaning that they are as important as nodes themselves. The OGM has the same 
+philosophy in mind and supports another type of entity, called `Relationship Entity`.
+
+Let's see it by example and extend our domain model with the following requirements : 
+
+* A new `User` entity will represent user nodes
+* User will have a `RATED` outgoing relationship towards movies
+* `RATED` relationships have a `score` property being a float type
+
+Let's create the User entity : 
+
+```php
+<?php
+
+namespace Demo;
+
+use GraphAware\Neo4j\OGM\Common\Collection;
+use GraphAware\Neo4j\OGM\Annotations as OGM;
+
+/**
+ *
+ * @OGM\Node(label="User")
+ */
+class User
+{
+    /**
+     * @var int
+     *
+     * @OGM\GraphId()
+     */
+    protected $id;
+
+    /**
+     * @var string
+     *
+     * @OGM\Property(type="string")
+     */
+    protected $login;
+
+    /**
+     * @var Collection
+     *
+     * @OGM\Relationship(relationshipEntity="MovieRating", type="RATED", direction="OUTGOING", collection=true, mappedBy="user")
+     */
+    protected $ratings;
+
+    public function __construct()
+    {
+        $this->ratings = new Collection();
+    }
+    
+    // getters and setters
+}
+```
+
+A few notes : 
+
+* The `targetEntity` on the relationship annotation is replaced by `relationshipEntity`
+* The `mappedBy` attribute on the relationship annotation is refering the the property name that will be used on the relationship entity 
+and not on the movie entity
+
+Create now the `Relationship Entity` itself :
+
+```php
+<?php
+
+namespace Demo;
+
+use GraphAware\Neo4j\OGM\Annotations as OGM;
+
+/**
+ *
+ * @OGM\RelationshipEntity(type="RATED")
+ */
+class MovieRating
+{
+    /**
+     * @var int
+     *
+     * @OGM\GraphId()
+     */
+    protected $id;
+
+    /**
+     * @var User
+     *
+     * @OGM\StartNode(targetEntity="User")
+     */
+    protected $user;
+
+    /**
+     * @var Movie
+     *
+     * @OGM\EndNode(targetEntity="Movie")
+     */
+    protected $movie;
+
+    /**
+     * @var float
+     *
+     * @OGM\Property(type="float")
+     */
+    protected $score;
+
+    public function __construct(User $user, Movie $movie, $score)
+    {
+        $this->user = $user;
+        $this->movie = $movie;
+        $this->score = $score;
+    }
+    
+    // getters
+}
+```
+
+Some explanations about the new annotations : 
+
+* **RelationshipEntity** top-level annotation defines the entity as relationship object
+* **StartNode** / **EndNode** references the start and end entities for this relationship
+* The relationship object also has a **GraphId** annotation
+
+The last step is to add the ratings on the movie entity as well :
+
+```php
+<?php
+
+// src/Movie.php
+
+namespace Demo;
+
+use GraphAware\Neo4j\OGM\Annotations as OGM;
+use GraphAware\Neo4j\OGM\Common\Collection;
+
+/**
+ *
+ * @OGM\Node(label="Movie")
+ */
+class Movie
+{
+    /**
+     * @var int
+     *
+     * @OGM\GraphId()
+     */
+    protected $id;
+
+    // other code
+
+    /**
+     * @var MovieRating[]
+     * 
+     * @OGM\Relationship(relationshipEntity="MovieRating", type="RATED", direction="INCOMING", collection=true, mappedBy="movie")
+     */
+    protected $ratings;
+
+    public function __construct()
+    {
+        $this->actors = new Collection();
+        $this->ratings = new Collection();
+    }
+
+    /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    // other code
+
+    /**
+     * @return MovieRating[]
+     */
+    public function getRatings()
+    {
+        return $this->ratings;
+    }
+}
+```
+
+Now let's add a useful method on the User entity that will represent adding a new rating for a movie from this user :
+
+```php
+<?php
+
+namespace Demo;
+
+use GraphAware\Neo4j\OGM\Common\Collection;
+use GraphAware\Neo4j\OGM\Annotations as OGM;
+
+/**
+ *
+ * @OGM\Node(label="User")
+ */
+class User
+{
+    // other code
+
+    public function rateMovieWithScore(Movie $movie, $score)
+    {
+        $rating = new MovieRating($this, $movie, (float) $score);
+        $this->getRatings()->add($rating);
+        $movie->getRatings()->add($rating);
+    }
+}
+```
+
+It is good practice to have methods in your application business logic that ensure bi-directional reference as we do here in the method.
+
+Now, we will create some scripts that will perform the following action : 
+
+* create a user
+* show user and his ratings
+* add a rating from a user to a movie
+
+```php
+<?php
+
+// create-user.php
+
+require_once 'bootstrap.php';
+
+$login = $argv[1];
+
+$user = new \Demo\User();
+$user->setLogin($login);
+
+$entityManager->persist($user);
+$entityManager->flush();
+
+echo sprintf('Created user with login "%s"', $login);
+```
+
+```bash
+$/demo-ogm-movies> php create-user.php julius
+Created user with login "julius"⏎
+```
+
+```php
+<?php
+
+// show-user.php
+
+require_once 'bootstrap.php';
+
+$login = $argv[1];
+
+$userRepo = $entityManager->getRepository(\Demo\User::class);
+
+/** @var \Demo\User $user */
+$user = $userRepo->findOneBy(['login' => $login]);
+
+echo sprintf("User '%s' has the following ratings : \n", $user->getLogin());
+foreach ($user->getRatings() as $rating) {
+    echo sprintf(" - %s : %f\n", $rating->getMovie()->getTitle(), $rating->getScore());
+}
+```
+
+```bash
+$/demo-ogm-movies> php show-user.php julius
+User 'julius' has the following ratings :
+```
+
+```php
+<?php
+
+// rate-movie.php
+
+require_once 'bootstrap.php';
+
+$login = $argv[1];
+$title = $argv[2];
+$score = (float) $argv[3];
+
+/** @var \Demo\User $user */
+$user = $entityManager->getRepository(\Demo\User::class)->findOneBy(['login' => $login]);
+
+/** @var \Demo\Movie $movie */
+$movie = $entityManager->getRepository(\Demo\Movie::class)->findOneBy(['title' => $title]);
+
+$user->rateMovieWithScore($movie, $score);
+$entityManager->flush();
+```
+
+```bash
+$/demo-ogm-movies> php show-user.php julius
+User 'julius' has the following ratings :
+$/demo-ogm-movies> php rate-movie.php julius "The Matrix" 4.5
+$/demo-ogm-movies> php show-user.php julius
+User 'julius' has the following ratings :
+ - The Matrix : 4.500000
+```
+
+Don't forget that relationship entities are `Entity` objects and are treated like nodes, so for removing a rating, we would 
+perform the same operation as for nodes on the `EntityManager::remove()` method.
+
+```php
+<?php
+
+// remove-rating.php
+
+require_once 'bootstrap.php';
+
+$login = $argv[1];
+$title = $argv[2];
+
+/** @var \Demo\User $user */
+$user = $entityManager->getRepository(\Demo\User::class)->findOneBy(['login' => $login]);
+
+/** @var \Demo\Movie $movie */
+$movie = $entityManager->getRepository(\Demo\Movie::class)->findOneBy(['title' => $title]);
+
+$ratingToDelete = null;
+foreach ($user->getRatings() as $rating) {
+    if ($rating->getMovie() === $movie) {
+        $ratingToDelete = $rating;
+    }
+}
+
+if (null === $ratingToDelete) {
+    echo sprintf('Could not found rating from %s on %s', $user->getLogin(), $movie->getTitle());
+    exit(1);
+}
+
+$user->getRatings()->removeElement($ratingToDelete);
+$movie->getRatings()->removeElement($ratingToDelete);
+$entityManager->remove($ratingToDelete);
+$entityManager->flush();
+```
+
+```bash
+$/demo-ogm-movies> php show-user.php julius
+User 'julius' has the following ratings :
+ - The Matrix : 4.500000
+$/demo-ogm-movies> php remove-rating.php julius "The Matrix"
+$/demo-ogm-movies> php show-user.php julius
+User 'julius' has the following ratings :
+```
+
