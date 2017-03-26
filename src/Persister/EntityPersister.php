@@ -124,6 +124,14 @@ class EntityPersister
         }
     }
 
+    public function getDetachDeleteQuery($object)
+    {
+        $query = 'MATCH (n) WHERE id(n) = {id} DETACH DELETE n';
+        $id = $this->classMetadata->getIdValue($object);
+
+        return Statement::create($query, ['id' => $id]);
+    }
+
     public function getDeleteQuery($object)
     {
         $query = 'MATCH (n) WHERE id(n) = {id} DELETE n';

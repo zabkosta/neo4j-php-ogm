@@ -132,9 +132,9 @@ class EntityManager implements EntityManagerInterface
     /**
      * {@inheritdoc}
      */
-    public function remove($object)
+    public function remove($object, $detachRelationships = false)
     {
-        $this->uow->scheduleDelete($object);
+        $this->uow->scheduleDelete($object, $detachRelationships);
     }
 
     /**
