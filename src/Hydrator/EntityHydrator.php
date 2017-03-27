@@ -75,7 +75,6 @@ class EntityHydrator
 
         $mappedBy = $relationshipMetadata->getMappedByProperty();
         if ($mappedBy) {
-//            $targetMeta->getRelationship($mappedBy)->setValue($o, $sourceEntity);
             $targetRel = $targetMeta->getRelationship($mappedBy);
             if ($targetRel->isCollection()) {
                 $targetRel->addToCollection($o, $sourceEntity);
@@ -83,6 +82,7 @@ class EntityHydrator
                 $targetRel->setValue($o, $sourceEntity);
             }
         }
+        $this->_em->getUnitOfWork()->addManagedRelationshipReference($sourceEntity, $o, $relationshipMetadata->getPropertyName(), $relationshipMetadata);
     }
 
     public function hydrateSimpleRelationshipCollection($alias, Result $dbResult, $sourceEntity)
