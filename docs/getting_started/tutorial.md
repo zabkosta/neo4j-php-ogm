@@ -1194,3 +1194,44 @@ $/demo-ogm-movies> php show-user.php julius
 User 'julius' has the following ratings :
 ```
 
+### Caveats related to Proxy and Lazy loading
+
+As of 1.0.0-RC2, some caveats are to be taken into account for relationships proxies.
+
+>>> Lazy loading is triggered when the getter is called, meaning that before doing any operation on a relationship property, you would 
+ have to call its getter to be sure it is initialized.
+ 
+An example is the following : 
+
+```
+User -> OWNS -> CAR
+CAR <- OWNS <- USER
+```
+
+If you would load the User and the car separately with the EntityManager : 
+
+```php
+/** @var Car $bugatti */
+$bugatti = $this->em->getRepository(Car::class)->findOneBy(array('model' => 'Bugatti'));
+/** @var Person $mike */
+$mike = $this->em->getRepository(Person::class)->findOneBy(array('name' => 'Mike'));
+```
+
+Nor mike's car property or car's owner property would be lazy loaded. Meaning that :
+
+```php
+$mike->setCar(null);
+$bugatti->setOwner(null);
+$this->em->flush();
+```
+
+Would not result in deleting the relationship between the person and the car, however if you call the getter on one of both entities : 
+
+```php
+$mike->getCar();
+```
+
+Then it would be fine.
+
+NB: This is known caveat and it will be tackled in the next RC's. collections will use Doctrine's persistent collections and 
+single relationships will be automatically loaded with the entity itself.
