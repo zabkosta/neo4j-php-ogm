@@ -805,6 +805,11 @@ class UnitOfWork
         $this->originalEntityData[$oid] = $node->values();
         $classMetadata->setId($entity, $id);
         $this->addManaged($entity);
+        foreach ($this->entityManager->getClassMetadata($className)->getRelationships() as $relationship) {
+            if (!$relationship->isCollection()) {
+                $entity->__initializeProperty($relationship->getPropertyName());
+            }
+        }
 
         return $entity;
     }
