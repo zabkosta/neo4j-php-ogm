@@ -169,7 +169,7 @@ class EntityWithSimpleRelationshipTest extends IntegrationTestCase
         /** @var Person $mike */
         $mike = $this->em->getRepository(Person::class)->findOneBy(array('name' => 'Mike'));
         //echo "\n|" . print_r($mike->getName(),1 ) . "|\n";
-//        $this->assertEquals(spl_object_hash($bugatti->getOwner()), spl_object_hash($mike));
+        $this->assertEquals(spl_object_hash($bugatti->getOwner()), spl_object_hash($mike));
 
         $mike->setCar(null);
         $bugatti->setOwner(null);
