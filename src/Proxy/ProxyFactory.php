@@ -177,12 +177,14 @@ METHOD;
         static $prototypes = [];
 
         if (!array_key_exists($proxyClass, $prototypes)) {
-            $prototypes[$proxyClass] = @unserialize(sprintf('C:%d:"%s":0:{}', strlen($proxyClass), $proxyClass));
+            $rc = @unserialize(sprintf('C:%d:"%s":0:{}', strlen($proxyClass), $proxyClass));
 
-            if (false === $prototypes[$proxyClass]) {
+            if (false === $rc) {
                 $rc = new \ReflectionClass($proxyClass);
                 return $rc->newInstanceWithoutConstructor();
             }
+
+            $prototypes[$proxyClass] = $rc;
         }
 
         return clone $prototypes[$proxyClass];
