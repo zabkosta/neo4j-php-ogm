@@ -179,6 +179,9 @@ class MovieDatasetTest extends IntegrationTestCase
         $this->assertGraphNotExist('(p:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m:Movie {title:"Cast Away"})');
     }
 
+    /**
+     * @group moviefail
+     */
     public function testRelationshipReferenceCanBeRemovedAfterNewCreation()
     {
         /** @var Person $person */
@@ -190,7 +193,9 @@ class MovieDatasetTest extends IntegrationTestCase
         $this->assertGraphExist('(p:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m:Movie {title:"Super Movie"})');
         $person->getMovies()->removeElement($movie);
         $movie->getActors()->removeElement($person);
+        $start = microtime(true);
         $this->em->flush();
+        var_dump((microtime(true) - $start));
         $this->assertGraphNotExist('(p:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m:Movie {title:"Super Movie"})');
     }
 }

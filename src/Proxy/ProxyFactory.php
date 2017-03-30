@@ -38,10 +38,15 @@ class ProxyFactory
         $initializers = [];
         foreach ($this->classMetadata->getSimpleRelationships() as $relationship) {
             if (!in_array($relationship->getPropertyName(), $mappedByProperties, true)) {
-                $initializer = $this->getInitializerFor($relationship);
-                $initializers[$relationship->getPropertyName()] = $initializer;
+                if (!$relationship->isCollection()) {
+                    $initializer = $this->getInitializerFor($relationship);
+                    $initializers[$relationship->getPropertyName()] = $initializer;
+                } else {
+                    $mappedByProperties[] = $relationship->getPropertyName();
+                }
             }
         }
+
         foreach ($this->classMetadata->getRelationshipEntities() as $relationshipEntity) {
             if (!$relationshipEntity->isCollection()) {
                 if (!in_array($relationshipEntity->getPropertyName(), $mappedByProperties, true)) {
@@ -58,6 +63,14 @@ class ProxyFactory
         $object->__setInitializers($initializers);
         foreach ($mappedByProperties as $mappedByProperty) {
             $object->__setInitialized($mappedByProperty);
+        }
+
+        foreach ($this->classMetadata->getSimpleRelationships() as $relationship) {
+            if ($relationship->isCollection()) {
+                $initializer = $this->getInitializerFor($relationship);
+                $lc = new LazyCollection($initializer, $node, $object);
+                $relationship->setValue($object, $lc);
+            }
         }
 
         return $object;
