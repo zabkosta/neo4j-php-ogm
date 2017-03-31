@@ -189,13 +189,13 @@ class MovieDatasetTest extends IntegrationTestCase
         $movie = new Movie('Super Movie');
         $person->getMovies()->add($movie);
         $movie->getActors()->add($person);
+        $person->getMovies()->first();
         $this->em->flush();
         $this->assertGraphExist('(p:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m:Movie {title:"Super Movie"})');
         $person->getMovies()->removeElement($movie);
         $movie->getActors()->removeElement($person);
         $start = microtime(true);
         $this->em->flush();
-        var_dump((microtime(true) - $start));
         $this->assertGraphNotExist('(p:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m:Movie {title:"Super Movie"})');
     }
 }

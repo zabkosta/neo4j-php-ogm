@@ -18,6 +18,8 @@ class LazyCollection extends AbstractLazyCollection
 
     protected $initializing = false;
 
+    protected $added = [];
+
     public function __construct(SingleNodeInitializer $initializer, Node $node, $object)
     {
         $this->initalizer = $initializer;
@@ -36,4 +38,25 @@ class LazyCollection extends AbstractLazyCollection
         $this->initialized = true;
         $this->initializing = false;
     }
+
+    public function add($element)
+    {
+        $this->added[] = $element;
+        return parent::add($element);
+    }
+
+    public function getAddWithoutFetch()
+    {
+        return $this->added;
+    }
+
+    public function removeElement($element)
+    {
+        if (in_array($element, $this->added)) {
+            unset($this->added[array_search($element, $this->added)]);
+        }
+        return parent::removeElement($element);
+    }
+
+
 }
