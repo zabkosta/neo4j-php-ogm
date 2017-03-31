@@ -52,11 +52,14 @@ class ProxyFactory
                 if (!in_array($relationshipEntity->getPropertyName(), $mappedByProperties, true)) {
                     $initializer = new RelationshipEntityInitializer($this->em, $relationshipEntity, $this->classMetadata);
                     $initializers[$relationshipEntity->getPropertyName()] = $initializer;
+
                 }
             } else {
                 if (!in_array($relationshipEntity->getPropertyName(), $mappedByProperties, true)) {
-                    $initializer = new RelationshipEntityCollectionInitializer($this->em, $relationshipEntity, $this->classMetadata);
-                    $initializers[$relationshipEntity->getPropertyName()] = $initializer;
+//                    $initializer = new RelationshipEntityCollectionInitializer($this->em, $relationshipEntity, $this->classMetadata);
+//                    $initializers[$relationshipEntity->getPropertyName()] = $initializer;
+
+                    $mappedByProperties[] = $relationshipEntity->getPropertyName();
                 }
             }
         }
@@ -65,9 +68,11 @@ class ProxyFactory
             $object->__setInitialized($mappedByProperty);
         }
 
-        foreach ($this->classMetadata->getSimpleRelationships() as $relationship) {
+        foreach ($this->classMetadata->getRelationships() as $relationship) {
             if ($relationship->isCollection()) {
-                $initializer = $this->getInitializerFor($relationship);
+                $initializer = $relationship->isRelationshipEntity()
+                    ? new RelationshipEntityCollectionInitializer($this->em, $relationship, $this->classMetadata)
+                    : $this->getInitializerFor($relationship);
                 $lc = new LazyCollection($initializer, $node, $object, $relationship);
                 $relationship->setValue($object, $lc);
             }
