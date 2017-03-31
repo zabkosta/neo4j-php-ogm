@@ -68,7 +68,7 @@ class ProxyFactory
         foreach ($this->classMetadata->getSimpleRelationships() as $relationship) {
             if ($relationship->isCollection()) {
                 $initializer = $this->getInitializerFor($relationship);
-                $lc = new LazyCollection($initializer, $node, $object);
+                $lc = new LazyCollection($initializer, $node, $object, $relationship);
                 $relationship->setValue($object, $lc);
             }
         }
