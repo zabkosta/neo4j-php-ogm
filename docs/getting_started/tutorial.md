@@ -1198,7 +1198,7 @@ User 'julius' has the following ratings :
 
 As of 1.0.0-RC2, some caveats are to be taken into account for relationships proxies.
 
->>> Lazy loading is triggered when the getter is called, meaning that before doing any operation on a relationship property, you would 
+>>> Lazy loading for simple relationships (meaning non-collection) is triggered when the getter is called, meaning that before doing any operation on a relationship property, you would 
  have to call its getter to be sure it is initialized.
  
 An example is the following : 
@@ -1235,3 +1235,11 @@ Then it would be fine.
 
 NB: This is known caveat and it will be tackled in the next RC's. collections will use Doctrine's persistent collections and 
 single relationships will be automatically loaded with the entity itself.
+
+
+Collections of relationships are however better handled (since RC3) with a LazyCollection backed by a concrete collection. The behavior is 
+the following :
+
+* When an entity is loaded from the repository, its property being a relationship collection will be initialized with a `LazyCollection` object
+* Calls on the `count()` and `add()` methods will not trigger the loading of the entire relationships set, meaning you can add relationships without loading all of them
+* As of RC3, `contains()` still load the collection fully, this will be improved in the next RC's along with the addition of the `slice()` method for pagination
