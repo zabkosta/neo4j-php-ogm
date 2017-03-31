@@ -192,7 +192,6 @@ class MovieDatasetTest extends IntegrationTestCase
         $this->assertGraphExist('(p:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m:Movie {title:"Super Movie"})');
         $person->getMovies()->removeElement($movie);
         $movie->getActors()->removeElement($person);
-        $start = microtime(true);
         $this->em->flush();
         $this->assertGraphNotExist('(p:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m:Movie {title:"Super Movie"})');
     }
