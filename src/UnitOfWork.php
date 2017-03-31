@@ -25,6 +25,7 @@ use GraphAware\Neo4j\OGM\Persister\EntityPersister;
 use GraphAware\Neo4j\OGM\Persister\FlushOperationProcessor;
 use GraphAware\Neo4j\OGM\Persister\RelationshipEntityPersister;
 use GraphAware\Neo4j\OGM\Persister\RelationshipPersister;
+use GraphAware\Neo4j\OGM\Proxy\LazyCollection;
 
 /**
  * @author Christophe Willemsen <christophe@graphaware.com>
@@ -156,6 +157,9 @@ class UnitOfWork
 
         foreach ($associations as $association) {
             $value = $association->getValue($entity);
+            if ($value instanceof LazyCollection) {
+                $value = $value->getAddWithoutFetch();
+            }
             if (is_array($value) || $value instanceof ArrayCollection || $value instanceof Collection) {
                 foreach ($value as $assoc) {
                     $this->persistRelationship($entity, $assoc, $association, $visited);
@@ -241,7 +245,7 @@ class UnitOfWork
                 $relationship[1],
                 $this->entityIds[spl_object_hash($relationship[2])]
             );
-            $relStack->push($statement->text(), $statement->parameters());
+            $relStack->push($statement->text(), $statement->parameters(), $statement->getTag());
         }
 
         if (count($this->relationshipsScheduledForDelete) > 0) {
@@ -445,10 +449,6 @@ class UnitOfWork
                     $added = array_udiff($value, $currentValue, $compare);
                     $removed = array_udiff($currentValue, $value, $compare);
 
-                    foreach ($value as $t) {
-
-                    }
-
                     foreach ($added as $add) {
                         // Since this is the same property, it should be ok to re-use the first relationship
                         $this->scheduleRelationshipReferenceForCreate($entity, $add, $info[0]['rel']);
@@ -471,8 +471,6 @@ class UnitOfWork
             }
         }
 
-//        var_dump("relationships schduled for create : " . count($this->getRelationshipsScheduledForCreated()));
-//        var_dump("relationships scheduled for remove : " . count($this->getRelationshipsScheduledForDelete()));
     }
 
     public function scheduleRelationshipReferenceForCreate($entity, $target, RelationshipMetadata $relationship)

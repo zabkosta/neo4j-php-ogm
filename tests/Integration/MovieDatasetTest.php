@@ -11,6 +11,7 @@
 
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
+use GraphAware\Neo4j\OGM\Proxy\LazyCollection;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\MoviesDemo\Movie;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\MoviesDemo\Person;
 
@@ -186,11 +187,33 @@ class MovieDatasetTest extends IntegrationTestCase
         $movie = new Movie('Super Movie');
         $person->getMovies()->add($movie);
         $movie->getActors()->add($person);
+        $person->getMovies()->first();
         $this->em->flush();
         $this->assertGraphExist('(p:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m:Movie {title:"Super Movie"})');
         $person->getMovies()->removeElement($movie);
         $movie->getActors()->removeElement($person);
         $this->em->flush();
         $this->assertGraphNotExist('(p:Person {name:"Tom Hanks"})-[:ACTED_IN]->(m:Movie {title:"Super Movie"})');
+    }
+
+    public function testThatGetterShouldNotBeCalledToTriggerLazyLoading()
+    {
+        /** @var Person $person */
+        $person = $this->em->getRepository(Person::class)->findOneBy(['name' => 'Tom Hanks']);
+        $this->assertInstanceOf(LazyCollection::class, $person->movies);
+
+        /** @var Movie $movie */
+        $movie = $this->em->getRepository(Movie::class)->findOneBy(['title' => 'The Matrix']);
+        $this->assertInstanceOf(LazyCollection::class, $movie->actors);
+    }
+
+    public function testDegreeOfNodeIsReturned()
+    {
+        $degree = $this->client->run('MATCH (n:Person {name:"Tom Hanks"}) RETURN size((n)-[:ACTED_IN]->()) AS c')->firstRecord()->get('c');
+        /** @var Person $person */
+        $person = $this->em->getRepository(Person::class)->findOneBy(['name' => 'Tom Hanks']);
+        $this->assertEquals($degree, $person->getMovies()->count());
+
+
     }
 }

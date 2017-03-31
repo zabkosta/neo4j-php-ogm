@@ -54,7 +54,7 @@ class Movie
      *
      * @var Collection|Person[]
      */
-    protected $actors;
+    public $actors;
 
     public function __construct($title)
     {

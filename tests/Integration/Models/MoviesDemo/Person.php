@@ -47,7 +47,7 @@ class Person
      *
      * @var Movie[]|Collection
      */
-    protected $movies;
+    public $movies;
 
     public function __construct($name, $born = null)
     {
