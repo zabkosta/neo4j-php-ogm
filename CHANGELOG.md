@@ -2,7 +2,8 @@
 
 - Added a possibility to detach delete node entities via EntityManager::remove ([#111](https://github.com/graphaware/neo4j-php-ogm/pull/111))
 - Fixed an issue where a simple relationship would not be managed by the uow ([#112](https://github.com/graphaware/neo4j-php-ogm/pull/112))
-- Fix issue [#102](https://github.com/graphaware/neo4j-php-ogm/issues/102) Unserialize error - [#115](https://github.com/graphaware/neo4j-php-ogm/pull/115)
+- Fix issue [#102](https://github.com/graphaware/neo4j-php-ogm/issues/102) Unserialize error - ([#115](https://github.com/graphaware/neo4j-php-ogm/pull/115))
+- Implemented Lazy Collection for smart relationships collection lazy loading ([#116](https://github.com/graphaware/neo4j-php-ogm/pull/116))
 
 1.0.0-RC2 (2017-03-25)
 
