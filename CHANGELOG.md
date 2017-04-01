@@ -1,4 +1,4 @@
-1.0.0-RC3 (not released yet)
+1.0.0-RC3 (2017-04-01)
 
 - Added a possibility to detach delete node entities via EntityManager::remove ([#111](https://github.com/graphaware/neo4j-php-ogm/pull/111))
 - Fixed an issue where a simple relationship would not be managed by the uow ([#112](https://github.com/graphaware/neo4j-php-ogm/pull/112))
