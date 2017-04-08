@@ -10,6 +10,14 @@
 
 **Current Release** : `1.0.0-RC3`
 
+## Installation
+
+Install with composer
+
+```cli
+composer require graphaware/neo4j-php-ogm
+```
+
 ## Documentation
 
 The new documentation is available on [ReadTheDocs](http://neo4j-php-ogm.readthedocs.io/en/latest/).
