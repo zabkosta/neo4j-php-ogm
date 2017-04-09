@@ -1062,6 +1062,16 @@ class User
 }
 ```
 
+##### Note on the mappedBy property when using Relationship Entities
+
+You might notice that the mappedBy property do not reference the property on the Movie or User class, but rather the property 
+used on the Relationship Entity itself.
+
+![Relationship Entity Mapped By](_assets/_3_re_mapped.jpg)
+
+As of RC4, this is now mandatory to ensure a correct hydration of start and end nodes.
+
+
 It is good practice to have methods in your application business logic that ensure bi-directional reference as we do here in the method.
 
 Now, we will create some scripts that will perform the following action : 

@@ -43,11 +43,15 @@ class LazyCollection extends AbstractLazyCollection
         $this->initalizer->initialize($this->node, $this->object);
         $this->initialized = true;
         $this->initializing = false;
+        $this->collection = new Collection($this->added);
     }
 
-    public function add($element)
+    public function add($element, $andFetch = true)
     {
         $this->added[] = $element;
+        if (!$andFetch) {
+            return true;
+        }
         return parent::add($element);
     }
 

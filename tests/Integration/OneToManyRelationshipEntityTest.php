@@ -65,6 +65,9 @@ class OneToManyRelationshipEntityTest extends IntegrationTestCase
         $this->assertGraphExist('(o:Owner {name:"M"})-[r:ACQUIRED {year: 2008}]->(h:House {address: "B Street 2"})');
     }
 
+    /**
+     * @group breaking
+     */
     public function testOwnerCanBeLoadedWithMultipleAcquisitions()
     {
         $owner = new Owner('M');
