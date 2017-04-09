@@ -19,6 +19,7 @@ use GraphAware\Neo4j\OGM\Common\Collection;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
+use GraphAware\Neo4j\OGM\Util\DirectionUtils;
 
 class EntityHydrator
 {
@@ -136,6 +137,12 @@ class EntityHydrator
             // hydrate the target node :
             $targetEntity = $otherHydrator->hydrateNode($targetNode);
 
+            $startNodePropertyName = $relationshipEntityMetadata->getStartNodePropertyName();
+            $sourceEntityMappedName = $relationshipMetadata->getMappedByProperty();
+
+            $startNodeIsSourceEntity = $startNodePropertyName === $sourceEntityMappedName;
+
+
             // create the relationship entity
             $entity = $this->_em->getUnitOfWork()->createRelationshipEntity(
                 $relationship,
@@ -152,14 +159,14 @@ class EntityHydrator
             }
 
             // set the start node
-            if ($relationshipEntityMetadata->getStartNodeClass() === $this->_classMetadata->getClassName()) {
+            if ($startNodeIsSourceEntity) {
                 $relationshipEntityMetadata->setStartNodeProperty($entity, $sourceEntity);
             } else {
                 $relationshipEntityMetadata->setStartNodeProperty($entity, $targetEntity);
             }
 
             // set the end node
-            if ($relationshipEntityMetadata->getEndNodeClass() === $this->_classMetadata->getClassName()) {
+            if (!$startNodeIsSourceEntity) {
                 $relationshipEntityMetadata->setEndNodeProperty($entity, $sourceEntity);
             } else {
                 $relationshipEntityMetadata->setEndNodeProperty($entity, $targetEntity);
