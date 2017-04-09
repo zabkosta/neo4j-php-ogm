@@ -1,4 +1,6 @@
-1.0.0-RC4 (not released yet)
+1.0.0-RC5 (not released yet)
+
+1.0.0-RC4 (2017-04-09)
 
 - Fixed incorrect hydration when RE is used between same model ([#124](https://github.com/graphaware/neo4j-php-ogm/pull/124))
   (BC : The `mappedBy` is now mandatory when using RE)
