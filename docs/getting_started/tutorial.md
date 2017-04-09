@@ -1253,3 +1253,127 @@ the following :
 * When an entity is loaded from the repository, its property being a relationship collection will be initialized with a `LazyCollection` object
 * Calls on the `count()` and `add()` methods will not trigger the loading of the entire relationships set, meaning you can add relationships without loading all of them
 * As of RC3, `contains()` still load the collection fully, this will be improved in the next RC's along with the addition of the `slice()` method for pagination
+
+### Using custom Cypher queries
+
+While using direct methods on repositories is very handy, often you will need to create your own Cypher queries for advanced 
+use cases.
+
+Let's see how this all works by explaining it step by step :
+
+```php
+<?php
+
+// native-query.php
+
+require_once 'bootstrap.php';
+
+$em = $entityManager;
+
+$query = $em->createQuery('MATCH (n:Person) WHERE n.name CONTAINS {part} RETURN n LIMIT 10');
+$query->addEntityMapping('n', \Demo\Person::class);
+$query->setParameter('part', 'Tom');
+
+$result = $query->execute();
+
+foreach ($result as $person) {
+    echo sprintf('Person found with name "%s"' . PHP_EOL, $person->getName());
+}
+```
+
+```bash
+$> php native-query.php
+Person found with name "Tom Cruise"
+Person found with name "Tom Skerritt"
+Person found with name "Tom Hanks"
+Person found with name "Tom Tykwer"
+```
+
+You invoke the native query handler by calling `EntityManager::createQuery()` and pass it the Cypher query string.
+
+Next, you define that the `n` result alias of the query should be mapped to `Person` objects and you pass a `part` parameter.
+
+You then execute the query and receive results back.
+
+The result is depending on your query and result aliases and has the following behavior : 
+
+* If only one alias is returned and is mapped to an object class, it returns a collection of objects : 
+ 
+  ```php
+  Array
+      [0] => Object
+      [1] => Object
+          ...
+  ```
+
+* If more than one alias is returned, it will returned a mixed result set, let's see the next example :
+
+```php
+<?php
+
+// native-query-2.php
+
+require_once 'bootstrap.php';
+
+$em = $entityManager;
+
+$query = $em->createQuery('MATCH (n:Person)-[:ACTED_IN]->(movie)<-[:ACTED_IN]-(other)
+WHERE n.name CONTAINS "Tom"
+RETURN n, collect(other)[0..2] AS coactors, size((n)-[:ACTED_IN]->()) AS totalActs');
+$query
+    ->addEntityMapping('n', \Demo\Person::class)
+    ->addEntityMapping('coactors', \Demo\Person::class, \GraphAware\Neo4j\OGM\Query::HYDRATE_COLLECTION);
+
+$result = $query->execute();
+
+foreach ($result as $row) {
+    echo sprintf('Person found with name "%s", he played in %d movies' . PHP_EOL, $row['n']->getName(), $row['totalActs']);
+    echo 'His first two co-actors are ' . PHP_EOL;
+    foreach ($row['coactors'] as $coactor) {
+        echo sprintf(' -- %s' .PHP_EOL, $coactor->getName());
+    }
+}
+```
+
+```bash
+$> php native-query-2.php
+Person found with name "Tom Hanks", he played in 12 movies
+His first two co-actors are
+ -- Philip Seymour Hoffman
+ -- Julia Roberts
+Person found with name "Tom Skerritt", he played in 1 movies
+His first two co-actors are
+ -- Tom Cruise
+ -- Val Kilmer
+Person found with name "Tom Cruise", he played in 3 movies
+His first two co-actors are
+ -- Cuba Gooding Jr.
+ -- Noah Wyle
+```
+
+To make it clearer, this is the result output of the query in the Neo4j browser : 
+
+![Query Result](_assets/_4_query_result.png)
+
+The `execute()` method will return what is called a mixed result represented by rows.
+
+Each row will be represented as the following : 
+
+```bash
+[0] => Array
+        'n' => Object Person
+        'coactors' => Array[Object Person]
+        'totalActs' => scalar (integer)
+[1] => Array
+        'n' => Object Person
+        'coactors' => Array[Object Person]
+        'totalActs' => scalar (integer)
+      ...
+```
+
+To summarize, you can define the mapping of the result aliases with the following hints : 
+
+* `Query::HYDRATE_COLLECTION` => collection of object entities
+* `Query::HYDRATE_SINGLE` => single entity
+
+Aliases not being mapped via the `addEntityMapping` are returned as raw results
