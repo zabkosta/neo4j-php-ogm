@@ -18,10 +18,7 @@ class QueryTest extends IntegrationTestCase
         $this->clearDb();
         $this->createTree();
     }
-
-    /**
-     * @group native-fail
-     */
+    
     public function testCreateQueryReturnsPlainCollectionEntities()
     {
         $q = $this->em->createQuery('MATCH (n:Level) WHERE n.code = {code} MATCH (n)-[:PARENT_LEVEL*0..]->(level) RETURN level');
@@ -83,9 +80,6 @@ class QueryTest extends IntegrationTestCase
         $this->assertNull($q->getOneOrNullResult());
     }
 
-    /**
-     * @group query-mixed-1
-     */
     public function testCreateQueryCanMapMixedResults()
     {
         $q = $this->em->createQuery('MATCH (n:Level) WHERE n.code = "root" MATCH (n)<-[r:PARENT_LEVEL*]-(child) 
@@ -104,10 +98,6 @@ class QueryTest extends IntegrationTestCase
         }
     }
 
-    /**
-     *
-     * @group query-mixed
-     */
     public function testCreateQueryCanMapScalarResult()
     {
         $q = $this->em->createQuery('MATCH (n:Level) WHERE n.code = "root" MATCH (n)<-[r:PARENT_LEVEL*]-(child) RETURN n AS root, count(*) AS total');
