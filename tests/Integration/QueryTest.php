@@ -19,6 +19,9 @@ class QueryTest extends IntegrationTestCase
         $this->createTree();
     }
 
+    /**
+     * @group native-fail
+     */
     public function testCreateQueryReturnsPlainCollectionEntities()
     {
         $q = $this->em->createQuery('MATCH (n:Level) WHERE n.code = {code} MATCH (n)-[:PARENT_LEVEL*0..]->(level) RETURN level');
@@ -28,6 +31,7 @@ class QueryTest extends IntegrationTestCase
         /** @var Level[] $levels */
         $levels = $q->execute();
         $this->assertCount(4, $levels);
+        $this->assertInstanceOf(Level::class, $levels[0]);
         $this->assertEquals('root', $levels[3]->getCode());
         $this->assertCount(2, $levels[3]->getChildren());
     }
@@ -41,11 +45,16 @@ class QueryTest extends IntegrationTestCase
 
         $result = $q->getResult();
 
-        $this->assertArrayHasKey('root', $result);
-        $this->assertArrayHasKey('level', $result);
+        $this->assertArrayHasKey('root', $result[0]);
+        $this->assertArrayHasKey('level', $result[0]);
 
-        $this->assertCount(4, $result['level']);
-        $this->assertCount(4, $result['root']);
+        $this->assertCount(4, $result);
+
+        foreach ($result as $row) {
+            $this->assertInternalType('array', $row);
+            $this->assertArrayHasKey('root', $row);
+            $this->assertArrayHasKey('level', $row);
+        }
     }
 
     public function testNonUniqueExceptionIsThrown()
@@ -75,7 +84,7 @@ class QueryTest extends IntegrationTestCase
     }
 
     /**
-     * @group query-mixed
+     * @group query-mixed-1
      */
     public function testCreateQueryCanMapMixedResults()
     {
@@ -85,7 +94,7 @@ class QueryTest extends IntegrationTestCase
         $q->addEntityMapping('root', Level::class);
         $q->addEntityMapping('children', Level::class, Query::HYDRATE_COLLECTION);
 
-        $result = $q->execute();
+        $result = $q->getOneResult();
 
         $this->assertInstanceOf(Level::class, $result['root']);
         $this->assertInternalType('array', $result['children']);
@@ -93,6 +102,20 @@ class QueryTest extends IntegrationTestCase
         foreach ($result['children'] as $o) {
             $this->assertInstanceOf(Level::class, $o);
         }
+    }
+
+    /**
+     *
+     * @group query-mixed
+     */
+    public function testCreateQueryCanMapScalarResult()
+    {
+        $q = $this->em->createQuery('MATCH (n:Level) WHERE n.code = "root" MATCH (n)<-[r:PARENT_LEVEL*]-(child) RETURN n AS root, count(*) AS total');
+        $q->addEntityMapping('root', Level::class);
+
+        $result = $q->getOneResult();
+        $this->assertInstanceOf(Level::class, $result['root']);
+        $this->assertEquals(7, $result['total']);
     }
     
 
