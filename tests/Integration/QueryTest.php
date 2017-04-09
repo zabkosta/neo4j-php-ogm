@@ -3,7 +3,10 @@
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Exception\Result\NonUniqueResultException;
+use GraphAware\Neo4j\OGM\Proxy\LazyCollection;
 use GraphAware\Neo4j\OGM\Query;
+use GraphAware\Neo4j\OGM\Tests\Integration\Models\MoviesDemo\Movie;
+use GraphAware\Neo4j\OGM\Tests\Integration\Models\MoviesDemo\Person;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\Tree\Level;
 
 /**
@@ -106,6 +109,44 @@ class QueryTest extends IntegrationTestCase
         $result = $q->getOneResult();
         $this->assertInstanceOf(Level::class, $result['root']);
         $this->assertEquals(7, $result['total']);
+    }
+
+    /**
+     * @group native-test
+     */
+    public function testCreateQueryToSimulateEager()
+    {
+        $this->clearDb();
+        $this->playMovies();
+
+        $q = $this->em->createQuery('MATCH (n:Person) WHERE n.name = {name} 
+        MATCH (n)-[:ACTED_IN]->(movie)<-[:ACTED_IN]-(coactor) 
+        RETURN n, movie, coactor');
+
+        $q->setParameter('name', 'Tom Hanks');
+        $q
+            ->addEntityMapping('n', Person::class)
+            ->addEntityMapping('movie', Movie::class)
+            ->addEntityMapping('coactor', Person::class);
+
+        $result = $q->execute();
+
+        /** @var Person $tom */
+        $tom = $result[0]['n'];
+        $this->assertInstanceOf(Person::class, $tom);
+        $this->assertInstanceOf(LazyCollection::class, $tom->getMovies());
+        $movie1 = $result[0]['movie'];
+        $hash = spl_object_hash($movie1);
+        $tomMovie = null;
+        foreach ($tom->getMovies() as $movie) {
+            if ($movie->getTitle() === $movie1->getTitle()) {
+                $tomMovie = $movie;
+            }
+        }
+
+        $this->assertNotNull($tomMovie);
+        $this->assertEquals($hash, spl_object_hash($tomMovie));
+        $this->assertTrue($tom->getMovies()->contains($movie1));
     }
     
 
