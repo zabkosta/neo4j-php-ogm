@@ -18,7 +18,7 @@ class QueryTest extends IntegrationTestCase
         $this->clearDb();
         $this->createTree();
     }
-    
+
     public function testCreateQueryReturnsPlainCollectionEntities()
     {
         $q = $this->em->createQuery('MATCH (n:Level) WHERE n.code = {code} MATCH (n)-[:PARENT_LEVEL*0..]->(level) RETURN level');
