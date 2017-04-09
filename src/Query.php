@@ -12,6 +12,7 @@
 namespace GraphAware\Neo4j\OGM;
 
 use GraphAware\Common\Result\Result;
+use GraphAware\Common\Type\Node;
 use GraphAware\Neo4j\OGM\Exception\Result\NonUniqueResultException;
 use GraphAware\Neo4j\OGM\Exception\Result\NoResultException;
 
@@ -21,6 +22,12 @@ class Query
 
     const PARAMETER_MAP = 1;
 
+    const HYDRATE_COLLECTION = "HYDRATE_COLLECTION";
+
+    const HYDRATE_SINGLE = "HYDRATE_SINGLE";
+
+    const HYDRATE_RAW = "HYDRATE_RAW";
+
     protected $em;
 
     protected $cql;
@@ -28,6 +35,8 @@ class Query
     protected $parameters = [];
 
     protected $mappings = [];
+
+    protected $resultMappings = [];
 
     /**
      * @param EntityManager $entityManager
@@ -43,6 +52,8 @@ class Query
     public function setCQL($cql)
     {
         $this->cql = $cql;
+
+        return $this;
     }
 
     /**
@@ -53,15 +64,19 @@ class Query
     public function setParameter($key, $value, $type = null)
     {
         $this->parameters[$key] = [$value, $type];
+
+        return $this;
     }
 
     /**
      * @param string $alias
      * @param string $className
      */
-    public function addEntityMapping($alias, $className)
+    public function addEntityMapping($alias, $className, $hydrationType = self::HYDRATE_SINGLE)
     {
-        $this->mappings[$alias] = $className;
+        $this->mappings[$alias] = [$className, $hydrationType];
+
+        return $this;
     }
 
     /**
@@ -88,7 +103,7 @@ class Query
         }
 
 
-        return $result[0];
+        return $result;
     }
 
     /**
@@ -125,11 +140,6 @@ class Query
 
         $cqlResult = $this->handleResult($result);
 
-        if (count($this->mappings) === 1) {
-            $k = array_keys($this->mappings)[0];
-            return $cqlResult[$k];
-        }
-
         return $cqlResult;
     }
 
@@ -138,24 +148,35 @@ class Query
         $queryResult = [];
 
         foreach ($result->records() as $record) {
+            $row = [];
             $keys = $record->keys();
-            $this->validateKeys($keys);
 
             foreach ($keys as $key) {
-                $queryResult[$key][] = $this->em->getEntityHydrator($this->mappings[$key])->hydrateNode($record->get($key));
+
+                $mode = array_key_exists($key, $this->mappings) ? $this->mappings[$key][1] : self::HYDRATE_RAW;
+
+                if ($mode === self::HYDRATE_SINGLE) {
+                    if (count($keys) === 1) {
+                        $row = $this->em->getEntityHydrator($this->mappings[$key][0])->hydrateNode($record->get($key));
+                    } else {
+                        $row[$key] = $this->em->getEntityHydrator($this->mappings[$key][0])->hydrateNode($record->get($key));
+                    }
+                } elseif ($mode === self::HYDRATE_COLLECTION) {
+                    $coll = [];
+                    foreach ($record->get($key) as $i) {
+                        $v = $this->em->getEntityHydrator($this->mappings[$key][0])->hydrateNode($i);
+                        $coll[] = $v;
+                    }
+                    $row[$key] = $coll;
+                } elseif ($mode === self::HYDRATE_RAW) {
+                    $row[$key] = $record->get($key);
+                }
             }
+
+            $queryResult[] = $row;
         }
 
         return $queryResult;
-    }
-
-    private function validateKeys(array $keys)
-    {
-        foreach ($keys as $key) {
-            if (!array_key_exists($key, $this->mappings)) {
-                throw new \RuntimeException(sprintf('The query mapping do not contain a reference for "%s"', $key));
-            }
-        }
     }
 
     /**

@@ -2,6 +2,7 @@
 
 - Fixed incorrect hydration when RE is used between same model ([#124](https://github.com/graphaware/neo4j-php-ogm/pull/124))
   (BC : The `mappedBy` is now mandatory when using RE)
+- Improvements on `EntityManager::createQuery` supporting scalar results and hydration of more than one entity types ([#125](https://github.com/graphaware/neo4j-php-ogm/pull/125))
 
 1.0.0-RC3 (2017-04-01)
 

@@ -3,6 +3,7 @@
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Exception\Result\NonUniqueResultException;
+use GraphAware\Neo4j\OGM\Query;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\Tree\Level;
 
 /**
@@ -27,6 +28,7 @@ class QueryTest extends IntegrationTestCase
         /** @var Level[] $levels */
         $levels = $q->execute();
         $this->assertCount(4, $levels);
+        $this->assertInstanceOf(Level::class, $levels[0]);
         $this->assertEquals('root', $levels[3]->getCode());
         $this->assertCount(2, $levels[3]->getChildren());
     }
@@ -40,11 +42,16 @@ class QueryTest extends IntegrationTestCase
 
         $result = $q->getResult();
 
-        $this->assertArrayHasKey('root', $result);
-        $this->assertArrayHasKey('level', $result);
+        $this->assertArrayHasKey('root', $result[0]);
+        $this->assertArrayHasKey('level', $result[0]);
 
-        $this->assertCount(4, $result['level']);
-        $this->assertCount(4, $result['root']);
+        $this->assertCount(4, $result);
+
+        foreach ($result as $row) {
+            $this->assertInternalType('array', $row);
+            $this->assertArrayHasKey('root', $row);
+            $this->assertArrayHasKey('level', $row);
+        }
     }
 
     public function testNonUniqueExceptionIsThrown()
@@ -71,6 +78,34 @@ class QueryTest extends IntegrationTestCase
         $q->addEntityMapping('level', Level::class);
 
         $this->assertNull($q->getOneOrNullResult());
+    }
+
+    public function testCreateQueryCanMapMixedResults()
+    {
+        $q = $this->em->createQuery('MATCH (n:Level) WHERE n.code = "root" MATCH (n)<-[r:PARENT_LEVEL*]-(child) 
+        RETURN n AS root, collect(child) AS children');
+
+        $q->addEntityMapping('root', Level::class);
+        $q->addEntityMapping('children', Level::class, Query::HYDRATE_COLLECTION);
+
+        $result = $q->getOneResult();
+
+        $this->assertInstanceOf(Level::class, $result['root']);
+        $this->assertInternalType('array', $result['children']);
+
+        foreach ($result['children'] as $o) {
+            $this->assertInstanceOf(Level::class, $o);
+        }
+    }
+
+    public function testCreateQueryCanMapScalarResult()
+    {
+        $q = $this->em->createQuery('MATCH (n:Level) WHERE n.code = "root" MATCH (n)<-[r:PARENT_LEVEL*]-(child) RETURN n AS root, count(*) AS total');
+        $q->addEntityMapping('root', Level::class);
+
+        $result = $q->getOneResult();
+        $this->assertInstanceOf(Level::class, $result['root']);
+        $this->assertEquals(7, $result['total']);
     }
     
 
