@@ -3,6 +3,7 @@
 namespace GraphAware\Neo4j\OGM\Tests\Integration;
 
 use GraphAware\Neo4j\OGM\Exception\Result\NonUniqueResultException;
+use GraphAware\Neo4j\OGM\Query;
 use GraphAware\Neo4j\OGM\Tests\Integration\Models\Tree\Level;
 
 /**
@@ -71,6 +72,27 @@ class QueryTest extends IntegrationTestCase
         $q->addEntityMapping('level', Level::class);
 
         $this->assertNull($q->getOneOrNullResult());
+    }
+
+    /**
+     * @group query-mixed
+     */
+    public function testCreateQueryCanMapMixedResults()
+    {
+        $q = $this->em->createQuery('MATCH (n:Level) WHERE n.code = "root" MATCH (n)<-[r:PARENT_LEVEL*]-(child) 
+        RETURN n AS root, collect(child) AS children');
+
+        $q->addEntityMapping('root', Level::class);
+        $q->addEntityMapping('children', Level::class, Query::HYDRATE_COLLECTION);
+
+        $result = $q->execute();
+
+        $this->assertInstanceOf(Level::class, $result['root']);
+        $this->assertInternalType('array', $result['children']);
+
+        foreach ($result['children'] as $o) {
+            $this->assertInstanceOf(Level::class, $o);
+        }
     }
     
 

@@ -12,6 +12,7 @@
 namespace GraphAware\Neo4j\OGM;
 
 use GraphAware\Common\Result\Result;
+use GraphAware\Common\Type\Node;
 use GraphAware\Neo4j\OGM\Exception\Result\NonUniqueResultException;
 use GraphAware\Neo4j\OGM\Exception\Result\NoResultException;
 
@@ -20,6 +21,10 @@ class Query
     const PARAMETER_LIST = 0;
 
     const PARAMETER_MAP = 1;
+
+    const HYDRATE_COLLECTION = "HYDRATE_COLLECTION";
+
+    const HYDRATE_SINGLE = "HYDRATE_SINGLE";
 
     protected $em;
 
@@ -59,9 +64,9 @@ class Query
      * @param string $alias
      * @param string $className
      */
-    public function addEntityMapping($alias, $className)
+    public function addEntityMapping($alias, $className, $hydrationType = self::HYDRATE_SINGLE)
     {
-        $this->mappings[$alias] = $className;
+        $this->mappings[$alias] = [$className, $hydrationType];
     }
 
     /**
@@ -142,7 +147,20 @@ class Query
             $this->validateKeys($keys);
 
             foreach ($keys as $key) {
-                $queryResult[$key][] = $this->em->getEntityHydrator($this->mappings[$key])->hydrateNode($record->get($key));
+
+                $mode = $this->mappings[$key][1];
+
+                if ($mode === self::HYDRATE_SINGLE) {
+                    $queryResult[$key] = $this->em->getEntityHydrator($this->mappings[$key][0])->hydrateNode($record->get($key));
+                } elseif ($mode === self::HYDRATE_COLLECTION) {
+                    foreach ($record->get($key) as $i) {
+                        if (!$i instanceof Node) {
+                            throw new \InvalidArgumentException(sprintf('Node class expected for "%s" result', $key));
+                        }
+
+                        $queryResult[$key][] = $this->em->getEntityHydrator($this->mappings[$key][0])->hydrateNode($i);
+                    }
+                }
             }
         }
 
