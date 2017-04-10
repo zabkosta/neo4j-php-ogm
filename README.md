@@ -15,7 +15,7 @@
 Install with composer
 
 ```cli
-composer require graphaware/neo4j-php-ogm
+composer require graphaware/neo4j-php-ogm:@rc
 ```
 
 ## Documentation
