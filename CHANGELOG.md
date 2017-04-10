@@ -1,5 +1,7 @@
 1.0.0-RC5 (not released yet)
 
+- Fixed issue when m..1 will have relationship references not managed. ([#127](https://github.com/graphaware/neo4j-php-ogm/pull/127))
+
 1.0.0-RC4 (2017-04-09)
 
 - Fixed incorrect hydration when RE is used between same model ([#124](https://github.com/graphaware/neo4j-php-ogm/pull/124))

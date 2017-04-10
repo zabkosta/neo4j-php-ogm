@@ -106,6 +106,7 @@ class EntityHydrator
                     $this->_em->getUnitOfWork()->addManagedRelationshipReference($sourceEntity, $item, $relationshipMetadata->getPropertyName(), $relationshipMetadata);
                 } else {
                     $mappedRel->setValue($item, $sourceEntity);
+                    $this->_em->getUnitOfWork()->addManagedRelationshipReference($sourceEntity, $item, $relationshipMetadata->getPropertyName(), $relationshipMetadata);
                 }
             }
         }
