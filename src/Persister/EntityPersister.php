@@ -12,6 +12,7 @@
 namespace GraphAware\Neo4j\OGM\Persister;
 
 use GraphAware\Common\Cypher\Statement;
+use GraphAware\Neo4j\OGM\Converters\Converter;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 
@@ -45,7 +46,14 @@ class EntityPersister
         $extraLabels = [];
         $removeLabels = [];
         foreach ($this->classMetadata->getPropertiesMetadata() as $field => $meta) {
-            $propertyValues[$field] = $meta->getValue($object);
+            $fieldId = $this->classMetadata->getClassName().$field;
+            if ($meta->hasConverter()) {
+                $converter = Converter::getConverter($meta->getConverterType(), $fieldId);
+                $v = $converter->toDatabaseValue($meta->getValue($object), $meta->getConverterOptions());
+                $propertyValues[$field] = $v;
+            } else {
+                $propertyValues[$field] = $meta->getValue($object);
+            }
         }
 
         foreach ($this->classMetadata->getLabeledProperties() as $labeledProperty) {

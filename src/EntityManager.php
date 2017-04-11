@@ -16,6 +16,7 @@ use Doctrine\Common\Annotations\FileCacheReader;
 use Doctrine\Common\EventManager;
 use GraphAware\Neo4j\Client\ClientBuilder;
 use GraphAware\Neo4j\Client\ClientInterface;
+use GraphAware\Neo4j\OGM\Converters\Converter;
 use GraphAware\Neo4j\OGM\Exception\MappingException;
 use GraphAware\Neo4j\OGM\Hydrator\EntityHydrator;
 use GraphAware\Neo4j\OGM\Metadata\Factory\Annotation\AnnotationGraphEntityMetadataFactory;
@@ -378,5 +379,10 @@ class EntityManager implements EntityManagerInterface
         }
 
         return $query;
+    }
+
+    public function registerPropertyConverter($name, $classname)
+    {
+        Converter::addConverter($name, $classname);
     }
 }

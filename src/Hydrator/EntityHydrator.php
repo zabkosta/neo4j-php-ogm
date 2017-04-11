@@ -16,6 +16,7 @@ use GraphAware\Common\Result\Result;
 use GraphAware\Common\Type\Node;
 use GraphAware\Common\Type\Relationship;
 use GraphAware\Neo4j\OGM\Common\Collection;
+use GraphAware\Neo4j\OGM\Converters\Converter;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
@@ -252,10 +253,14 @@ class EntityHydrator
 
     protected function hydrateProperties($object, Node $node)
     {
-        foreach ($node->keys() as $key) {
-            if ($this->_classMetadata->hasField($key)) {
-                $propertyMeta = $this->_classMetadata->getPropertyMetadata($key);
-                $propertyMeta->setValue($object, $node->get($key));
+        foreach ($this->_classMetadata->getPropertiesMetadata() as $key => $metadata) {
+            if ($metadata->hasConverter()) {
+                $converter = Converter::getConverter($metadata->getConverterType(), $key);
+                $value = $converter->toPHPValue($node->values(), $metadata->getConverterOptions());
+                $metadata->setValue($object, $value);
+            } else {
+                $v = $node->hasValue($key) ? $node->get($key) : null;
+                $metadata->setValue($object, $v);
             }
         }
     }
