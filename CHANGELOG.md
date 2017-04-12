@@ -1,5 +1,7 @@
 1.0.0-RC5 (not released yet)
 
+- Feature: `Property Converter` ([#128](https://github.com/graphaware/neo4j-php-ogm/pull/128))
+
 1.0.0-RC4 (2017-04-09)
 
 - Fixed incorrect hydration when RE is used between same model ([#124](https://github.com/graphaware/neo4j-php-ogm/pull/124))
