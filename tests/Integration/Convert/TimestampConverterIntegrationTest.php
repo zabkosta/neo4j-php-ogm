@@ -56,7 +56,7 @@ class TimestampConverterIntegrationTest extends IntegrationTestCase
         $o = $this->em->getRepository(TimestampConverterEntity::class)->findOneBy(['time' => $ts]);
         $this->assertInstanceOf(\DateTime::class, $o->getTime());
     }
-
+    
     public function testTimestampsMillisAreConverted()
     {
         $dt = new \DateTime("NOW");

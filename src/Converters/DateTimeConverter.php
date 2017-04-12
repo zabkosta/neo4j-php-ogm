@@ -59,19 +59,17 @@ class DateTimeConverter extends Converter
             return null;
         }
 
+        $tz = isset($options['timezone']) ? new \DateTimeZone($options['timezone']) : new \DateTimeZone(date_default_timezone_get());
+
         $format = isset($options['format']) ? $options['format'] : self::DEFAULT_FORMAT;
         $v = $values[$this->propertyName];
 
         if (self::DEFAULT_FORMAT === $format) {
-            $dt = new \DateTime();
-            $dt->setTimestamp($v);
-            return $dt;
+            return \DateTime::createFromFormat('U', $v, $tz);
         }
 
         if (self::LONG_TIMESTAMP_FORMAT === $format) {
-            $dt = new \DateTime();
-            $dt->setTimestamp($v/1000);
-            return $dt;
+            return \DateTime::createFromFormat('U', round($v/1000), $tz);
         }
 
         return \DateTime::createFromFormat($format, $v);
