@@ -24,6 +24,6 @@ The options available are the format and the timezone.
 
 The format has two helper values :
 
-* `timestamp` : equivalent's of the `U` date format (https://secure.php.net/manual/fr/datetime.createfromformat.php)
+* `timestamp` : equivalent of `U` in [php date format](https://secure.php.net/manual/fr/datetime.createfromformat.php)
 * `long_timestamp` : equivalent's of above but multiplied by 1000, more useful if the timestamps are coming from neo4j java plugins/listeners (millis)
 
