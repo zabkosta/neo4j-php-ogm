@@ -6,3 +6,5 @@ pages:
   - 'What is an OGM?': 'overview/what_is_an_ogm.md'
 - Getting started:
   - 'Tutorial': 'getting_started/tutorial.md'
+- References:
+  - 'Property Converters': 'references/property_converter.md'
