@@ -154,8 +154,14 @@ class EntityHydrator
 
             // set properties on the relationship entity
             foreach ($relationshipEntityMetadata->getPropertiesMetadata() as $key => $propertyMetadata) {
-                if ($relationship->hasValue($key)) {
-                    $relationshipEntityMetadata->getPropertyMetadata($key)->setValue($entity, $relationship->get($key));
+
+                if ($propertyMetadata->hasConverter()) {
+                    $converter = Converter::getConverter($propertyMetadata->getConverterType(), $key);
+                    $value = $converter->toPHPValue($relationship->values(), $propertyMetadata->getConverterOptions());
+                    $propertyMetadata->setValue($entity, $value);
+                } else {
+                    $v = $relationship->hasValue($key) ? $relationship->get($key) : null;
+                    $propertyMetadata->setValue($entity, $v);
                 }
             }
 

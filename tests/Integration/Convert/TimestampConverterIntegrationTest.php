@@ -4,6 +4,9 @@ namespace GraphAware\Neo4j\OGM\Tests\Integration\Convert;
 
 use GraphAware\Neo4j\OGM\Tests\Integration\IntegrationTestCase;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
+use GraphAware\Neo4j\OGM\Tests\Integration\Models\SimpleRelationshipEntity\Guest;
+use GraphAware\Neo4j\OGM\Tests\Integration\Models\SimpleRelationshipEntity\Hotel;
+use GraphAware\Neo4j\OGM\Tests\Integration\Models\SimpleRelationshipEntity\Rating;
 
 /**
  *
@@ -65,7 +68,42 @@ class TimestampConverterIntegrationTest extends IntegrationTestCase
         $this->assertCount(1, $objects);
         $this->assertInstanceOf(\DateTime::class, $objects[0]->getTime());
         $this->assertEquals($ts, $objects[0]->getTime()->getTimestamp());
+    }
 
+    public function testTimestampCanBeUpdated()
+    {
+        $e = new TimestampConverterEntity();
+        $dt = new \DateTime("NOW");
+        $e->setTime($dt);
+        $this->persist($e);
+        $this->em->flush();
+        $ts = $dt->getTimestamp() * 1000;
+        $this->assertGraphExist('(e:Entity {time: '.$ts.'})');
+
+        $dt = new \DateTime("1990-01-01");
+        $ts = $dt->getTimestamp() * 1000;
+        $e->setTime($dt);
+        $this->em->flush();
+        $this->assertGraphExist('(e:Entity {time: '.$ts.'})');
+
+    }
+
+    public function testTimestampOnRelationshipEntityIsConverted()
+    {
+        $guest = new Guest('test');
+        $hotel = new Hotel('Hayatt');
+        $rating = new Rating($guest, $hotel, 3);
+        $guest->setRating($rating);
+        $hotel->setRating($rating);
+        $this->em->persist($guest);
+        $this->em->flush();
+        $t = $rating->getCreated()->getTimestamp();
+        $this->assertGraphExist('(n:Guest)-[:RATED {created: ' . ($t*1000).'}]->(h:Hotel)');
+        $this->em->clear();
+
+        /** @var Guest $guest */
+        $guest = $this->em->getRepository(Guest::class)->findAll()[0];
+        $this->assertEquals($t, $guest->getRating()->getCreated()->getTimestamp());
     }
 
 

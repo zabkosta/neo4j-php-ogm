@@ -38,7 +38,7 @@ class TimestampConverter extends Converter
 
     public function toPHPValue(array $values, array $options)
     {
-        if (null === $values[$this->propertyName]) {
+        if (!isset($values[$this->propertyName]) || null === $values[$this->propertyName]) {
             return null;
         }
 
