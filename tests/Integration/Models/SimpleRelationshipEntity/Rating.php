@@ -52,7 +52,7 @@ class Rating
      * @var \DateTime
      *
      * @OGM\Property()
-     * @OGM\Convert(type="timestamp", options={"php_type":"datetime", "db_type":"long"})
+     * @OGM\Convert(type="datetime", options={"format":"long_timestamp"})
      */
     protected $created;
 

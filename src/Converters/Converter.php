@@ -13,12 +13,12 @@ namespace GraphAware\Neo4j\OGM\Converters;
 
 abstract class Converter
 {
-    const TIMESTAMP = 'timestamp';
+    const DATETIME = 'datetime';
 
     protected $propertyName;
 
     private static $converterMap = [
-        self::TIMESTAMP => TimestampConverter::class,
+        self::DATETIME => DateTimeConverter::class,
     ];
 
     private static $converterObjects = [];

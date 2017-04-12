@@ -128,7 +128,7 @@ class TimestampConverterEntity
      * @var \DateTime
      *
      * @OGM\Property()
-     * @OGM\Convert(type="timestamp", options={"db_type"="long","php_type"="datetime"})
+     * @OGM\Convert(type="datetime", options={"format":"long_timestamp"})
      */
     protected $time;
 
