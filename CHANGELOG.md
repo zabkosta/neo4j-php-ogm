@@ -1,5 +1,6 @@
 1.0.0-RC5 (not released yet)
 
+- Added support for Map and Map Collections in `createQuery` result sets ([#131](https://github.com/graphaware/neo4j-php-ogm/pull/131))
 - Feature: `Property Converter` ([#128](https://github.com/graphaware/neo4j-php-ogm/pull/128))
 - Fixed issue when m..1 will have relationship references not managed. ([#127](https://github.com/graphaware/neo4j-php-ogm/pull/127))
 
