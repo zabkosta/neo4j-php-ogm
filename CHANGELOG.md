@@ -1,4 +1,4 @@
-1.0.0-RC5 (not released yet)
+1.0.0-RC5 (2017-04-15)
 
 - Added support for Map and Map Collections in `createQuery` result sets ([#131](https://github.com/graphaware/neo4j-php-ogm/pull/131))
 - Feature: `Property Converter` ([#128](https://github.com/graphaware/neo4j-php-ogm/pull/128))
