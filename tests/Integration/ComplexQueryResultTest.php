@@ -37,7 +37,7 @@ class ComplexQueryResultTest extends IntegrationTestCase
         $this->assertInstanceOf(Movie::class, $row['actInfo']['movie']);
     }
 
-    public function testQueryReturningMapCollection()
+    public function testQueryReturningMapCollectionMixed()
     {
         $q = $this->em->createQuery('MATCH (n:Person)-[r:ACTED_IN]->(m) 
         WITH n, {roles: r.roles, movie: m} AS actInfo 
@@ -49,8 +49,47 @@ class ComplexQueryResultTest extends IntegrationTestCase
 
         $result = $q->getResult();
         $this->assertCount(2, $result);
+        $this->assertInternalType('array', $result[0]['actorInfos']);
         $this->assertInstanceOf(Movie::class, $result[0]['actorInfos'][0]['movie']);
+        $this->assertCount(1, $result[0]['actorInfos']);
+    }
 
+    public function testQueryReturningCollectionOfEntitiesInMap()
+    {
+        $q = $this->em->createQuery('MATCH (n:Person)-[r:ACTED_IN]->(m) 
+        RETURN n, {score: size((n)-[:ACTED_IN]->()), movies: collect(m)} AS infos LIMIT 10');
 
+        $q->addEntityMapping('n', Person::class);
+        $q->addEntityMapping('infos', null, Query::HYDRATE_MAP);
+        $q->addEntityMapping('movies', Movie::class, Query::HYDRATE_COLLECTION);
+
+        $result = $q->getResult();
+
+        $this->assertCount(10, $result);
+        $row = $result[0];
+        $this->assertInstanceOf(Person::class, $row['n']);
+        $this->assertInternalType('array', $row['infos']);
+        $this->assertEquals($row['infos']['score'], count($row['infos']['movies']));
+        $this->assertInstanceOf(Movie::class, $row['infos']['movies'][0]);
+    }
+
+    public function testQueryReturningMapAsOnlyColumn()
+    {
+        $q = $this->em->createQuery('MATCH (n:Person)-[r:ACTED_IN]->(m) 
+        RETURN {user: n, score: size((n)-[:ACTED_IN]->()), movies: collect(m)} AS infos LIMIT 10');
+
+        $q->addEntityMapping('user', Person::class);
+        $q->addEntityMapping('infos', null, Query::HYDRATE_MAP);
+        $q->addEntityMapping('movies', Movie::class, Query::HYDRATE_COLLECTION);
+
+        $result = $q->execute();
+
+        $this->assertCount(10, $result);
+        $row = $result[0];
+        $this->assertInternalType('array', $row['infos']);
+        $this->assertEquals(1, count(array_keys($row)));
+        $this->assertInstanceOf(Person::class, $row['infos']['user']);
+        $this->assertEquals($row['infos']['score'], count($row['infos']['movies']));
+        $this->assertInstanceOf(Movie::class, $row['infos']['movies'][0]);
     }
 }
