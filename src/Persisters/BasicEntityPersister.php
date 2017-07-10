@@ -274,6 +274,13 @@ class BasicEntityPersister
     {
         $relationshipMeta = $this->_classMetadata->getRelationship($alias);
         $relAlias = $relationshipMeta->getAlias();
+        $targetClassLabel = '';
+        if ($relationshipMeta->isRelationshipEntity() === false && $relationshipMeta->isTargetEntity() === true) {
+            $targetMetadata = $this->_em->getClassMetadataFor($relationshipMeta->getTargetEntity());
+            if ($targetMetadata->getLabel() != null) {
+                $targetClassLabel = ':'.$targetMetadata->getLabel();
+            }
+        }
         $sourceEntityId = $this->_classMetadata->getIdValue($sourceEntity);
         $relationshipType = $relationshipMeta->getType();
 
@@ -283,7 +290,7 @@ class BasicEntityPersister
         $relPattern = sprintf('%s-[:`%s`]-%s', $isIncoming, $relationshipType, $isOutgoing);
 
         $cypher  = 'MATCH (n) WHERE id(n) = {id} ';
-        $cypher .= 'RETURN size((n)'.$relPattern.'()) ';
+        $cypher .= 'RETURN size((n)'.$relPattern.'('.$targetClassLabel.')) ';
         $cypher .= 'AS '.$alias;
 
         return Statement::create($cypher, ['id' => $sourceEntityId]);
