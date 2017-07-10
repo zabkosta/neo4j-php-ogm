@@ -211,8 +211,7 @@ class BasicEntityPersister
     {
         $relationshipMeta = $this->_classMetadata->getRelationship($alias);
         $relAlias = $relationshipMeta->getAlias();
-        $targetMetadata = $this->_em->getClassMetadataFor($relationshipMeta->getTargetEntity());
-        $targetClassLabel = $targetMetadata->getLabel();
+        $targetMetadata = $this->_em->getClassMetadataFor($relationshipMeta->getRelationshipEntityClass());
         $targetAlias = $targetMetadata->getEntityAlias();
         $sourceEntityId = $this->_classMetadata->getIdValue($sourceEntity);
         $relationshipType = $relationshipMeta->getType();
@@ -225,7 +224,7 @@ class BasicEntityPersister
         $relPattern = sprintf('%s-[%s:`%s`]-%s', $isIncoming, $relAlias, $relationshipType, $isOutgoing);
 
         $cypher = 'MATCH (n) WHERE id(n) = {id} ';
-        $cypher .= 'MATCH (n)'.$relPattern.'('.$targetAlias.($targetClassLabel != null ? ':' . $targetClassLabel : '').') ';
+        $cypher .= 'MATCH (n)'.$relPattern.'('.$targetAlias.') ';
         $cypher .= 'RETURN {target: '.$target.'('.$relAlias.'), re: '.$relAlias.'} AS '.$relAlias;
 
         $params = ['id' => $sourceEntityId];
