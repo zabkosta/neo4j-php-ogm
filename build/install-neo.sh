@@ -8,3 +8,5 @@ mkdir neo
 tar xzf neo4j-enterprise-3.1.4-unix.tar.gz -C neo --strip-components=1 > null
 sed -i.bak '/\(dbms\.security\.auth_enabled=\).*/s/^#//g' ./neo/conf/neo4j.conf
 neo/bin/neo4j start > null &
+sleep 15
+cat ./neo/logs/neo4j.log
