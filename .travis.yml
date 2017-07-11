@@ -11,7 +11,8 @@ env:
 before_install:
     - wget dist.neo4j.org/neo4j-enterprise-$NEO_VERSION-unix.tar.gz > null
     - tar -xzf neo4j-enterprise-$NEO_VERSION-unix.tar.gz > null
-    - sed -i.bak 's/^\(dbms\.security\.auth_enabled=\).*/\1false/' neo4j-enterprise-$NEO_VERSION/conf/neo4j.conf
+    #- sed -i.bak 's/^\(dbms\.security\.auth_enabled=\).*/\1false/' neo4j-enterprise-$NEO_VERSION/conf/neo4j.conf
+    - cp ./build/neo4j.conf neo4j-enterprise-$NEO_VERSION/conf/
     - neo4j-enterprise-$NEO_VERSION/bin/neo4j start > null
     - composer self-update
 
