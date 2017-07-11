@@ -118,7 +118,7 @@ class TestUser implements \JsonSerializable
         $this->sponsoredBy = $sponsoredBy;
     }
 
-    function jsonSerialize()
+    public function jsonSerialize()
     {
         return [
             'id' => $this->id,
