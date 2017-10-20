@@ -53,6 +53,12 @@ class RelationshipEntityBetweenSameModelTest extends IntegrationTestCase
         $this->em->flush();
         $this->em->clear();
 
+        // at this point user 'me' follows 'followee1' - 'followee5'
+        // that means there are 5 relations:
+        //   me -> followee1
+        //   ...
+        //   me -> followee5
+
         /** @var SystemUser $u */
         $u = $this->em->getRepository(SystemUser::class)->findOneBy(['login' => 'me']);
         $this->assertEquals('me', $u->getLogin());
@@ -60,7 +66,20 @@ class RelationshipEntityBetweenSameModelTest extends IntegrationTestCase
         $h1 = spl_object_hash($u->getFollowing());
         $this->assertInstanceOf(Follow::class, $u->getFollowing()[0]);
         $this->assertEquals($h1, spl_object_hash($u->getFollowing()));
-        $this->assertEquals(5, $u->getFollowing()->count());
+        $this->assertEquals(5, $count = $u->getFollowing()->count());
+
+        for($i = 0; $i < $count; ++$i) {
+            /** @var Follow $f */
+            $f = $u->getFollowing()[$i];
+            $this->assertInstanceOf(Follow::class, $f);
+            $follower = $f->getFollower();
+            $followee = $f->getFollowee();
+
+            // make sure entities are assigned correctly
+            $this->assertEquals('me', $follower->getLogin());
+            $this->assertStringStartsWith('followee', $followee->getLogin());
+            $this->assertEquals(1, $followee->getFollowers()->count());
+        }
     }
 
 }
