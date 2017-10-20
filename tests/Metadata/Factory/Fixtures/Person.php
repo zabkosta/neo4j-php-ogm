@@ -11,6 +11,7 @@
 
 namespace GraphAware\Neo4j\OGM\Tests\Metadata\Factory\Fixtures;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
@@ -53,6 +54,21 @@ class Person
      * @OGM\Convert(type="datetime", options={"db_format"="long", "timezone"="UTC"})
      */
     private $created;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @OGM\Relationship(relationshipEntity="Follow", targetEntity="Person", collection=true, mappedBy="following", type="FOLLOWS", direction="INCOMING")
+     */
+    private $followers;
+
+    /**
+     * @var ArrayCollection
+     *
+     * @OGM\Relationship(relationshipEntity="Follow", targetEntity="Person", collection=true, mappedBy="followers", type="FOLLOWS", direction="OUTGOING")
+     */
+    private $following;
+
 
     /**
      * @return string

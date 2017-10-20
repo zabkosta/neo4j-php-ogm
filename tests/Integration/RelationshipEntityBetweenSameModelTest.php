@@ -76,10 +76,15 @@ class RelationshipEntityBetweenSameModelTest extends IntegrationTestCase
             $followee = $f->getFollowee();
 
             // make sure entities are assigned correctly
-            $this->assertEquals('me', $follower->getLogin());
-            $this->assertStringStartsWith('followee', $followee->getLogin());
-            $this->assertEquals(1, $followee->getFollowers()->count());
+            $this->assertEquals('me', $follower->getLogin(), '"me" is following "followeeX", not the other way round.');
+            $this->assertStringStartsWith('followee', $followee->getLogin(), '"followeeX" is followed by "me", not the other way round.');
+            $this->assertEquals(1, $followee->getFollowers()->count(), '"followeeX" should have one follower, which is "me".');
         }
+
+        /** @var SystemUser $followee1 */
+        $followee1 = $this->em->getRepository(SystemUser::class)->findOneBy(['login' => 'followee1']);
+        $this->assertEquals(1, $followee1->getFollowers()->count());
+        $this->assertEquals('me', $followee1->getFollowers()[0]->getFollower()->getLogin());
     }
 
 }

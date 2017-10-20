@@ -157,7 +157,7 @@ class GraphEntityMetadataFactoryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame('my-age', $labeledAgeProperty->getLabelName());
 
         $relations = $metadata->getRelationships();
-        $this->assertCount(1, $relations);
+        $this->assertCount(3, $relations);
 
         $moviesRelation = $metadata->getRelationship('movies');
         $this->assertSame('ACTED_IN', $moviesRelation->getType());
@@ -165,6 +165,20 @@ class GraphEntityMetadataFactoryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(Movie::class, $moviesRelation->getTargetEntity());
         $this->assertSame(true, $moviesRelation->isCollection());
         $this->assertSame('actors', $moviesRelation->getMappedByProperty());
+
+        $moviesRelation = $metadata->getRelationship('followers');
+        $this->assertSame('FOLLOWS', $moviesRelation->getType());
+        $this->assertSame('INCOMING', $moviesRelation->getDirection());
+        $this->assertSame(Person::class, $moviesRelation->getTargetEntity());
+        $this->assertSame(true, $moviesRelation->isCollection());
+        $this->assertSame('following', $moviesRelation->getMappedByProperty());
+
+        $moviesRelation = $metadata->getRelationship('following');
+        $this->assertSame('FOLLOWS', $moviesRelation->getType());
+        $this->assertSame('OUTGOING', $moviesRelation->getDirection());
+        $this->assertSame(Person::class, $moviesRelation->getTargetEntity());
+        $this->assertSame(true, $moviesRelation->isCollection());
+        $this->assertSame('followers', $moviesRelation->getMappedByProperty());
     }
 
     /**
