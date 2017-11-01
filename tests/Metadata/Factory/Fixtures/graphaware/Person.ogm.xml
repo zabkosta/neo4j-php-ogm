@@ -12,5 +12,13 @@
             <lazy/>
             <order-by property="name" order="DESC"/>
         </relationship>
+        <relationship name="followers" type="FOLLOWS" direction="INCOMING" target-entity="GraphAware\Neo4j\OGM\Tests\Metadata\Factory\Fixtures\Person" collection="true" mapped-by="following">
+            <lazy/>
+            <order-by property="name" order="DESC"/>
+        </relationship>
+        <relationship name="following" type="FOLLOWS" direction="OUTGOING" target-entity="GraphAware\Neo4j\OGM\Tests\Metadata\Factory\Fixtures\Person" collection="true" mapped-by="followers">
+            <lazy/>
+            <order-by property="name" order="DESC"/>
+        </relationship>
     </node>
 </graphaware-mapping>

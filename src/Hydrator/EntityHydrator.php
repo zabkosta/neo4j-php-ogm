@@ -11,6 +11,7 @@
 
 namespace GraphAware\Neo4j\OGM\Hydrator;
 
+use GraphAware\Common\Graph\Direction;
 use GraphAware\Common\Result\Record;
 use GraphAware\Common\Result\Result;
 use GraphAware\Common\Type\Node;
@@ -18,6 +19,7 @@ use GraphAware\Common\Type\Relationship;
 use GraphAware\Neo4j\OGM\Common\Collection;
 use GraphAware\Neo4j\OGM\Converters\Converter;
 use GraphAware\Neo4j\OGM\EntityManager;
+use GraphAware\Neo4j\OGM\Exception\MappingException;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipEntityMetadata;
 use GraphAware\Neo4j\OGM\Util\DirectionUtils;
@@ -30,7 +32,7 @@ class EntityHydrator
     private $_em;
 
     /**
-     * @var NodeEntityMetadata
+     * @var NodeEntityMetadata class meta data of the entity that is to be hydrated by this instance.
      */
     private $_classMetadata;
 
@@ -127,10 +129,29 @@ class EntityHydrator
             $relationshipMetadata->initializeCollection($sourceEntity);
         }
 
+        if ($relationshipEntityMetadata->getStartNodeClass() == $relationshipEntityMetadata->getEndNodeClass()) {
+
+            // handle relationships between nodes of the same type
+
+            if ($relationshipMetadata->getDirection() === Direction::OUTGOING) {
+                $startNodeIsSourceEntity = true;
+            } else if ($relationshipMetadata->getDirection() === Direction::INCOMING) {
+                $startNodeIsSourceEntity = false;
+            } else {
+                throw new MappingException('Invalid Relationship Entity annotations. Direction BOTH not supported on'
+                    . 'RelationshipEntities where startNode and endNode are of the same class');
+            }
+
+        } else if ($relationshipEntityMetadata->getStartNodeClass() === $this->_classMetadata->getClassName()) {
+            $startNodeIsSourceEntity = true;
+        } else {
+            $startNodeIsSourceEntity = false;
+        }
+
         // we iterate the result of records which are a map
         // {target: (Node) , re: (Relationship) }
+        $k = $relationshipMetadata->getAlias();
         foreach ($dbResult->records() as $record) {
-            $k = $relationshipMetadata->getAlias();
             /** @var Node $targetNode */
             $targetNode = $record->get($k)['target'];
             /** @var Relationship $relationship */
@@ -138,12 +159,6 @@ class EntityHydrator
 
             // hydrate the target node :
             $targetEntity = $otherHydrator->hydrateNode($targetNode);
-
-            $startNodePropertyName = $relationshipEntityMetadata->getStartNodePropertyName();
-            $sourceEntityMappedName = $relationshipMetadata->getMappedByProperty();
-
-            $startNodeIsSourceEntity = $startNodePropertyName === $sourceEntityMappedName;
-
 
             // create the relationship entity
             $entity = $this->_em->getUnitOfWork()->createRelationshipEntity(
