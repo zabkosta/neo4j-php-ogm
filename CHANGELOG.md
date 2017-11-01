@@ -1,3 +1,8 @@
+1.0.0-RC7 (2017-11-01)
+
+- Fixed PHP7 null return types in proxy ([#153](https://github.com/graphaware/neo4j-php-ogm/pull/153))
+- Fixed directions with same class relationships ([#160](https://github.com/graphaware/neo4j-php-ogm/pull/160))
+
 1.0.0-RC6 (2017-07-13)
 
 - Fixed a bug where findOneById was not checking class label in query ([#136](https://github.com/graphaware/neo4j-php-ogm/pull/136))
