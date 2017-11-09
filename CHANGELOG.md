@@ -1,3 +1,7 @@
+1.0.0-RC8 (2017-11-09)
+
+- Feature: added the possibility to map db property key to class fields ([#164](https://github.com/graphaware/neo4j-php-ogm/pull/164))
+
 1.0.0-RC7 (2017-11-01)
 
 - Fixed PHP7 null return types in proxy ([#153](https://github.com/graphaware/neo4j-php-ogm/pull/153))
