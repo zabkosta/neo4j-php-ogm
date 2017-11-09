@@ -170,13 +170,18 @@ class EntityHydrator
 
             // set properties on the relationship entity
             foreach ($relationshipEntityMetadata->getPropertiesMetadata() as $key => $propertyMetadata) {
+                $fieldKey = $key;
+
+                if ($propertyMetadata->getPropertyAnnotationMetadata()->hasCustomKey()) {
+                    $fieldKey = $propertyMetadata->getPropertyAnnotationMetadata()->getKey();
+                }
 
                 if ($propertyMetadata->hasConverter()) {
-                    $converter = Converter::getConverter($propertyMetadata->getConverterType(), $key);
+                    $converter = Converter::getConverter($propertyMetadata->getConverterType(), $fieldKey);
                     $value = $converter->toPHPValue($relationship->values(), $propertyMetadata->getConverterOptions());
                     $propertyMetadata->setValue($entity, $value);
                 } else {
-                    $v = $relationship->hasValue($key) ? $relationship->get($key) : null;
+                    $v = $relationship->hasValue($fieldKey) ? $relationship->get($fieldKey) : null;
                     $propertyMetadata->setValue($entity, $v);
                 }
             }
@@ -276,12 +281,18 @@ class EntityHydrator
     protected function hydrateProperties($object, Node $node)
     {
         foreach ($this->_classMetadata->getPropertiesMetadata() as $key => $metadata) {
+            $fieldKey = $key;
+
+            if ($metadata->getPropertyAnnotationMetadata()->hasCustomKey()) {
+                $fieldKey = $metadata->getPropertyAnnotationMetadata()->getKey();
+            }
+
             if ($metadata->hasConverter()) {
-                $converter = Converter::getConverter($metadata->getConverterType(), $key);
+                $converter = Converter::getConverter($metadata->getConverterType(), $fieldKey);
                 $value = $converter->toPHPValue($node->values(), $metadata->getConverterOptions());
                 $metadata->setValue($object, $value);
             } else {
-                $v = $node->hasValue($key) ? $node->get($key) : null;
+                $v = $node->hasValue($fieldKey) ? $node->get($fieldKey) : null;
                 $metadata->setValue($object, $v);
             }
         }

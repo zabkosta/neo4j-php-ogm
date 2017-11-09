@@ -51,19 +51,31 @@ class RelationshipEntityPersister
             'fields' => [],
         ];
 
-        foreach ($this->classMetadata->getPropertiesMetadata() as $propertyMetadata) {
+        foreach ($this->classMetadata->getPropertiesMetadata() as $field => $propertyMetadata) {
             $v = $propertyMetadata->getValue($entity);
-            $parameters['fields'][$propertyMetadata->getPropertyName()] = $v;
+            $fieldKey = $field;
+
+            if ($propertyMetadata->getPropertyAnnotationMetadata()->hasCustomKey()) {
+                $fieldKey = $propertyMetadata->getPropertyAnnotationMetadata()->getKey();
+            }
+
+            $parameters['fields'][$fieldKey] = $v;
         }
 
         foreach ($this->classMetadata->getPropertiesMetadata() as $field => $meta) {
             $fieldId = $this->classMetadata->getClassName().$field;
+            $fieldKey = $field;
+
+            if ($meta->getPropertyAnnotationMetadata()->hasCustomKey()) {
+                $fieldKey = $meta->getPropertyAnnotationMetadata()->getKey();
+            }
+
             if ($meta->hasConverter()) {
                 $converter = Converter::getConverter($meta->getConverterType(), $fieldId);
                 $v = $converter->toDatabaseValue($meta->getValue($entity), $meta->getConverterOptions());
-                $parameters['fields'][$field] = $v;
+                $parameters['fields'][$fieldKey] = $v;
             } else {
-                $parameters['fields'][$field] = $meta->getValue($entity);
+                $parameters['fields'][$fieldKey] = $meta->getValue($entity);
             }
         }
 
@@ -90,12 +102,18 @@ class RelationshipEntityPersister
 
         foreach ($this->classMetadata->getPropertiesMetadata() as $field => $meta) {
             $fieldId = $this->classMetadata->getClassName().$field;
+            $fieldKey = $field;
+
+            if ($meta->getPropertyAnnotationMetadata()->hasCustomKey()) {
+                $fieldKey = $meta->getPropertyAnnotationMetadata()->getKey();
+            }
+
             if ($meta->hasConverter()) {
                 $converter = Converter::getConverter($meta->getConverterType(), $fieldId);
                 $v = $converter->toDatabaseValue($meta->getValue($entity), $meta->getConverterOptions());
-                $parameters['fields'][$field] = $v;
+                $parameters['fields'][$fieldKey] = $v;
             } else {
-                $parameters['fields'][$field] = $meta->getValue($entity);
+                $parameters['fields'][$fieldKey] = $meta->getValue($entity);
             }
         }
 
