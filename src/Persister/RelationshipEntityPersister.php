@@ -58,12 +58,18 @@ class RelationshipEntityPersister
 
         foreach ($this->classMetadata->getPropertiesMetadata() as $field => $meta) {
             $fieldId = $this->classMetadata->getClassName().$field;
+            $fieldKey = $field;
+
+            if ($meta->getPropertyAnnotationMetadata()->hasCustomKey()) {
+                $fieldKey = $meta->getPropertyAnnotationMetadata()->getKey();
+            }
+
             if ($meta->hasConverter()) {
                 $converter = Converter::getConverter($meta->getConverterType(), $fieldId);
                 $v = $converter->toDatabaseValue($meta->getValue($entity), $meta->getConverterOptions());
-                $parameters['fields'][$field] = $v;
+                $parameters['fields'][$fieldKey] = $v;
             } else {
-                $parameters['fields'][$field] = $meta->getValue($entity);
+                $parameters['fields'][$fieldKey] = $meta->getValue($entity);
             }
         }
 
@@ -90,12 +96,18 @@ class RelationshipEntityPersister
 
         foreach ($this->classMetadata->getPropertiesMetadata() as $field => $meta) {
             $fieldId = $this->classMetadata->getClassName().$field;
+            $fieldKey = $field;
+
+            if ($meta->getPropertyAnnotationMetadata()->hasCustomKey()) {
+                $fieldKey = $meta->getPropertyAnnotationMetadata()->getKey();
+            }
+
             if ($meta->hasConverter()) {
                 $converter = Converter::getConverter($meta->getConverterType(), $fieldId);
                 $v = $converter->toDatabaseValue($meta->getValue($entity), $meta->getConverterOptions());
-                $parameters['fields'][$field] = $v;
+                $parameters['fields'][$fieldKey] = $v;
             } else {
-                $parameters['fields'][$field] = $meta->getValue($entity);
+                $parameters['fields'][$fieldKey] = $meta->getValue($entity);
             }
         }
 

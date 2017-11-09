@@ -47,12 +47,18 @@ class EntityPersister
         $removeLabels = [];
         foreach ($this->classMetadata->getPropertiesMetadata() as $field => $meta) {
             $fieldId = $this->classMetadata->getClassName().$field;
+            $fieldKey = $field;
+
+            if ($meta->getPropertyAnnotationMetadata()->hasCustomKey()) {
+                $fieldKey = $meta->getPropertyAnnotationMetadata()->getKey();
+            }
+
             if ($meta->hasConverter()) {
                 $converter = Converter::getConverter($meta->getConverterType(), $fieldId);
                 $v = $converter->toDatabaseValue($meta->getValue($object), $meta->getConverterOptions());
-                $propertyValues[$field] = $v;
+                $propertyValues[$fieldKey] = $v;
             } else {
-                $propertyValues[$field] = $meta->getValue($object);
+                $propertyValues[$fieldKey] = $meta->getValue($object);
             }
         }
 
@@ -88,12 +94,18 @@ class EntityPersister
         $removeLabels = [];
         foreach ($this->classMetadata->getPropertiesMetadata() as $field => $meta) {
             $fieldId = $this->classMetadata->getClassName().$field;
+            $fieldKey = $field;
+
+            if ($meta->getPropertyAnnotationMetadata()->hasCustomKey()) {
+                $fieldKey = $meta->getPropertyAnnotationMetadata()->getKey();
+            }
+
             if ($meta->hasConverter()) {
                 $converter = Converter::getConverter($meta->getConverterType(), $fieldId);
                 $v = $converter->toDatabaseValue($meta->getValue($object), $meta->getConverterOptions());
-                $propertyValues[$field] = $v;
+                $propertyValues[$fieldKey] = $v;
             } else {
-                $propertyValues[$field] = $meta->getValue($object);
+                $propertyValues[$fieldKey] = $meta->getValue($object);
             }
         }
 
