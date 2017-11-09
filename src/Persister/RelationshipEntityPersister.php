@@ -51,9 +51,15 @@ class RelationshipEntityPersister
             'fields' => [],
         ];
 
-        foreach ($this->classMetadata->getPropertiesMetadata() as $propertyMetadata) {
+        foreach ($this->classMetadata->getPropertiesMetadata() as $field => $propertyMetadata) {
             $v = $propertyMetadata->getValue($entity);
-            $parameters['fields'][$propertyMetadata->getPropertyName()] = $v;
+            $fieldKey = $field;
+
+            if ($propertyMetadata->getPropertyAnnotationMetadata()->hasCustomKey()) {
+                $fieldKey = $propertyMetadata->getPropertyAnnotationMetadata()->getKey();
+            }
+
+            $parameters['fields'][$fieldKey] = $v;
         }
 
         foreach ($this->classMetadata->getPropertiesMetadata() as $field => $meta) {
