@@ -207,7 +207,7 @@ class EntityHydrator
             foreach ($otherMetadata->getRelationships() as $rel) {
                 if ($rel->isRelationshipEntity() && $rel->getRelationshipEntityClass() === $relationshipEntityMetadata->getClassName()) {
                     // if relation direction is not the opposite, do not populate
-                    if ($rel->getDirection() !== Direction::BOTH && $relationshipMetadata->getDirection() === $rel->getDirection()) {
+                    if (($direction = $rel->getDirection()) !== Direction::BOTH && $direction === $relationshipMetadata->getDirection()) {
                         continue;
                     }
                     if (!$rel->isCollection()) {
