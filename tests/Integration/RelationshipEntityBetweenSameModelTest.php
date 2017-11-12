@@ -131,8 +131,10 @@ class RelationshipEntityBetweenSameModelTest extends IntegrationTestCase
             /** @var Follow $f */
             $f = $u->getFollowing()->last();
             $this->assertInstanceOf(Follow::class, $f);
+            $this->assertEquals(1, $f->getFollowee()->getFollowers()->count(), "{$u->getLogin()} should be followed by exactly one user.");
 
             $u = $f->getFollowee();
+
         }
     }
 
