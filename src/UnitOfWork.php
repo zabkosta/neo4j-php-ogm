@@ -249,9 +249,13 @@ class UnitOfWork
         }
 
         if (count($this->relationshipsScheduledForDelete) > 0) {
-            foreach ($this->relationshipsScheduledForDelete as $toDelete) {
-                $statement = $this->relationshipPersister->getDeleteRelationshipQuery($toDelete[0], $toDelete[1], $toDelete[2]);
-                $relStack->push($statement->text(), $statement->parameters());
+            foreach ($this->relationshipsScheduledForDelete as $relationship) {
+                $statement = $this->relationshipPersister->getDeleteRelationshipQuery(
+                    $this->entityIds[spl_object_hash($relationship[0])],
+                    $this->entityIds[spl_object_hash($relationship[2])],
+                    $relationship[1]
+                );
+                $relStack->push($statement->text(), $statement->parameters(), $statement->getTag());
             }
         }
 
@@ -480,9 +484,7 @@ class UnitOfWork
 
     public function scheduleRelationshipReferenceForDelete($entity, $target, RelationshipMetadata $relationship)
     {
-        $eClass = $this->entityManager->getClassMetadataFor(get_class($entity));
-        $tClass = $this->entityManager->getClassMetadataFor(get_class($target));
-        $this->relationshipsScheduledForDelete[] = [$eClass->getIdValue($entity), $tClass->getIdValue($target), $relationship];
+        $this->relationshipsScheduledForDelete[] = [$entity, $relationship, $target, $relationship->getPropertyName()];
     }
 
     public function traverseRelationshipEntities($entity, array &$visited = [])
