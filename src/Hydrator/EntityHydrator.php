@@ -186,18 +186,13 @@ class EntityHydrator
                 }
             }
 
-            // set the start node
+            // set the start and end node
             if ($startNodeIsSourceEntity) {
                 $relationshipEntityMetadata->setStartNodeProperty($entity, $sourceEntity);
+                $relationshipEntityMetadata->setEndNodeProperty($entity, $targetEntity);
             } else {
                 $relationshipEntityMetadata->setStartNodeProperty($entity, $targetEntity);
-            }
-
-            // set the end node
-            if (!$startNodeIsSourceEntity) {
                 $relationshipEntityMetadata->setEndNodeProperty($entity, $sourceEntity);
-            } else {
-                $relationshipEntityMetadata->setEndNodeProperty($entity, $targetEntity);
             }
 
             // set the relationship entity on the source entity
@@ -208,9 +203,13 @@ class EntityHydrator
                 $relationshipMetadata->addToCollection($sourceEntity, $entity);
             }
 
-            // guess the name of the property on the other node
+            // detect the name of the property on the other node to populate reverse relation
             foreach ($otherMetadata->getRelationships() as $rel) {
                 if ($rel->isRelationshipEntity() && $rel->getRelationshipEntityClass() === $relationshipEntityMetadata->getClassName()) {
+                    // if relation direction is not the opposite, do not populate
+                    if (($direction = $rel->getDirection()) !== Direction::BOTH && $direction === $relationshipMetadata->getDirection()) {
+                        continue;
+                    }
                     if (!$rel->isCollection()) {
                         $rel->setValue($targetEntity, $entity);
                     } else {
