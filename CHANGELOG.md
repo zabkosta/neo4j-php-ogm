@@ -1,3 +1,8 @@
+1.0.0-RC9 (2017-12-12)
+
+- ProxyManager uses locking to prevent loading partially generate proxied files (Fixes #122) ([#174](https://github.com/graphaware/neo4j-php-ogm/pull/174))
+- Fixed an issue when loading relationships of the same type on two different fields ([#168](https://github.com/graphaware/neo4j-php-ogm/pull/168))
+
 1.0.0-RC8 (2017-11-09)
 
 - Feature: added the possibility to map db property key to class fields ([#164](https://github.com/graphaware/neo4j-php-ogm/pull/164))
