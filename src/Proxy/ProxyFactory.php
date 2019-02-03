@@ -15,6 +15,7 @@ use GraphAware\Common\Type\Node;
 use GraphAware\Neo4j\OGM\EntityManager;
 use GraphAware\Neo4j\OGM\Metadata\NodeEntityMetadata;
 use GraphAware\Neo4j\OGM\Metadata\RelationshipMetadata;
+use GraphAware\Neo4j\OGM\Proxy\EntityProxy;
 
 class ProxyFactory
 {
@@ -84,6 +85,15 @@ class ProxyFactory
     protected function createProxy()
     {
         $class = $this->classMetadata->getClassName();
+
+        // TODO proxy should autoload after unserialize()
+
+        $reflClass = new \ReflectionClass($class);
+        if (in_array(EntityProxy::class,$reflClass->getInterfaceNames())) {
+            return $this->newProxyInstance($class);
+        };
+
+
         $proxyClass = $this->getProxyClass();
         $proxyFile = $this->proxyDir.'/'.$proxyClass.'.php';
         $methodProxies = $this->getMethodProxies();
